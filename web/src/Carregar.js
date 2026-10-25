@@ -47,6 +47,8 @@ export default class Carregar extends Phaser.Scene {
 		this.load.image('chao_ruinas', PASTA + 'chao_ruinas.png')
 		this.load.image('chao_inferno', PASTA + 'chao_inferno.png')
 		this.load.spritesheet('melhorias', PASTA + 'melhorias.png', { frameWidth: 16, frameHeight: 16 })
+		// sombra escura nas bordas da tela (fica mais forte à noite)
+		this.load.image('vinheta', PASTA + 'vinheta.png')
 		// corvo visto de cima: 3 quadros de 16x12 (asas abertas, no meio, fechadas)
 		this.load.spritesheet('corvo', PASTA + 'corvo.png', { frameWidth: 16, frameHeight: 12 })
 		// troféu das conquistas: quadro 0 dourado, quadro 1 cinza
@@ -78,6 +80,8 @@ export default class Carregar extends Phaser.Scene {
 	}
 
 	create() {
+		// o jogo amplia tudo "em pixels"; só a vinheta é um degradê e precisa ser suavizada
+		this.textures.get('vinheta').setFilter(Phaser.Textures.FilterMode.LINEAR)
 		this.scene.start('Titulo')
 	}
 }

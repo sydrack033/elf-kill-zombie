@@ -7,7 +7,7 @@ s.pontos = 12345
 s.vidas = 1
 s.invencivel = 0
 s.perder_vida()
-await espera(800)
+await espera(1800) // a animação do elfo caindo vem antes do placar
 const tecla = (key, keyCode) => {
 	for (const tipo of ['keydown', 'keyup']) {
 		const ev = new KeyboardEvent(tipo, { key, bubbles: true })

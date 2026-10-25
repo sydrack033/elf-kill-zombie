@@ -122,12 +122,15 @@ export default class Jogo extends Phaser.Scene {
 		this.proximo_item = 500
 		this.textos = [] // pontos e avisos que sobem e somem: { obj, ha }
 		this.dano_ha = 0 // tela vermelha quando o elfo apanha
+		this.vermelho_heroi = 0 // elfo pintado de vermelho logo depois de apanhar
+		this.mortes_recentes = [] // ticks das últimas mortes, para o DUPLO! TRIPLO!
 		this.manchas = [] // sangue que fica no chão: { sprite, y, ha }
 
 		// chuva e relâmpagos quando a noite chega
 		this.chuva = this.add.graphics().setDepth(8.5)
 		this.gotas = []
 		this.relampago = this.add.rectangle(0, 0, 10, ALTURA, 0xe8f0ff, 0).setOrigin(0).setDepth(8.6)
+		this.vinheta = this.add.image(0, 0, 'vinheta').setOrigin(0).setDepth(8.4)
 		this.relampago_ha = 0
 		this.proximo_trovao = 900
 
@@ -245,6 +248,7 @@ export default class Jogo extends Phaser.Scene {
 		this.vermelho.setSize(this.largura, ALTURA)
 		this.escurecer.setSize(this.largura, ALTURA)
 		this.relampago.setSize(this.largura, ALTURA)
+		this.vinheta.setDisplaySize(this.largura, ALTURA)
 		this.aviso.x = meio
 		this.mensagem.x = meio
 		this.barra_fundo.x = meio
@@ -465,6 +469,9 @@ export default class Jogo extends Phaser.Scene {
 		const noite = Phaser.Display.Color.ValueToColor(0x6a72a8)
 		const c = Phaser.Display.Color.Interpolate.ColorWithColor(dia, noite, 100, t * 100)
 		this.chao.setTint(Phaser.Display.Color.GetColor(c.r, c.g, c.b))
+		if (this.vinheta) {
+			this.vinheta.setAlpha(0.35 + 0.5 * t)
+		}
 	}
 
 	// o cenário da fase atual (cemitério, pântano...)
@@ -866,6 +873,8 @@ export default class Jogo extends Phaser.Scene {
 			this.clarao_ha--
 		if (this.dano_ha > 0)
 			this.dano_ha--
+		if (this.vermelho_heroi > 0)
+			this.vermelho_heroi--
 		for (const poder in this.poderes) {
 			if (this.poderes[poder] > 0)
 				this.poderes[poder]--
@@ -1048,6 +1057,10 @@ export default class Jogo extends Phaser.Scene {
 		}
 		this.vidas--
 		this.apanhou_na_fase = true
+		this.vermelho_heroi = 20 // o elfo fica vermelho por um instante
+		if (navigator.vibrate) {
+			navigator.vibrate(this.vidas == 0 ? [80, 60, 200] : 120)
+		}
 		this.invencivel = R.INVENCIVEL_DEPOIS_DE_APANHAR
 		this.dano_ha = 30
 		this.combo = 0
@@ -1332,6 +1345,16 @@ export default class Jogo extends Phaser.Scene {
 		if (this.stats.mortos >= 100) desbloquear(this, 'cem')
 		if (this.combo >= 20) desbloquear(this, 'combo20')
 
+		// várias mortes quase juntas: DUPLO!, TRIPLO!, MASSACRE!
+		this.mortes_recentes = this.mortes_recentes.filter((t) => this.quadro_atual - t < 15)
+		this.mortes_recentes.push(this.quadro_atual)
+		const juntas = this.mortes_recentes.length
+		if (juntas >= 2) {
+			const nomes = ['', '', 'DUPLO!', 'TRIPLO!', 'QUÁDRUPLO!']
+			const c0 = corpo(zumbi)
+			this.flutuar(c0.x + c0.l / 2, c0.y - 10, nomes[juntas] || 'MASSACRE!', '#ff5a5a')
+			this.pontos += 25 * juntas * this.nivel
+		}
 		const ganho = zumbi.regra.pontos * this.nivel * this.multiplicador
 		this.pontos += ganho
 		if (this.pontos >= 50000) desbloquear(this, 'rico')
@@ -1864,6 +1887,24 @@ export default class Jogo extends Phaser.Scene {
 		this.estado = 'fim'
 		parar_musica(300)
 		this.sound.play('fim', { volume: 0.7 })
+
+		// o elfo cai: fica vermelho, tomba de lado e vai sumindo; depois aparece o placar
+		this.dica_texto.setVisible(false)
+		this.arma_na_mao.setVisible(false)
+		this.bolha.setVisible(false)
+		this.heroi.setVisible(true).setTint(0xff3030).setTintMode(Phaser.TintModes.FILL)
+		this.heroi.setOrigin(0.5, 1).setPosition(this.heroi_x + 12, this.heroi_y + 25)
+		for (let i = 0; i < 3; i++) {
+			this.espirrar_sangue(this.heroi_x + 6 + i * 6, this.heroi_y + 8 + (i % 2) * 6)
+		}
+		this.deixar_mancha(this.heroi_x + 12, this.heroi_y + 24)
+		this.cameras.main.shake(400, 0.012)
+		this.tweens.add({ targets: this.heroi, angle: 90, duration: 500, ease: 'Bounce.Out' })
+		this.tweens.add({ targets: this.heroi, alpha: 0.35, delay: 400, duration: 600 })
+		this.time.delayedCall(1100, () => this.mostrar_fim())
+	}
+
+	mostrar_fim() {
 		const novo_recorde = this.pontos > this.recorde
 		if (novo_recorde) {
 			this.recorde = this.pontos
@@ -1999,6 +2040,12 @@ export default class Jogo extends Phaser.Scene {
 		// piscando enquanto está invencível
 		const visivel = this.invencivel == 0 || Math.floor(this.invencivel / 8) % 2 == 0
 		this.heroi.setVisible(visivel)
+		if (this.vermelho_heroi > 0) {
+			this.heroi.setTint(0xff3030).setTintMode(Phaser.TintModes.FILL)
+		}
+		else {
+			this.heroi.clearTint().setTintMode(Phaser.TintModes.MULTIPLY)
+		}
 
 		// a arma acompanha a mira; virada para a esquerda ela é espelhada para não ficar de cabeça para baixo
 		this.arma_na_mao.setPosition(Math.round(this.mao_x), Math.round(this.mao_y))
