@@ -4,7 +4,8 @@ import Phaser from 'phaser'
 import { ALTURA } from '../tela.js'
 import * as R from '../regras.js'
 import { efeito } from '../opcoes.js'
-import { progresso_de_hoje } from '../desafios.js'
+import { progresso_de_hoje, conferir_desafios, PREMIO } from '../desafios.js'
+import { ganhar_moedas } from '../moedas.js'
 import { corpo } from './comum.js'
 
 export default class Clima {
@@ -123,9 +124,15 @@ export default class Clima {
 		// a cada segundo confere os desafios do dia: o que acabou de ser cumprido ganha um aviso
 		if (this.stats.ticks % 100 == 0) {
 			for (const d of progresso_de_hoje(this.dia, this.resumo_da_partida())) {
-				if (!d.feita && d.atual >= d.meta && !this.desafios_avisados.has(d.texto)) {
+				if (!d.feita && !d.so_no_fim && d.atual >= d.meta && !this.desafios_avisados.has(d.texto)) {
 					this.desafios_avisados.add(d.texto)
-					this.anunciar('DESAFIO CUMPRIDO!\n' + d.texto, 220, '#9ff07a')
+					// grava e paga na hora (sair pela pausa não perde o prêmio)
+					const pagos = conferir_desafios(this.dia, this.resumo_da_partida())
+					if (pagos.length) {
+						ganhar_moedas(pagos.length * PREMIO)
+						this.desafios_pagos = (this.desafios_pagos || []).concat(pagos.map((m) => m.texto))
+					}
+					this.flutuar(this.heroi_x + 12, this.heroi_y - 30, 'DESAFIO CUMPRIDO! +' + PREMIO + ' MOEDAS', '#9ff07a')
 					efeito(this, 'moeda', { volume: 0.6 })
 				}
 			}

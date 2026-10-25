@@ -17,7 +17,7 @@ const MISSOES = [
 	{ id: 'elites', texto: 'MATE 3 ZUMBIS DE ELITE', meta: 3, valor: (r) => r.elites },
 	{ id: 'horda', texto: 'SOBREVIVA A UMA HORDA', meta: 1, valor: (r) => r.hordas },
 	{ id: 'explosoes', texto: 'MATE 15 ZUMBIS COM EXPLOSÕES', meta: 15, valor: (r) => r.por_explosao },
-	{ id: 'mira', texto: 'TERMINE COM 60% DE PONTARIA (100+ TIROS)', meta: 100, valor: (r) => (r.acertos / Math.max(1, r.disparos) >= 0.6 ? r.disparos : 0) },
+	{ id: 'mira', texto: 'TERMINE COM 60% DE PONTARIA (100+ TIROS)', meta: 100, valor: (r) => (r.acertos / Math.max(1, r.disparos) >= 0.6 ? r.disparos : 0), so_no_fim: true },
 	{ id: 'zumbis150', texto: 'MATE 150 ZUMBIS', meta: 150, valor: (r) => r.mortos },
 ]
 
@@ -51,7 +51,7 @@ function ler_feitas(dia) {
 // progresso da partida em andamento em cada desafio de hoje: [{ texto, feita, atual, meta }]
 export function progresso_de_hoje(dia, resumo) {
 	const feitas = ler_feitas(dia)
-	return sortear_do_dia(dia).map((m) => ({ texto: m.texto, feita: feitas.includes(m.id), atual: Math.min(m.meta, m.valor(resumo)), meta: m.meta }))
+	return sortear_do_dia(dia).map((m) => ({ id: m.id, texto: m.texto, feita: feitas.includes(m.id), atual: Math.min(m.meta, m.valor(resumo)), meta: m.meta, so_no_fim: !!m.so_no_fim }))
 }
 
 export function desafios_de_hoje() {

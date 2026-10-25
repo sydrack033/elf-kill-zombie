@@ -132,6 +132,8 @@ export default class Jogo extends Phaser.Scene {
 		this.explicacao = null
 		this.capitulo_pendente = null
 		this.desafios_avisados = new Set()
+		this.desafios_pagos = []
+		this.polvora_da_classe = 0
 		this.ja_trocou = false // troca de cartas de melhoria (uma por partida)
 		this.tecla_trocar = null
 		// setinhas vermelhas no pé da tela marcando zumbis perto de passar (passar custa vida)
@@ -346,7 +348,7 @@ export default class Jogo extends Phaser.Scene {
 			this.trocar_arma('arco') // nível II
 		}
 		if (liberada && classe == 'bombardeiro') {
-			this.melhorias.polvora = this.m('polvora') + 1
+			this.polvora_da_classe = 1 // fora das melhorias (não conta para a conquista Colecionador)
 			this.bombas = Math.min(this.bombas_max() + 4, this.bombas + 4)
 			this.vidas = Math.max(1, this.vidas - 1)
 			this.atualizar_hud_melhorias()

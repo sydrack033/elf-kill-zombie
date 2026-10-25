@@ -80,7 +80,7 @@ export default class Fim {
 			'ZUMBIS ' + this.stats.mortos + '   CHEFÕES ' + this.stats.chefes + '\n' +
 			'PONTARIA ' + pontaria + '%   MAIOR COMBO ' + this.stats.melhor_combo + '\n' +
 			'+' + moedas + ' MOEDAS  (' + carteira + ' NA CARTEIRA)' +
-			cumpridos.map((m) => '\nDESAFIO CUMPRIDO: ' + m.texto).join(''),
+			cumpridos.map((m) => m.texto).concat(this.desafios_pagos || []).map((t) => '\nDESAFIO CUMPRIDO: ' + t).join(''),
 		)
 		this.instrucao = texto(this, this.largura / 2, ALTURA - 50, '', 8, '#cfcfcf').setOrigin(0.5).setDepth(10)
 		if (novo_recorde && this.pontos > 0) {

@@ -154,6 +154,6 @@ export default class Tiros {
 
 	// a Pólvora deixa as explosões maiores
 	tamanho_explosao() {
-		return 1 + 0.25 * this.m('polvora')
+		return 1 + 0.25 * (this.m('polvora') + this.polvora_da_classe)
 	}
 }

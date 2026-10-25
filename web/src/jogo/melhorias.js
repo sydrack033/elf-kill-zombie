@@ -398,7 +398,7 @@ export default class Melhorias {
 		const desafios = progresso_de_hoje(this.dia, this.resumo_da_partida())
 		objetos.push(texto(this, meio, ALTURA - 86, 'DESAFIOS DE HOJE', 8, '#ffd34d').setOrigin(0.5).setDepth(11))
 		desafios.forEach((d, i) => {
-			const feito = d.feita || d.atual >= d.meta
+			const feito = d.feita || (d.atual >= d.meta && !d.so_no_fim)
 			const linha = texto(this, meio, ALTURA - 72 + i * 13, (feito ? 'FEITO: ' : '') + d.texto + (feito ? '' : '   ' + d.atual.toLocaleString('pt-BR') + '/' + d.meta.toLocaleString('pt-BR')), 8, feito ? '#9ff07a' : '#9fd8ff').setOrigin(0.5).setDepth(11)
 			linha.setScale(Math.min(1, (this.largura - 10) / linha.width))
 			objetos.push(linha)

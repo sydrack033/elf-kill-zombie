@@ -153,7 +153,7 @@ export default class Titulo extends Phaser.Scene {
 					14: () => this.mudar_dificuldade(-1), 15: () => this.mudar_dificuldade(1),
 					3: () => ir('Conquistas'), 2: () => this.mudar_modo(), 8: () => ir('Loja'),
 					4: () => this.mudar_inicio(-1), 5: () => this.mudar_inicio(1), // LB / RB: capítulo
-					6: () => this.mudar_classe(-1), 7: () => this.mudar_classe(1), // LT / RT: classe
+					...(this.seletor_classe ? { 6: () => this.mudar_classe(-1), 7: () => this.mudar_classe(1) } : {}), // LT / RT: classe
 				}
 				;(acoes[botao.index] || comecar)()
 			})
