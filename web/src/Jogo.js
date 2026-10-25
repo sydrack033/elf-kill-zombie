@@ -1269,7 +1269,7 @@ export default class Jogo extends Phaser.Scene {
 
 	// segundo elfo: anda com as setas (ou com o controle, se tiver um ligado) e mira e atira sozinho
 	criar_p2() {
-		const p2 = { x: this.largura / 2 + 20, y: ALTURA - 50, xi: 0, direcao: 'cima', angulo: -Math.PI / 2, espera_tiro: 0 }
+		const p2 = { x: this.largura / 2 + 20, y: ALTURA - 50, xi: 0, direcao: 'cima', angulo: -Math.PI / 2, espera_tiro: 0, arma_nome: 'pistola', municao: Infinity }
 		p2.sprite = this.add.sprite(p2.x, p2.y, 'heroi_parado_cima').setOrigin(0).setDepth(5).setTint(COR_P2)
 		p2.arma = this.add.sprite(0, 0, 'armas', 0).setOrigin(3 / 16, 4 / 8).setDepth(6)
 		p2.rotulo = texto(this, 0, 0, 'P2', 8, '#d0a0ff').setOrigin(0.5).setDepth(6)
@@ -1303,21 +1303,13 @@ export default class Jogo extends Phaser.Scene {
 
 	processar_p2() {
 		const p2 = this.p2
-		const lodo = this.no_lodo(this.heroi_x + 12, this.heroi_y + 22) ? R.LODO.lenta : 1
+		const lodo = this.no_lodo(p2.x + 12, p2.y + 22) ? R.LODO.lenta : 1
 		const v = (this.poderes.velocidade > 0 ? R.VELOCIDADE_HEROI_RAPIDO : R.VELOCIDADE_HEROI) * (1 + 0.12 * this.m('velocidade')) * lodo
 		p2.x = Phaser.Math.Clamp(p2.x + p2.vx * v, 0, this.largura - 25)
 		p2.y = Phaser.Math.Clamp(p2.y + p2.vy * v, ALTURA * 0.55, ALTURA - 27)
 
 		// mira: o analógico direito do controle ou, sem ele, o inimigo mais perto
-		let alvo = p2.mira
-		if (!alvo) {
-			const guardado = { x: this.heroi_x, y: this.heroi_y }
-			this.heroi_x = p2.x
-			this.heroi_y = p2.y
-			alvo = this.inimigo_mais_perto()
-			this.heroi_x = guardado.x
-			this.heroi_y = guardado.y
-		}
+		const alvo = p2.mira || this.inimigo_mais_perto(p2.x + 12, p2.y + 12)
 		const mao_x = p2.x + 12
 		const mao_y = p2.y + 15
 		if (alvo) {
@@ -1327,24 +1319,47 @@ export default class Jogo extends Phaser.Scene {
 		const dy = Math.sin(p2.angulo)
 		p2.direcao = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'direita' : 'esquerda') : dy > 0 ? 'baixo' : 'cima'
 
-		// atira com a pistola (com as melhorias de dano, cadência e perfuração)
+		// atira com a arma dele (a pistola ou a que pegou numa caixa), com as melhorias de dano, cadência e perfuração
 		if (p2.espera_tiro > 0) {
 			p2.espera_tiro--
 		}
 		else if (alvo) {
-			const pistola = R.ARMAS.pistola
-			const x = mao_x + dx * 14
-			const y = mao_y + dy * 14
-			const sprite = this.add.sprite(x, y, 'tiro', 0).setRotation(p2.angulo).setDepth(4).setTint(COR_P2)
-			this.tiros.push({
-				sprite, x, y, arma: pistola, ha: 0,
-				vx: dx * pistola.velocidade, vy: dy * pistola.velocidade,
-				dano: pistola.dano + this.m('dano'), perfura: this.m('perfura'), acertou: new Set(),
-			})
-			this.stats.disparos++
-			p2.espera_tiro = Math.round(pistola.espera * Math.pow(0.85, this.m('cadencia')))
-			efeito(this, 'tiro', { volume: 0.35, rate: 1.15 })
+			const arma = R.ARMAS[p2.arma_nome]
+			for (let i = 0; i < arma.tiros; i++) {
+				const angulo = p2.angulo + (i - (arma.tiros - 1) / 2) * arma.abertura + (Math.random() * 2 - 1) * arma.tremida
+				const x = mao_x + Math.cos(angulo) * 14
+				const y = mao_y + Math.sin(angulo) * 14
+				const sprite = this.add.sprite(x, y, arma.projetil, 0).setRotation(angulo).setDepth(4)
+				if (arma.chama) {
+					sprite.setScale(0.5).setTint(Math.random() < 0.5 ? 0xffd060 : 0xff8a30)
+				}
+				else if (arma.projetil == 'tiro') {
+					sprite.setTint(COR_P2)
+				}
+				this.tiros.push({
+					sprite, x, y, arma, ha: 0, dono: p2,
+					vx: Math.cos(angulo) * arma.velocidade, vy: Math.sin(angulo) * arma.velocidade,
+					dano: arma.dano + this.m('dano'), perfura: arma.atravessa ? Infinity : this.m('perfura'), acertou: new Set(),
+				})
+				this.stats.disparos++
+			}
+			p2.espera_tiro = Math.round(arma.espera * Math.pow(0.85, this.m('cadencia')))
+			efeito(this, arma.som.chave, { ...arma.som, volume: arma.som.volume * 0.7 })
+			if (p2.municao != Infinity) {
+				p2.municao--
+				if (p2.municao <= 0) {
+					this.trocar_arma_p2('pistola')
+				}
+			}
 		}
+	}
+
+	// o jogador 2 pegou uma arma (o raio fica para o jogador 1, porque mira pela mão dele)
+	trocar_arma_p2(arma) {
+		const p2 = this.p2
+		p2.arma_nome = arma
+		p2.municao = arma == 'pistola' ? Infinity : Math.round(R.ARMAS[arma].municao * (1 + 0.5 * this.m('cinto')))
+		p2.arma.setFrame(R.ARMAS[arma].quadro)
 	}
 
 	desenhar_p2() {
@@ -1369,6 +1384,8 @@ export default class Jogo extends Phaser.Scene {
 		p2.arma.setPosition(Math.round(p2.x + 12), Math.round(p2.y + 15)).setRotation(p2.angulo)
 		p2.arma.setFlipY(Math.abs(p2.angulo) > Math.PI / 2).setVisible(visivel)
 		p2.rotulo.setPosition(Math.round(p2.x + 12), Math.round(p2.y - 6))
+		// com arma especial, mostra a munição em cima dele
+		p2.rotulo.setText(p2.municao == Infinity ? 'P2' : 'P2 ' + p2.municao)
 	}
 
 	// "fantasma" do elfo que fica para trás durante a esquiva
@@ -1795,8 +1812,10 @@ export default class Jogo extends Phaser.Scene {
 			tiro.acertou.clear() // na volta acerta de novo quem já levou na ida
 		}
 		if (tiro.voltando) {
-			const dx = this.heroi_x + 12 - tiro.x
-			const dy = this.heroi_y + 12 - tiro.y
+			// volta para quem jogou
+			const dono = tiro.dono || { x: this.heroi_x, y: this.heroi_y }
+			const dx = dono.x + 12 - tiro.x
+			const dy = dono.y + 12 - tiro.y
 			const d = Math.hypot(dx, dy)
 			// vai virando aos poucos na direção do elfo (curva) e acelera
 			const v = Math.min(7, Math.hypot(tiro.vx, tiro.vy) + 0.08)
@@ -2896,9 +2915,19 @@ export default class Jogo extends Phaser.Scene {
 		for (const item of this.itens) {
 			item.y += 0.5
 			this.puxar(item, 8)
-			if (this.herois().some((h) => encostou(item.x, item.y, 16, 16, h.x, h.y, 25, 25))) {
+			const quem = this.herois().findIndex((h) => encostou(item.x, item.y, 16, 16, h.x, h.y, 25, 25))
+			if (quem >= 0) {
 				item.pegou = true
-				this.pegar(item.tipo)
+				// arma pega pelo jogador 2 fica com ele
+				if (quem == 1 && R.ARMAS[item.tipo] && item.tipo != 'raio') {
+					this.trocar_arma_p2(item.tipo)
+					this.armas_usadas.add(item.tipo)
+					efeito(this, 'item', { volume: 0.6 })
+					this.anunciar('P2: ' + R.ARMAS[item.tipo].nome + '!', 100, '#d0a0ff')
+				}
+				else {
+					this.pegar(item.tipo)
+				}
 			}
 			if (item.pegou || item.y > ALTURA) {
 				item.sprite.destroy()
