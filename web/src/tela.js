@@ -151,6 +151,25 @@ export function somar_estatisticas(partida) {
 	}
 }
 
+// histórico das últimas 10 partidas: [{ data, fase, pontos, dificuldade, modo }] (a mais nova primeiro)
+export function ler_historico() {
+	try {
+		const lista = JSON.parse(localStorage.getItem('elf-kill-zombie-historico') || '[]')
+		return Array.isArray(lista) ? lista : []
+	} catch {
+		return []
+	}
+}
+
+export function gravar_historico(partida) {
+	const lista = [{ data: Date.now(), ...partida }].concat(ler_historico()).slice(0, 10)
+	try {
+		localStorage.setItem('elf-kill-zombie-historico', JSON.stringify(lista))
+	} catch {
+		// sem localStorage: não guarda
+	}
+}
+
 // troca o nome provisório depois que o jogador digita as 3 letras
 export function renomear_no_placar(id, nome) {
 	const placar = ler_placar()

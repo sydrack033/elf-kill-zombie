@@ -40,7 +40,7 @@ export default class ConquistasCena extends Phaser.Scene {
 		this.estatisticas = texto(
 			this, 0, ALTURA - 32,
 			'PARTIDAS ' + e.partidas + '   ZUMBIS ' + e.zumbis.toLocaleString('pt-BR') + '   CHEFÕES ' + e.chefes +
-			'   MELHOR FASE ' + e.melhor_fase + '   TEMPO ' + (horas ? horas + 'H ' : '') + minutos + 'MIN',
+			'   MELHOR FASE ' + e.melhor_fase + '   TEMPO ' + (horas ? horas + 'H ' : '') + minutos + 'MIN   [ MAIS: E ]',
 			8, '#9fd8ff',
 		).setOrigin(0.5)
 		this.cameras.main.fadeIn(250, 0, 0, 0)
@@ -50,6 +50,7 @@ export default class ConquistasCena extends Phaser.Scene {
 		this.input.keyboard.once('keydown-ESC', voltar)
 		this.input.keyboard.once('keydown-SPACE', voltar)
 		this.input.keyboard.once('keydown-C', voltar)
+		this.input.keyboard.once('keydown-E', () => this.scene.start('Estatisticas'))
 		// numa coluna só a lista pode passar da tela: arrastar, roda do mouse ou setas rolam;
 		// um toque sem arrastar volta para o título
 		this.rolagem = 0
@@ -60,8 +61,12 @@ export default class ConquistasCena extends Phaser.Scene {
 			if (Math.abs(p.y - inicio.y) > 6) inicio.mexeu = true
 			this.rolar(inicio.rolagem - (p.y - inicio.y) / (this.zoom || 1), true)
 		})
-		this.input.on('pointerup', () => {
-			if (inicio && !inicio.mexeu) voltar()
+		this.input.on('pointerup', (p) => {
+			// tocar na linha das estatísticas abre a tela com mais números
+			if (inicio && !inicio.mexeu && this.estatisticas.getBounds().contains(p.worldX, p.worldY)) {
+				this.scene.start('Estatisticas')
+			}
+			else if (inicio && !inicio.mexeu) voltar()
 			inicio = null
 		})
 		this.input.on('wheel', (p, objetos, dx, dy) => this.rolar(this.rolagem + dy * 0.3, true))

@@ -1,7 +1,7 @@
 // Parte da cena Jogo: fim de jogo: morte do elfo, placar, nome e reinício.
 // Os métodos desta classe são copiados para a cena em Jogo.js (por isso usam this como se fossem dela).
 import Phaser from 'phaser'
-import { ALTURA, texto, gravar_recorde, gravar_placar, renomear_no_placar, somar_estatisticas } from '../tela.js'
+import { ALTURA, texto, gravar_recorde, gravar_placar, renomear_no_placar, somar_estatisticas, gravar_historico } from '../tela.js'
 import { parar_musica } from '../musica.js'
 import { desbloquear } from '../conquistas.js'
 import { efeito, opcoes } from '../opcoes.js'
@@ -56,6 +56,7 @@ export default class Fim {
 			gravar_recorde(this.pontos)
 		}
 		const { posicao, id } = gravar_placar(this.pontos, this.nivel, opcoes.dificuldade, opcoes.modo)
+		gravar_historico({ fase: this.nivel, pontos: this.pontos, dificuldade: opcoes.dificuldade, modo: opcoes.modo })
 		somar_estatisticas({ zumbis: this.stats.mortos, chefes: this.stats.chefes, segundos: Math.floor(this.stats.ticks / 100), fase: this.nivel, por_tipo: this.stats.por_tipo })
 		const segundos = Math.floor(this.stats.ticks / 100)
 		const tempo = Math.floor(segundos / 60) + ':' + String(segundos % 60).padStart(2, '0')
