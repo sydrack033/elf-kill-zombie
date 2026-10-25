@@ -3,8 +3,6 @@
 import Phaser from 'phaser'
 import { ALTURA, texto } from '../tela.js'
 import * as R from '../regras.js'
-import { tocar_musica, parar_musica } from '../musica.js'
-import { desbloquear } from '../conquistas.js'
 import { efeito } from '../opcoes.js'
 import { encostou, sortear } from './comum.js'
 
@@ -223,94 +221,5 @@ export default class Itens {
 	espirrar_sangue(x, y) {
 		const sprite = this.add.sprite(x, y, 'sangue', 0).setDepth(3.5)
 		this.sangues.push({ sprite, ha: 0 })
-	}
-
-	// venceu o chefão final: a história termina (e dá para continuar jogando no modo infinito)
-	mostrar_final() {
-		if (this.estado != 'jogando') {
-			return // o elfo morreu no mesmo instante: vale o fim de jogo
-		}
-		this.estado = 'final'
-		desbloquear(this, 'zerou')
-		this.dica_texto.setVisible(false)
-		tocar_musica(this, 'musica_titulo')
-		this.escurecer.setVisible(true).setAlpha(0)
-		this.tweens.add({ targets: this.escurecer, alpha: 1, duration: 1200 })
-		const frases = [
-			'O SENHOR DOS MORTOS CAIU.',
-			'OS SINOS SE CALARAM E OS MORTOS VOLTARAM PARA AS COVAS.',
-			'PELA PRIMEIRA VEZ EM MUITO TEMPO,',
-			'O CEMITÉRIO DORME.',
-			'OBRIGADO POR JOGAR!',
-		]
-		const meio = this.largura / 2
-		const objetos = []
-		const linhas = frases.map((_, i) => {
-			const linha = texto(this, meio, 90 + i * 26, '', 8, i == frases.length - 1 ? '#ffd34d' : '#e8f5c8').setOrigin(0.5).setDepth(12)
-			objetos.push(linha)
-			return linha
-		})
-		this.objetos_final = objetos
-		// máquina de escrever, uma letra a cada 45 ms
-		let frase = 0
-		let letra = 0
-		const escrever = this.time.addEvent({
-			delay: 45, loop: true, startAt: -1500,
-			callback: () => {
-				if (frase >= frases.length) {
-					escrever.remove()
-					this.opcoes_do_final(objetos)
-					return
-				}
-				letra++
-				linhas[frase].setText(frases[frase].slice(0, letra))
-				linhas[frase].setScale(Math.min(1, (this.largura - 10) / Math.max(1, linhas[frase].width)))
-				if (letra >= frases[frase].length) {
-					frase++
-					letra = 0
-				}
-			},
-		})
-	}
-
-	// depois do final: continuar no modo infinito ou terminar a partida (vai para a tela de fim)
-	opcoes_do_final(objetos) {
-		const meio = this.largura / 2
-		const continuar = texto(this, meio, 260, '[ CONTINUAR JOGANDO ]', 8, '#9ff07a').setOrigin(0.5).setDepth(12).setInteractive({ useHandCursor: true })
-		const terminar = texto(this, meio, 284, '[ TERMINAR A PARTIDA ]', 8, '#cfcfcf').setOrigin(0.5).setDepth(12).setInteractive({ useHandCursor: true })
-		const dica = texto(this, meio, 310, this.modo_toque ? '' : 'ENTER: CONTINUAR   ESC: TERMINAR', 8, '#8a8a90').setOrigin(0.5).setDepth(12)
-		objetos.push(continuar, terminar, dica)
-		let escolheu = false
-		const sair = (seguir) => {
-			if (escolheu || this.estado != 'final') return
-			escolheu = true
-			for (const o of objetos) o.destroy()
-			this.input.keyboard.off('keydown-ENTER', seguir_tecla)
-			this.input.keyboard.off('keydown-ESC', terminar_tecla)
-			if (seguir) {
-				this.escurecer.setVisible(false).setAlpha(1)
-				this.estado = 'jogando'
-				this.tempo_acumulado = 0
-				tocar_musica(this, this.cenario().musica)
-				this.dica_texto.setVisible(true)
-				this.subir_nivel(true)
-				// aparece depois da escolha da melhoria (escolher() anuncia o texto_da_fase)
-				this.texto_da_fase = 'MODO INFINITO!'
-				this.anunciar('MODO INFINITO!', 250, '#c08aff')
-			}
-			else {
-				this.escurecer.setAlpha(1)
-				this.estado = 'fim'
-				parar_musica(300)
-				this.mostrar_fim()
-			}
-		}
-		const seguir_tecla = () => sair(true)
-		const terminar_tecla = () => sair(false)
-		continuar.on('pointerdown', (p, x, y, ev) => { ev.stopPropagation(); sair(true) })
-		terminar.on('pointerdown', (p, x, y, ev) => { ev.stopPropagation(); sair(false) })
-		this.input.keyboard.on('keydown-ENTER', seguir_tecla)
-		this.input.keyboard.on('keydown-ESC', terminar_tecla)
-		this.botoes_do_final = { sair }
 	}
 }
