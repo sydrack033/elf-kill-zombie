@@ -1,0 +1,5 @@
+node_modules/
+dist/
+
+# arquivos de outras sessões que usam esta pasta
+*.log
