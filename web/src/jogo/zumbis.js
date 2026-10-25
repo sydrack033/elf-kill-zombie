@@ -491,6 +491,11 @@ export default class Zumbis {
 				this.moedas.push({ sprite, x: cx - 6 + (i - 1) * 14, y: cy - 6 })
 			}
 		}
+		// Halloween: o zumbi de abóbora deixa uma moeda (doce ou travessura)
+		if (zumbi.enfeite) {
+			const ca = corpo(zumbi)
+			this.moedas.push({ sprite: this.add.sprite(ca.x, ca.y, 'moeda').setScale(1.5).setDepth(1.8), x: ca.x + ca.l / 2 - 6, y: ca.y + ca.a / 2 - 6 })
+		}
 		// saqueador: o saco rasga e as moedas se espalham
 		if (zumbi.regra.corre) {
 			const cs = corpo(zumbi)
