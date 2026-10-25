@@ -40,6 +40,7 @@ funciona **sem internet** depois da primeira visita.
 | Conquistas (no título) | C | troféu no canto | Y |
 | Loja (no título) | L | moeda no canto | Select |
 | Modo de jogo (no título) | X | setas na tela | X |
+| Começar adiantado (no título) | I | setas na tela | |
 | Bestiário / história (no título) | B / H | | |
 | Opções (no título) | O | "OPÇÕES" no canto | |
 | Desafios do dia (no título) | D | "DESAFIOS" no canto | |
