@@ -21,6 +21,8 @@ export default class Titulo extends Phaser.Scene {
 		this.demo_tiros = [] // { sprite, x, y }
 		this.demo_sangues = []
 		this.demo_heroi = this.add.sprite(0, ALTURA - 45, 'heroi_parado_cima').setOrigin(0.5, 0).setDepth(2)
+		// o chapéu comprado na loja aparece também aqui
+		this.demo_chapeu = opcoes.chapeu && ler_loja().compras[opcoes.chapeu] ? this.add.sprite(0, ALTURA - 39, opcoes.chapeu).setOrigin(0.5, 1).setDepth(2.1) : null
 		this.demo_arma = this.add.sprite(0, 0, 'armas', 0).setOrigin(3 / 16, 4 / 8).setRotation(-Math.PI / 2).setDepth(2)
 		this.demo_x = 0
 		this.demo_proximo = 0
@@ -273,6 +275,7 @@ export default class Titulo extends Phaser.Scene {
 		this.demo_heroi.setPosition(Math.round(this.demo_x), ALTURA - 45)
 		this.demo_heroi.setTexture(alvo && Math.abs(alvo.x - this.demo_x) > 2 ? 'heroi_cima' : 'heroi_parado_cima', Math.floor(this.quadro / 5) % 10)
 		this.demo_arma.setPosition(Math.round(this.demo_x), ALTURA - 30)
+		if (this.demo_chapeu) this.demo_chapeu.x = Math.round(this.demo_x)
 
 		this.demo_espera_tiro -= passo
 		if (alvo && this.demo_espera_tiro <= 0 && Math.abs(alvo.x - this.demo_x) < 8) {
