@@ -123,6 +123,8 @@ export default class Jogo extends Phaser.Scene {
 		this.capitulo_pendente = null
 		this.ja_trocou = false // troca de cartas de melhoria (uma por partida)
 		this.tecla_trocar = null
+		// setinhas vermelhas no pé da tela marcando zumbis perto de passar (passar custa vida)
+		this.alertas = this.add.graphics().setDepth(8.5)
 		this.cartao_ate = 0 // até quando o cartão de cinema atual fica na tela
 		this.tweens.resumeAll() // se a partida anterior acabou pausada
 		this.time.paused = false

@@ -2,6 +2,7 @@
 // Os métodos desta classe são copiados para a cena em Jogo.js (por isso usam this como se fossem dela).
 import Phaser from 'phaser'
 import * as R from '../regras.js'
+import { ALTURA } from '../tela.js'
 import { corpo, corpo_chefe } from './comum.js'
 
 export default class Desenho {
@@ -126,6 +127,20 @@ export default class Desenho {
 		this.arma_na_mao.setFlipY(Math.abs(this.angulo) > Math.PI / 2)
 		this.arma_na_mao.setVisible(visivel)
 		this.clarao.setVisible(this.clarao_ha > 0)
+		// zumbi a menos de 60 px de sair por baixo: setinha piscando na borda, embaixo dele
+		this.alertas.clear()
+		if (Math.floor(this.quadro_atual / 10) % 2 == 0) {
+			this.alertas.fillStyle(0xff3030, 0.8)
+			for (const z of this.zumbis) {
+				if (z.morrendo || z.regra.voa || z.intangivel) continue
+				const c = corpo(z)
+				if (c.y + c.a > ALTURA - 60) {
+					const x = c.x + c.l / 2
+					this.alertas.fillTriangle(x - 5, ALTURA - 8, x + 5, ALTURA - 8, x, ALTURA - 2)
+				}
+			}
+		}
+
 		// barrinha da carga do arco em cima do elfo (pisca quando está cheia)
 		this.barra_carga.setVisible(this.carga > 0).setPosition(Math.round(this.heroi_x + 2), Math.round(this.heroi_y - 4))
 		this.barra_carga.width = 20 * this.carga
