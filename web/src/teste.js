@@ -29,6 +29,13 @@ export function instalar_teste(jogo) {
 				cena(jogo, 'Titulo').scene.start('Jogo')
 				for (let i = 0; i < 100 && !ativa(jogo, 'Jogo'); i++) await espera(50)
 			}
+			else {
+				// já tinha uma partida: recomeça do zero (como o jogador faria)
+				const velha = this.jogo
+				velha.scene.resume()
+				velha.scene.restart()
+				for (let i = 0; i < 100 && !(velha.sys.isActive() && velha.estado == 'jogando' && velha.stats.ticks == 0); i++) await espera(50)
+			}
 			const s = this.jogo
 			for (let i = 0; i < 50 && !s.sys.isActive(); i++) await espera(100)
 			s.scene.pause()

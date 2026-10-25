@@ -15,6 +15,9 @@ async function nova_partida() {
 	return s
 }
 
+// meta de mortes de uma fase (igual a R.MORTES_POR_NIVEL)
+const R_MORTES = (nivel) => 10 + 2 * nivel
+
 // tira todos os zumbis da tela (para um teste não atrapalhar o outro)
 function limpar() {
 	s.zumbis.forEach((zz) => zz.sprite.destroy())
@@ -157,5 +160,69 @@ s.invencivel = 0
 s.perder_vida()
 confere('última vida acaba o jogo', s.estado == 'fim')
 
+// ---- coveiro: tiro de frente bate na lápide
+s = await nova_partida()
+z = s.criar_zumbi('coveiro', s.heroi_x - 10, s.heroi_y - 150)
+z.vy = 0
+z.vx = 0
+const escudo0 = z.escudo
+const vida0 = z.vida
+teste.controle = (j) => { j.mira_x = z.x + 22; j.mira_y = z.y + 22; j.atirar_on = true }
+teste.ticks(40)
+teste.controle = null
+confere('tiro de frente gasta a lápide e não o coveiro', z.escudo < escudo0 && z.vida == vida0)
+
+// ---- gosma se divide uma vez
+limpar()
+z = s.criar_zumbi('gosma', 200, 100)
+s.matar_zumbi(z)
+const filhos = s.zumbis.filter((q) => q.filhote && !q.morrendo)
+confere('gosma vira duas gosminhas', filhos.length == 2)
+s.matar_zumbi(filhos[0])
+confere('gosminha não se divide de novo', s.zumbis.filter((q) => q.filhote).length == 2)
+
+// ---- bumerangue volta para a mão
+limpar()
+s.pegar('bumerangue')
+s.espera_tiro = 0
+teste.controle = (j) => { j.mira_x = s.heroi_x + 12; j.mira_y = 40; j.atirar_on = true }
+teste.ticks(1)
+teste.controle = null
+const bum = s.tiros.find((t) => t.arma.volta)
+for (let i = 0; i < 300 && s.tiros.includes(bum); i++) teste.ticks(1)
+confere('bumerangue volta e é pego', bum && bum.voltando && !s.tiros.includes(bum))
+
+// ---- horda: começa na metade da fase 8 e dá prêmio
+s = await nova_partida()
+s.vidas = 99
+s.nivel = 8
+for (let i = 0; i < Math.floor(R_MORTES(8) / 2); i++) s.matar_zumbi(s.criar_zumbi('comum', 50, 50))
+confere('horda começa na metade da fase 8', !!s.horda)
+teste.ticks(410)
+for (const zz of s.horda ? s.horda.zumbis : []) if (!zz.morrendo) s.matar_zumbi(zz)
+const extras = s.moedas_extras
+teste.ticks(2)
+confere('horda vencida dá moedas', !s.horda && s.moedas_extras >= extras + 10)
+
+// ---- segunda chance
+s = await nova_partida()
+s.pode_reviver = true
+s.vidas = 1
+s.perder_vida()
+confere('segunda chance salva da morte', s.estado == 'jogando' && s.vidas == 1)
+s.invencivel = 0
+s.perder_vida()
+confere('segunda chance só vale uma vez', s.estado == 'fim')
+
+// ---- chefão final na fase 50
+s = await nova_partida()
+s.vidas = 99
+s.nivel = 49
+s.subir_nivel()
+teste.ticks(310)
+confere('fase 50 chama o chefão final', !!s.chefe && s.chefe.final)
+s.ferir_chefe(999999, s.chefe.x + 60, s.chefe.y + 60)
+teste.ticks(140)
+confere('vencer o chefão final mostra o final', s.estado == 'final')
 teste.soltar()
 return resultados.join('\n')

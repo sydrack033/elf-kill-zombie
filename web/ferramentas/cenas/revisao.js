@@ -1,4 +1,4 @@
-// Correções da revisão: nada de subir de fase depois do fim, toque continua depois de reiniciar
+// Correções da revisão: nada de subir de fase depois do fim, fúria fora da pontaria, toque continua depois de reiniciar
 const r = []
 let s = await teste.comecar()
 s.vidas = 1
@@ -7,10 +7,8 @@ s.perder_vida()
 s.nivel = 1
 s.subir_nivel()
 r.push('fim continua fim: ' + (s.estado == 'fim') + ' nivel=' + s.nivel)
-s.ligar_toque()
-s = await teste.comecar()
-r.push('toque depois de reiniciar: ' + s.modo_toque)
 // fúria não conta na pontaria
+s = await teste.comecar()
 s.proximo_zumbi = 999999
 s.furia = 1
 s.furia_on = true
@@ -19,5 +17,9 @@ for (let i = 0; i < 8; i++) { const z = s.criar_zumbi('comum', s.heroi_x - 40 + 
 s.soltar_furia()
 teste.ticks(40)
 r.push('acertos da fúria contados: ' + (s.stats.acertos - acertos))
+// por último, porque o toque fica ligado para as próximas partidas
+s.ligar_toque()
+s = await teste.comecar()
+r.push('toque depois de reiniciar: ' + s.modo_toque)
 teste.soltar()
 return r.join('\n')
