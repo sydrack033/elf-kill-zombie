@@ -2848,7 +2848,7 @@ export default class Jogo extends Phaser.Scene {
 
 		chefe.espera_cuspe--
 		if (tem('cuspe') && chefe.espera_cuspe <= 0) {
-			const quantos = Math.min(9, 3 + chefe.numero * 2)
+			const quantos = Math.min(9, 1 + chefe.numero * 2) // 3 no primeiro chefão, 5 no segundo...
 			this.cuspir(c.x + c.l / 2, c.y + c.a * 0.4, quantos, 0.18)
 			chefe.atacando = 40
 			chefe.espera_cuspe = Math.max(70, 150 - chefe.numero * 15)

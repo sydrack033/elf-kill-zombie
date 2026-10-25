@@ -66,7 +66,9 @@ export function instalar_teste(jogo) {
 			let tinha_chefe = false
 			this.controle = (j) => {
 				const vivos = j.zumbis.filter((z) => !z.morrendo && z.y > -30).sort((a, b) => b.y - a.y)
-				const alvo = j.chefe && j.chefe.fase != 'morrendo' ? j.chefe : vivos[0]
+				// zumbi perto de passar vem primeiro, mesmo com chefão na tela
+				const urgente = vivos.find((z) => z.y > 170 && !z.intangivel)
+				const alvo = urgente || (j.chefe && j.chefe.fase != 'morrendo' ? j.chefe : vivos[0])
 				const item = j.itens.find((i) => i.y > 150) || j.coracoes.find((c) => c.y > 150)
 				let destino = item ? item.x : alvo ? alvo.x + 10 : j.largura / 2
 				// desvia de cuspe chegando perto e de zumbi encostando
