@@ -96,6 +96,9 @@ export default class Fim {
 			'+' + moedas + ' MOEDAS  (' + carteira + ' NA CARTEIRA)' +
 			cumpridos.map((m) => m.texto).concat(this.desafios_pagos || []).map((t) => '\nDESAFIO CUMPRIDO: ' + t).join(''),
 		)
+		// com muitas linhas (desafios cumpridos), elas ficam mais juntas para caber na tela
+		const n_linhas = this.mensagem.text.split('\n').length
+		this.mensagem.setLineSpacing(n_linhas > 9 ? 2 : n_linhas > 8 ? 5 : 8)
 		this.instrucao = texto(this, this.largura / 2, ALTURA - 50, '', 8, '#cfcfcf').setOrigin(0.5).setDepth(10)
 		if (novo_recorde && this.pontos > 0) {
 			this.soltar_confete()
