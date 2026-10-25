@@ -2272,6 +2272,20 @@ export default class Jogo extends Phaser.Scene {
 			this.flutuar(c0.x + c0.l / 2, c0.y - 10, nomes[juntas] || 'MASSACRE!', '#ff5a5a')
 			this.pontos += 25 * juntas * this.nivel
 		}
+		// gosma: se divide em duas menores, mais rápidas e com 1 de vida
+		if (zumbi.regra.divide && !zumbi.filhote) {
+			for (const lado of [-1, 1]) {
+				const filho = this.criar_zumbi(zumbi.tipo, Phaser.Math.Clamp(zumbi.x + lado * 14, 0, this.largura - 30), zumbi.y + 6)
+				filho.filhote = true
+				filho.escala = zumbi.escala * 0.6
+				filho.sprite.setScale(filho.escala)
+				filho.vida = filho.vida_max = 1
+				filho.vy = zumbi.vy * 1.5
+				filho.vx = Math.max(zumbi.vx, 0.25)
+				filho.y -= lado * 2
+			}
+			efeito(this, 'cuspe', { volume: 0.6, rate: 0.6 })
+		}
 		// Vampiro: a cada 30 mortes cura um coração
 		if (this.m('vampiro')) {
 			this.mortes_vampiro = (this.mortes_vampiro || 0) + 1
@@ -2306,6 +2320,9 @@ export default class Jogo extends Phaser.Scene {
 		}
 		else if (!zumbi.regra.fantasma) {
 			this.deixar_mancha(c.x + c.l / 2, c.y + c.a - 2)
+			if (zumbi.regra.divide) {
+				this.manchas[this.manchas.length - 1].sprite.setTint(0x7aff9a) // poça de gosma em vez de sangue
+			}
 		}
 
 		const sorte = 1 + this.m('sorte')

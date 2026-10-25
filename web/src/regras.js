@@ -189,6 +189,11 @@ export const ZUMBIS = {
 		escala: 1.05, cor: 0xd8c8a8, vida: 3, vy: 0.22, pontos: 45, empurravel: false, escudo: 6,
 		peso: (nivel) => (nivel >= 8 ? 1 + nivel * 0.25 : 0),
 	},
+	// gosma: zumbi de lodo; quando morre se divide em dois menores (que não se dividem de novo)
+	gosma: {
+		escala: 1.1, cor: 0x7aff9a, vida: 3, vy: 0.28, pontos: 30, empurravel: true, divide: true,
+		peso: (nivel) => (nivel >= 11 ? 1 + nivel * 0.25 : 0),
+	},
 	// corvo: não aparece sozinho, vem em revoadas (ver CORVOS); voa em diagonal e não custa vida se passar
 	corvo: {
 		escala: 1, cor: null, vida: 1, vy: 0, pontos: 15, empurravel: false, voa: true,
