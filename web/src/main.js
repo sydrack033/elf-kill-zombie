@@ -24,6 +24,13 @@ Promise.all([document.fonts.load('8px Silkscreen'), document.fonts.load('bold 8p
 		scene: [Carregar, Titulo, Jogo, ConquistasCena],
 	})
 
+	// na versão publicada (npm run build), registra o service worker para funcionar sem internet
+	if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+		navigator.serviceWorker.register('sw.js').catch(() => {
+			// sem service worker o jogo funciona igual, só não fica disponível offline
+		})
+	}
+
 	// só no modo de desenvolvimento (npm run dev): deixa o jogo acessível no console do navegador
 	if (import.meta.env.DEV) {
 		window.jogo = jogo

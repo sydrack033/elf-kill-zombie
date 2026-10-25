@@ -46,7 +46,19 @@ try {
 		if (m.type() == 'error') erros.push('console: ' + m.text())
 	})
 	await pagina.goto(endereco, { waitUntil: 'load' })
-	await pagina.waitForFunction(() => window.teste && window.jogo, { timeout: 30000 })
+	if (args.includes('--offline')) {
+		// versão publicada: espera o service worker guardar tudo, corta a internet e recarrega
+		await pagina.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller, { timeout: 30000 }).catch(() => {})
+		await pagina.reload({ waitUntil: 'load' })
+		await new Promise((r) => setTimeout(r, 3000))
+		await pagina.setOfflineMode(true)
+		await pagina.reload({ waitUntil: 'load' })
+		await new Promise((r) => setTimeout(r, 4000))
+		console.log('offline: ' + JSON.stringify(await pagina.evaluate(() => ({ canvas: !!document.querySelector('canvas'), controlado: !!(navigator.serviceWorker && navigator.serviceWorker.controller) }))))
+	}
+	else if (!args.includes('--sem-teste')) {
+		await pagina.waitForFunction(() => window.teste && window.jogo, { timeout: 30000 })
+	}
 
 	if (js) {
 		const resultado = await pagina.evaluate(`(async () => { ${js} })()`)
