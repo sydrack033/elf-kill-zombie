@@ -285,9 +285,16 @@ export default class Melhorias {
 
 	// vibra o controle de videogame (se tiver um e se o tremor estiver ligado); forca de 0 a 1
 	vibrar(forca, duracao) {
+		if (!opcoes.tremor) {
+			return
+		}
+		// no celular (jogando por toque) vibra o próprio aparelho, só nos golpes mais fortes
+		if (this.modo_toque && navigator.vibrate && forca >= 0.5) {
+			navigator.vibrate(Math.round(duracao * forca))
+		}
 		const pad = this.input.gamepad && this.input.gamepad.pad1
 		const motor = pad && pad.vibration
-		if (!opcoes.tremor || !motor || !motor.playEffect) {
+		if (!motor || !motor.playEffect) {
 			return
 		}
 		motor.playEffect('dual-rumble', { duration: duracao, strongMagnitude: forca, weakMagnitude: Math.min(1, forca * 1.3) }).catch(() => {})
