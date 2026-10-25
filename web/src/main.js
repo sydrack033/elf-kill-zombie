@@ -20,6 +20,7 @@ Promise.all([document.fonts.load('8px Silkscreen'), document.fonts.load('bold 8p
 			width: window.innerWidth,
 			height: window.innerHeight,
 		},
+		input: { gamepad: true }, // controle de videogame (Xbox, PlayStation...)
 		scene: [Carregar, Titulo, Jogo, ConquistasCena],
 	})
 

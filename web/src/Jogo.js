@@ -52,7 +52,9 @@ export default class Jogo extends Phaser.Scene {
 		this.hud_pontos = null
 		this.botao_bomba = null
 		this.objetos_escolha = []
+		this.cartas = []
 		this.digitando_nome = false
+		this.pode_reiniciar = false
 
 		this.chao = this.add.tileSprite(0, 0, 10, ALTURA, 'chao').setOrigin(0)
 		ajustar_tela(this)
@@ -94,6 +96,10 @@ export default class Jogo extends Phaser.Scene {
 		this.poderes = { escudo: 0, velocidade: 0, congelar: 0 } // ticks que faltam de cada poder
 		this.mouse_mexeu = false // até mexer o mouse, o elfo mira para cima
 		this.andou = false // para as dicas da primeira partida
+		this.ultima_direcao = { x: 1, y: 0 }
+		this.esquiva_ha = 0 // ticks que faltam da esquiva
+		this.esquiva_espera = 0 // ticks até poder esquivar de novo
+		this.rastros = [] // { sprite, ha }
 
 		this.tiros = [] // { sprite, x, y, vx, vy, arma, acertou: Set }
 		this.espera_tiro = 0
@@ -140,6 +146,7 @@ export default class Jogo extends Phaser.Scene {
 			s: 'S',
 			espaco: 'SPACE',
 			q: 'Q',
+			shift: 'SHIFT',
 		})
 		tecla_tela_cheia(this)
 		tecla_som(this)
@@ -153,6 +160,12 @@ export default class Jogo extends Phaser.Scene {
 				this.scene.start('Titulo')
 			}
 		})
+
+		// botões do controle que não são "segurar": Start pausa, e A/direcional servem nos menus
+		this.mira_controle = null
+		if (this.input.gamepad) {
+			this.input.gamepad.on('down', (pad, botao) => this.botao_do_controle(botao.index))
+		}
 
 		this.input.mouse.disableContextMenu() // o botão direito joga bomba em vez de abrir o menu
 		this.input.setDefaultCursor('crosshair')
@@ -332,8 +345,7 @@ export default class Jogo extends Phaser.Scene {
 			const x = meio + (i - 1) * (largura_carta + 6)
 			const carta = this.add.rectangle(x, topo, largura_carta, altura_carta, 0x1c1630, 0.95)
 				.setOrigin(0.5, 0).setStrokeStyle(2, 0x7a3ab0).setDepth(11).setInteractive({ useHandCursor: true })
-			carta.on('pointerover', () => carta.setStrokeStyle(2, 0xffd34d))
-			carta.on('pointerout', () => carta.setStrokeStyle(2, 0x7a3ab0))
+			carta.on('pointerover', () => this.destacar_carta(i))
 			carta.on('pointerdown', () => this.escolher(i))
 			const icone = this.add.sprite(x, topo + 22, 'melhorias', mel.quadro).setScale(2).setDepth(12)
 			const tem = this.m(mel.id)
@@ -345,6 +357,8 @@ export default class Jogo extends Phaser.Scene {
 			objetos.push(carta, icone, nome, desc, tecla)
 		})
 		this.objetos_escolha = objetos
+		this.cartas = objetos.filter((o) => o.type == 'Rectangle')
+		this.carta_destacada = -1
 
 		// espera um pouco antes de aceitar: quem está segurando o botão de atirar não escolhe sem querer
 		this.pode_escolher = false
@@ -353,6 +367,12 @@ export default class Jogo extends Phaser.Scene {
 		this.input.keyboard.once('keydown-TWO', () => this.escolher(1))
 		this.input.keyboard.once('keydown-THREE', () => this.escolher(2))
 		this.sound.play('poder', { volume: 0.5, rate: 0.7 })
+	}
+
+	// a carta destacada fica com a borda amarela (mouse em cima ou direcional do controle)
+	destacar_carta(i) {
+		this.carta_destacada = i
+		this.cartas.forEach((carta, j) => carta.setStrokeStyle(2, j == i ? 0xffd34d : 0x7a3ab0))
 	}
 
 	escolher(i) {
@@ -480,6 +500,9 @@ export default class Jogo extends Phaser.Scene {
 		this.baixo_on = t.abaixo.isDown || t.s.isDown
 		this.atirar_on = t.espaco.isDown || (mouse.leftButtonDown() && !mouse.wasTouch)
 		this.bomba_on = t.q.isDown || (mouse.rightButtonDown() && !mouse.wasTouch)
+		this.esquiva_on = t.shift.isDown
+		this.toque_vx = 0
+		this.toque_vy = 0
 
 		// para onde o elfo mira: o ponto do mouse dentro do jogo
 		if (this.mouse_mexeu) {
@@ -494,6 +517,60 @@ export default class Jogo extends Phaser.Scene {
 
 		if (this.modo_toque) {
 			this.ler_toque()
+		}
+		const controle = this.input.gamepad && this.input.gamepad.total ? this.input.gamepad.getPad(0) : null
+		if (controle) {
+			this.ler_controle(controle)
+		}
+	}
+
+	// controle de videogame, estilo "dois analógicos": o esquerdo anda e o direito mira e atira
+	ler_controle(pad) {
+		const zona_morta = 0.22
+		let vx = Math.abs(pad.leftStick.x) > zona_morta ? pad.leftStick.x : (pad.right ? 1 : 0) - (pad.left ? 1 : 0)
+		let vy = Math.abs(pad.leftStick.y) > zona_morta ? pad.leftStick.y : (pad.down ? 1 : 0) - (pad.up ? 1 : 0)
+		if (vx || vy) {
+			this.toque_vx = Phaser.Math.Clamp(vx, -1, 1)
+			this.toque_vy = Phaser.Math.Clamp(vy, -1, 1)
+			this.esq_on = vx < -0.3
+			this.dir_on = vx > 0.3
+			this.cima_on = vy < -0.3
+			this.baixo_on = vy > 0.3
+		}
+		const rx = pad.rightStick.x
+		const ry = pad.rightStick.y
+		if (Math.hypot(rx, ry) > 0.35) {
+			this.mira_controle = { x: rx, y: ry }
+			this.atirar_on = true
+		}
+		if (this.mira_controle) {
+			// guarda a última direção do analógico direito
+			this.mira_x = this.heroi_x + 12 + this.mira_controle.x * 120
+			this.mira_y = this.heroi_y + 15 + this.mira_controle.y * 120
+		}
+		if (pad.R2 > 0.3 || pad.R1 || pad.A) this.atirar_on = true
+		if (pad.L2 > 0.3 || pad.L1 || pad.X) this.bomba_on = true
+		if (pad.B) this.esquiva_on = true
+	}
+
+	// índices padrão: 0 = A, 9 = Start, 14 = esquerda, 15 = direita no direcional
+	botao_do_controle(indice) {
+		if (indice == 9 && (this.estado == 'jogando' || this.estado == 'pausado')) {
+			this.pausar()
+		}
+		else if (this.estado == 'pausado' && indice == 0) {
+			this.pausar()
+		}
+		else if (this.estado == 'escolhendo') {
+			if (indice == 14 || indice == 15) {
+				this.destacar_carta((this.carta_destacada + (indice == 15 ? 1 : this.opcoes.length - 1)) % this.opcoes.length)
+			}
+			else if (indice == 0) {
+				this.escolher(this.carta_destacada)
+			}
+		}
+		else if (this.estado == 'fim' && this.pode_reiniciar && (indice == 0 || indice == 9)) {
+			this.scene.restart()
 		}
 	}
 
@@ -524,6 +601,8 @@ export default class Jogo extends Phaser.Scene {
 		this.joystick_botao = this.add.circle(0, 0, 10, 0xffffff, 0.45).setDepth(11).setVisible(false)
 		this.botao_bomba = fundo(16)
 		this.icone_bomba = this.add.image(0, 0, 'bomba').setScale(1.4).setDepth(11)
+		this.botao_esquiva = fundo(14)
+		this.icone_esquiva = texto(this, 0, 0, '>>', 8).setOrigin(0.5).setDepth(11)
 		this.botao_pausa = fundo(11)
 		this.icone_pausa = texto(this, 0, 0, 'II', 8).setOrigin(0.5).setDepth(11)
 		this.posicionar_botoes()
@@ -532,6 +611,8 @@ export default class Jogo extends Phaser.Scene {
 	posicionar_botoes() {
 		this.botao_bomba.setPosition(this.largura - 24, ALTURA - 58)
 		this.icone_bomba.setPosition(this.largura - 24, ALTURA - 58)
+		this.botao_esquiva.setPosition(this.largura - 58, ALTURA - 36)
+		this.icone_esquiva.setPosition(this.largura - 58, ALTURA - 36)
 		this.botao_pausa.setPosition(this.largura / 2, 14)
 		this.icone_pausa.setPosition(this.largura / 2, 14)
 	}
@@ -544,6 +625,7 @@ export default class Jogo extends Phaser.Scene {
 		let mover = null
 		let mira = null
 		let bomba = false
+		let esquiva = false
 		for (const p of this.input.manager.pointers) {
 			if (!p.isDown || !p.wasTouch) {
 				continue
@@ -552,6 +634,9 @@ export default class Jogo extends Phaser.Scene {
 			const inicio = camera.getWorldPoint(p.downX, p.downY)
 			if (Phaser.Math.Distance.Between(inicio.x, inicio.y, this.botao_bomba.x, this.botao_bomba.y) < 20) {
 				bomba = true
+			}
+			else if (Phaser.Math.Distance.Between(inicio.x, inicio.y, this.botao_esquiva.x, this.botao_esquiva.y) < 18) {
+				esquiva = true
 			}
 			else if (Phaser.Math.Distance.Between(inicio.x, inicio.y, this.botao_pausa.x, this.botao_pausa.y) < 16) {
 				continue
@@ -604,6 +689,10 @@ export default class Jogo extends Phaser.Scene {
 			}
 		}
 		this.bomba_on = bomba
+		this.esquiva_on = this.esquiva_on || esquiva
+		// o botão da esquiva fica apagado enquanto ela recarrega
+		this.botao_esquiva.setAlpha(this.esquiva_espera > 0 ? 0.35 : 1)
+		this.icone_esquiva.setAlpha(this.esquiva_espera > 0 ? 0.35 : 1)
 	}
 
 	// centro do inimigo vivo mais perto do elfo que já está dentro da tela
@@ -749,26 +838,59 @@ export default class Jogo extends Phaser.Scene {
 	mover_heroi() {
 		// o elfo anda pela parte de baixo da tela
 		const v = (this.poderes.velocidade > 0 ? R.VELOCIDADE_HEROI_RAPIDO : R.VELOCIDADE_HEROI) * (1 + 0.12 * this.m('velocidade'))
-		if (this.modo_toque && (this.toque_vx || this.toque_vy)) {
-			// joystick: a velocidade acompanha o quanto o dedo foi arrastado
-			this.heroi_x += this.toque_vx * v
-			this.heroi_y += this.toque_vy * v
+		let vx = 0
+		let vy = 0
+		if (this.toque_vx || this.toque_vy) {
+			// joystick (dedo ou controle): a velocidade acompanha o quanto foi empurrado
+			vx = this.toque_vx
+			vy = this.toque_vy
 		}
 		else {
-			if (this.esq_on)
-				this.heroi_x -= v
-			if (this.dir_on)
-				this.heroi_x += v
-			if (this.cima_on)
-				this.heroi_y -= v
-			if (this.baixo_on)
-				this.heroi_y += v
+			vx = (this.dir_on ? 1 : 0) - (this.esq_on ? 1 : 0)
+			vy = (this.baixo_on ? 1 : 0) - (this.cima_on ? 1 : 0)
+		}
+		if (vx || vy) {
+			this.andou = true
+			const tamanho = Math.hypot(vx, vy)
+			this.ultima_direcao = { x: vx / tamanho, y: vy / tamanho }
+		}
+
+		// esquiva: arrancada na direção em que o elfo está andando (ou na última em que andou)
+		if (this.esquiva_espera > 0) {
+			this.esquiva_espera--
+		}
+		if (this.esquiva_on && this.esquiva_ha == 0 && this.esquiva_espera == 0) {
+			this.esquiva_ha = R.ESQUIVA.duracao
+			this.esquiva_espera = R.ESQUIVA.espera
+			this.esquiva_direcao = this.ultima_direcao
+			this.sound.play('arremesso', { volume: 0.5, rate: 1.6 })
+		}
+		if (this.esquiva_ha > 0) {
+			this.esquiva_ha--
+			this.heroi_x += this.esquiva_direcao.x * R.ESQUIVA.velocidade
+			this.heroi_y += this.esquiva_direcao.y * R.ESQUIVA.velocidade
+			if (this.esquiva_ha % 3 == 0) {
+				this.deixar_rastro()
+			}
+		}
+		else {
+			this.heroi_x += vx * v
+			this.heroi_y += vy * v
 		}
 		this.heroi_x = Phaser.Math.Clamp(this.heroi_x, 0, this.largura - 25)
 		this.heroi_y = Phaser.Math.Clamp(this.heroi_y, ALTURA * 0.55, ALTURA - 27)
-		if (this.esq_on || this.dir_on || this.cima_on || this.baixo_on) {
-			this.andou = true
-		}
+	}
+
+	// "fantasma" do elfo que fica para trás durante a esquiva
+	deixar_rastro() {
+		const sprite = this.add.sprite(this.heroi_x, this.heroi_y, this.heroi.texture.key, this.heroi.frame.name)
+			.setOrigin(0).setDepth(4.8).setTint(0x9fd8ff).setTintMode(Phaser.TintModes.FILL).setAlpha(0.5)
+		this.rastros.push({ sprite, ha: 0 })
+	}
+
+	// o elfo está fora de alcance: piscando depois de apanhar ou no meio da esquiva
+	get intocavel() {
+		return this.invencivel > 0 || this.esquiva_ha > 0
 	}
 
 	// o elfo olha para o lado da mira (o lado em que ela está mais longe)
@@ -844,7 +966,7 @@ export default class Jogo extends Phaser.Scene {
 
 	// o elfo leva um golpe: o escudo segura, senão perde uma vida
 	levar_dano() {
-		if (this.invencivel > 0 || this.estado != 'jogando') {
+		if (this.intocavel || this.estado != 'jogando') {
 			return
 		}
 		if (this.poderes.escudo > 0) {
@@ -1247,7 +1369,7 @@ export default class Jogo extends Phaser.Scene {
 
 			const c = corpo(zumbi)
 			const mordeu = encostou(c.x, c.y, c.l, c.a, this.heroi_x + 4, this.heroi_y + 2, 17, 22)
-			if (mordeu && this.invencivel == 0) {
+			if (mordeu && !this.intocavel) {
 				// o zumbi que mordeu se desfaz (o brutamontes aguenta e continua)
 				if (zumbi.tipo != 'brutamontes') {
 					zumbi.morrendo = true
@@ -1288,7 +1410,7 @@ export default class Jogo extends Phaser.Scene {
 				cuspe.x += cuspe.vx
 				cuspe.y += cuspe.vy
 			}
-			if (encostou(cuspe.x - 3, cuspe.y - 3, 6, 6, this.heroi_x + 5, this.heroi_y + 3, 15, 20) && this.invencivel == 0) {
+			if (encostou(cuspe.x - 3, cuspe.y - 3, 6, 6, this.heroi_x + 5, this.heroi_y + 3, 15, 20) && !this.intocavel) {
 				cuspe.sumiu = true
 				this.levar_dano()
 			}
@@ -1644,7 +1766,8 @@ export default class Jogo extends Phaser.Scene {
 		this.instrucao = texto(this, this.largura / 2, ALTURA - 50, '', 8, '#cfcfcf').setOrigin(0.5).setDepth(10)
 
 		// entrou no placar e tem teclado: pede as 3 letras do nome, como nos fliperamas
-		if (posicao && !this.modo_toque) {
+		const usa_controle = this.input.gamepad && this.input.gamepad.total > 0
+		if (posicao && !this.modo_toque && !usa_controle) {
 			this.pedir_nome(id)
 		}
 		else {
@@ -1688,6 +1811,7 @@ export default class Jogo extends Phaser.Scene {
 		this.instrucao.setText(this.modo_toque ? 'TOQUE PARA JOGAR DE NOVO' : 'CLIQUE OU ESPAÇO: JOGAR DE NOVO\nESC: MENU')
 		// espera um pouco para quem está atirando não reiniciar sem querer
 		this.time.delayedCall(1000, () => {
+			this.pode_reiniciar = true // vale para o botão A/Start do controle
 			const reiniciar = () => this.scene.restart()
 			this.input.keyboard.once('keydown-SPACE', reiniciar)
 			this.input.once('pointerdown', reiniciar)
@@ -1874,6 +1998,15 @@ export default class Jogo extends Phaser.Scene {
 			}
 		}
 		this.sangues = this.sangues.filter((sangue) => sangue.ha < 6 * 6)
+
+		for (const rastro of this.rastros) {
+			rastro.ha++
+			rastro.sprite.setAlpha(0.5 * (1 - rastro.ha / 20))
+			if (rastro.ha >= 20) {
+				rastro.sprite.destroy()
+			}
+		}
+		this.rastros = this.rastros.filter((rastro) => rastro.ha < 20)
 
 		// textos flutuantes sobem e vão sumindo
 		for (const t of this.textos) {

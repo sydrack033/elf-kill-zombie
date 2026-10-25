@@ -52,6 +52,13 @@ export default class Titulo extends Phaser.Scene {
 		this.input.keyboard.once('keydown-SPACE', comecar)
 		this.input.keyboard.once('keydown-ENTER', comecar)
 		this.input.keyboard.once('keydown-C', () => this.scene.start('Conquistas'))
+		// controle: A ou Start começa, Y abre as conquistas
+		if (this.input.gamepad) {
+			this.input.gamepad.once('down', (pad, botao) => {
+				if (botao.index == 3) this.scene.start('Conquistas')
+				else comecar()
+			})
+		}
 		this.input.once('pointerdown', (p) => {
 			// no celular, tocar no troféu abre as conquistas
 			if (this.botao_trofeu && this.botao_trofeu.getBounds().contains(p.worldX, p.worldY)) {

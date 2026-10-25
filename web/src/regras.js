@@ -7,6 +7,8 @@ export const TICK_MS = 10
 export const VELOCIDADE_HEROI = 1.6
 export const VELOCIDADE_HEROI_RAPIDO = 2.6 // com as botas
 export const INVENCIVEL_DEPOIS_DE_APANHAR = 150
+// esquiva (Shift): uma arrancada rápida em que nada acerta o elfo
+export const ESQUIVA = { duracao: 16, velocidade: 5, espera: 100 }
 export const VIDAS_NO_COMECO = 3
 export const VIDAS_NO_MAXIMO = 5
 
