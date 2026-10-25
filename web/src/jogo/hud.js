@@ -94,7 +94,8 @@ export default class Hud {
 		this.hud_progresso.setSize(em_chefe ? 50 : (50 * this.mortes_no_nivel) / R.MORTES_POR_NIVEL(this.nivel), 2)
 		this.hud_progresso.setFillStyle(em_chefe ? 0xd02828 : 0x9ff07a)
 		const arma = R.ARMAS[this.arma]
-		this.hud_arma.setText(this.municao == Infinity ? arma.nome : arma.nome + ' ' + this.municao)
+		const nivel = ['', '', ' II', ' III'][this.nivel_arma || 1]
+		this.hud_arma.setText(this.municao == Infinity ? arma.nome : arma.nome + nivel + ' ' + this.municao)
 		this.hud_bombas.setText('BOMBAS ' + this.bombas + (this.moedas_extras ? '   MOEDAS ' + this.moedas_extras : ''))
 	}
 

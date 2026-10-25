@@ -111,7 +111,7 @@ export default class Itens {
 		}
 		else {
 			this.trocar_arma(tipo)
-			this.anunciar(R.ARMAS[tipo].nome + '!', 100)
+			this.anunciar(R.ARMAS[tipo].nome + (this.nivel_arma > 1 ? ' NÍVEL ' + this.nivel_arma : '') + '!', 100)
 		}
 		this.atualizar_hud()
 	}

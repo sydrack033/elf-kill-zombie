@@ -264,7 +264,7 @@ export default class Elfo {
 				}
 				this.tiros.push({
 					sprite, x, y, vx, vy, arma, ha: 0,
-					dano: arma.dano + this.m('dano'),
+					dano: arma.dano + this.m('dano') + (this.nivel_arma || 1) - 1,
 					// quantos zumbis ainda pode atravessar
 					perfura: arma.atravessa ? Infinity : this.m('perfura'),
 					acertou: new Set(),
@@ -325,7 +325,7 @@ export default class Elfo {
 	// raio: acerta o inimigo mais perto da mira e vai pulando para os vizinhos
 	disparar_raio(arma) {
 		this.stats.disparos++
-		const dano = arma.dano + this.m('dano')
+		const dano = arma.dano + this.m('dano') + (this.nivel_arma || 1) - 1
 		const alvos = []
 		const vivos = () => {
 			const lista = this.zumbis.filter((z) => !z.morrendo && !z.intangivel && !alvos.includes(z)).map((z) => {
@@ -375,6 +375,8 @@ export default class Elfo {
 	}
 
 	trocar_arma(arma) {
+		// pegar a mesma arma especial de novo sobe o nível dela (até 3): +1 de dano por nível
+		this.nivel_arma = arma == this.arma && arma != 'pistola' ? Math.min(3, (this.nivel_arma || 1) + 1) : 1
 		this.arma = arma
 		this.usou_arma(arma)
 		// o Cinto de Balas aumenta a munição das armas especiais

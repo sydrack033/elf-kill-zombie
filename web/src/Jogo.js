@@ -78,6 +78,7 @@ export default class Jogo extends Phaser.Scene {
 		this.stats = { mortos: 0, disparos: 0, acertos: 0, ticks: 0, melhor_combo: 0, chefes: 0, por_tipo: {}, elites: 0, hordas: 0, por_explosao: 0 }
 
 		this.arma = 'pistola'
+		this.nivel_arma = 1 // sobe pegando a mesma arma de novo
 		this.municao = Infinity
 		this.bombas = R.BOMBAS_NO_COMECO
 		this.poderes = { escudo: 0, velocidade: 0, congelar: 0 } // ticks que faltam de cada poder
