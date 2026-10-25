@@ -33,7 +33,7 @@ export default class Clima {
 	// no inferno, em vez de chuva, sobem brasas o tempo todo
 	mover_chuva() {
 		const cenario = this.cenario()
-		const fase_no_cenario = this.nivel - cenario.a_partir_da_fase + 1
+		const fase_no_cenario = this.fase_no_ciclo() - cenario.a_partir_da_fase + 1
 		const brasas = cenario.clima == 'brasas'
 		const neve = cenario.clima == 'neve'
 		let quantas = 0

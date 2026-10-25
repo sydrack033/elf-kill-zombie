@@ -173,9 +173,14 @@ export default class Melhorias {
 	}
 
 	// em cada cenário o chão vai escurecendo conforme as fases passam, como se a noite chegasse
+	// depois da fase 50 (modo infinito) os cenários recomeçam do cemitério: 51 é como 1, 60 como 10...
+	fase_no_ciclo() {
+		return ((this.nivel - 1) % R.CHEFE_FINAL.fase) + 1
+	}
+
 	pintar_noite() {
 		const cenario = this.cenario()
-		const t = Math.min(1, (this.nivel - cenario.a_partir_da_fase) / 9)
+		const t = Math.min(1, (this.fase_no_ciclo() - cenario.a_partir_da_fase) / 9)
 		const dia = Phaser.Display.Color.ValueToColor(0xffffff)
 		const noite = Phaser.Display.Color.ValueToColor(0x6a72a8)
 		const c = Phaser.Display.Color.Interpolate.ColorWithColor(dia, noite, 100, t * 100)
@@ -189,7 +194,7 @@ export default class Melhorias {
 	cenario() {
 		let atual = R.CENARIOS[0]
 		for (const c of R.CENARIOS) {
-			if (this.nivel >= c.a_partir_da_fase) atual = c
+			if (this.fase_no_ciclo() >= c.a_partir_da_fase) atual = c
 		}
 		return atual
 	}
