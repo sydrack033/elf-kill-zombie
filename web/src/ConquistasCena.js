@@ -51,6 +51,9 @@ export default class ConquistasCena extends Phaser.Scene {
 		this.input.keyboard.once('keydown-SPACE', voltar)
 		this.input.keyboard.once('keydown-C', voltar)
 		this.input.once('pointerdown', voltar)
+		if (this.input.gamepad) {
+			this.input.gamepad.once('down', voltar)
+		}
 	}
 
 	ao_redimensionar() {

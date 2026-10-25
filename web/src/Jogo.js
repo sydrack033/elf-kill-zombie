@@ -51,6 +51,9 @@ function corpo_chefe(chefe) {
 	return { x: chefe.x + c.x * e, y: chefe.y + c.y * e, l: c.l * e, a: c.a * e }
 }
 
+// quem já jogou com toque continua com os controles na tela ao jogar de novo
+let usou_toque = false
+
 export default class Jogo extends Phaser.Scene {
 	constructor() {
 		super('Jogo')
@@ -218,6 +221,10 @@ export default class Jogo extends Phaser.Scene {
 		this.events.once('shutdown', () => this.game.events.off(Phaser.Core.Events.BLUR, ao_perder_foco))
 
 		// modo chefões: um chefão atrás do outro, começando com uma melhoria
+		if (usou_toque) {
+			this.ligar_toque()
+		}
+
 		this.modo_chefes = opcoes.modo == 'chefes'
 		if (this.modo_chefes) {
 			this.texto_da_fase = 'CHEFÃO A CAMINHO!'
@@ -378,6 +385,9 @@ export default class Jogo extends Phaser.Scene {
 
 	// pausa o jogo e mostra 3 melhorias para escolher
 	oferecer_melhorias() {
+		if (this.estado == 'fim') {
+			return // a mesma explosão que matou o elfo pode ter fechado a fase
+		}
 		const possiveis = R.MELHORIAS.filter((mel) => this.m(mel.id) < mel.maximo)
 		if (possiveis.length == 0) {
 			return
@@ -416,9 +426,10 @@ export default class Jogo extends Phaser.Scene {
 		// espera um pouco antes de aceitar: quem está segurando o botão de atirar não escolhe sem querer
 		this.pode_escolher = false
 		this.time.delayedCall(700, () => (this.pode_escolher = true))
-		this.input.keyboard.once('keydown-ONE', () => this.escolher(0))
-		this.input.keyboard.once('keydown-TWO', () => this.escolher(1))
-		this.input.keyboard.once('keydown-THREE', () => this.escolher(2))
+		// .on e não .once: apertar antes da hora não pode gastar a tecla (escolher() tira os ouvintes)
+		this.input.keyboard.on('keydown-ONE', () => this.escolher(0))
+		this.input.keyboard.on('keydown-TWO', () => this.escolher(1))
+		this.input.keyboard.on('keydown-THREE', () => this.escolher(2))
 		efeito(this, 'poder', { volume: 0.5, rate: 0.7 })
 	}
 
@@ -798,6 +809,7 @@ export default class Jogo extends Phaser.Scene {
 
 	ligar_toque() {
 		this.modo_toque = true
+		usou_toque = true
 		this.input.setDefaultCursor('default')
 		const fundo = (raio) => this.add.circle(0, 0, raio, 0x000000, 0.35).setStrokeStyle(1, 0xffffff, 0.5).setDepth(11)
 		this.joystick_base = fundo(24).setVisible(false)
@@ -1346,7 +1358,7 @@ export default class Jogo extends Phaser.Scene {
 			return
 		}
 		this.furia = 0
-		const arma = { projetil: 'tiro', dano: R.FURIA.dano + this.m('dano'), empurra: 4, atravessa: true }
+		const arma = { projetil: 'tiro', dano: R.FURIA.dano + this.m('dano'), empurra: 4, atravessa: true, furia: true }
 		for (let i = 0; i < R.FURIA.tiros; i++) {
 			const angulo = (i / R.FURIA.tiros) * Math.PI * 2
 			const x = this.heroi_x + 12 + Math.cos(angulo) * 10
@@ -1452,7 +1464,7 @@ export default class Jogo extends Phaser.Scene {
 		this.apanhou_na_fase = true
 		this.vermelho_heroi = 20 // o elfo fica vermelho por um instante
 		if (navigator.vibrate) {
-			navigator.vibrate(this.vidas == 0 ? [80, 60, 200] : 120)
+			navigator.vibrate(this.vidas <= 0 ? [80, 60, 200] : 120)
 		}
 		this.invencivel = R.INVENCIVEL_DEPOIS_DE_APANHAR
 		this.dano_ha = 30
@@ -1462,7 +1474,7 @@ export default class Jogo extends Phaser.Scene {
 		this.tremer(200, 0.01)
 		efeito(this, 'perder_vida', { volume: 0.7 })
 		this.atualizar_hud()
-		if (this.vidas == 0) {
+		if (this.vidas <= 0) {
 			this.fim_de_jogo()
 		}
 	}
@@ -1534,7 +1546,7 @@ export default class Jogo extends Phaser.Scene {
 		const mortos_antes = this.stats.mortos
 
 		for (const zumbi of this.zumbis) {
-			if (zumbi.morrendo || dano == 0) {
+			if (zumbi.morrendo || zumbi.intangivel || dano == 0) {
 				continue
 			}
 			const c = corpo(zumbi)
@@ -1615,7 +1627,8 @@ export default class Jogo extends Phaser.Scene {
 
 	// o tiro bateu em alguém em (x, y): sangue, som e, conforme a arma, some ou explode
 	acertar(tiro, x, y) {
-		if (tiro.acertou.size == 0) {
+		// os tiros da fúria não contam na pontaria (não contam como disparos também)
+		if (tiro.acertou.size == 0 && !tiro.arma.furia) {
 			this.stats.acertos++
 		}
 		if (!tiro.arma.chama || Math.random() < 0.15) {
@@ -1791,6 +1804,9 @@ export default class Jogo extends Phaser.Scene {
 	}
 
 	subir_nivel(venceu_chefe = false) {
+		if (this.estado == 'fim') {
+			return
+		}
 		const cenario_antes = this.cenario()
 		if (!this.apanhou_na_fase && this.nivel >= 3) desbloquear(this, 'intocavel')
 		this.apanhou_na_fase = false
@@ -1802,6 +1818,10 @@ export default class Jogo extends Phaser.Scene {
 		if (this.nivel >= 10) desbloquear(this, 'fase10')
 		if (this.nivel >= 20) desbloquear(this, 'fase20')
 		this.mortes_no_nivel = 0
+		const fase_de_chefao = this.nivel % R.NIVEIS_ENTRE_CHEFOES == 0
+		if (fase_de_chefao) {
+			this.chefe_em = 300 // antes de trocar o cenário, para não tocar a música dele por 3 segundos
+		}
 		const cenario = this.cenario()
 		if (this.chao.texture.key != cenario.textura) {
 			this.trocar_cenario(cenario)
@@ -1810,9 +1830,8 @@ export default class Jogo extends Phaser.Scene {
 		if (this.m('anjo')) {
 			this.poderes.escudo = Math.max(this.poderes.escudo, 500)
 		}
-		if (this.nivel % R.NIVEIS_ENTRE_CHEFOES == 0) {
-			this.chefe_em = 300
-			this.anunciar('CHEFÃO A CAMINHO!', 300, '#ff5a5a')
+		if (fase_de_chefao) {
+			this.anunciar((cenario != cenario_antes ? cenario.nome + '\n' : '') + 'CHEFÃO A CAMINHO!', 300, '#ff5a5a')
 			// no modo chefões, cada vitória dá uma melhoria antes do próximo
 			if (this.modo_chefes && venceu_chefe) {
 				this.texto_da_fase = 'CHEFÃO A CAMINHO!'
@@ -2214,14 +2233,14 @@ export default class Jogo extends Phaser.Scene {
 		}
 
 		chefe.espera_investida--
-		if (tem('investida') && chefe.espera_investida <= 0) {
+		if (tem('investida') && chefe.espera_investida <= 0 && !chefe.teleporte) {
 			chefe.investida = { etapa: 'aviso', ha: 0 }
 			chefe.espera_investida = Math.max(300, 520 - chefe.numero * 30)
 			efeito(this, 'rugido', { volume: 0.7, rate: 1.3 })
 		}
 
 		chefe.espera_teleporte--
-		if (tem('teleporte') && chefe.espera_teleporte <= 0 && !chefe.teleporte) {
+		if (tem('teleporte') && chefe.espera_teleporte <= 0 && !chefe.teleporte && !chefe.investida) {
 			chefe.teleporte = { ha: 0 }
 			chefe.espera_teleporte = Math.max(220, 360 - chefe.numero * 15)
 			efeito(this, 'fantasma', { volume: 0.6, rate: 0.6 })
