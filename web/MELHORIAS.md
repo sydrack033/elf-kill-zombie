@@ -20,13 +20,13 @@ git (pasta `Jogo1`), então dá para ver o histórico com `git log` e voltar qua
   ataques). Vencendo, a história termina e dá para continuar no **modo infinito** ou encerrar.
 - **Armas:** triplo, metralhadora, laser (atravessa), bazuca (explode), lança-chamas, raio (pula de
   zumbi em zumbi), bumerangue (vai, faz a curva e volta) e espingarda (chumbos em leque, de perto).
-  A arma aparece na mão do elfo.
+  A arma aparece na mão do elfo. Pegar a mesma arma de novo sobe o **nível** dela (até III, mais dano).
 - **Torreta:** caixa que monta uma torreta no chão; ela atira sozinha por 12 segundos.
 - **Poderes:** escudo, botas de velocidade e gelo (congela os zumbis).
 - **Melhorias** estilo "roguelite": a cada 2 fases escolha 1 de 3 (15 melhorias diferentes, entre
   elas Vampiro, Ricochete e Estilhaços). A pausa mostra as que você já pegou.
 - **Esquiva** (Shift) e **fúria élfica** (E): barra que enche matando e solta um anel de fogo.
-- **Combos**, DUPLO!/TRIPLO!/MASSACRE!, pontos flutuando.
+- **Combos**, DUPLO!/TRIPLO!/MASSACRE!, pontos flutuando e avisos nos combos de 10, 25, 50 e 100.
 - **Eventos:** a **Horda** (na metade das fases 8, 13, 18...) manda uma enxurrada de zumbis e dá
   prêmio a quem sobrevive; a **Lua de Sangue** deixa uma fase vermelha, com zumbis mais rápidos e
   pontos em dobro; o **Eclipse** deixa a fase escura, com luz só em volta do elfo e das explosões.
@@ -58,7 +58,7 @@ git (pasta `Jogo1`), então dá para ver o histórico com `git log` e voltar qua
 - Sombras, manchas de sangue que ficam no chão, zumbi piscando ao levar tiro, clarão do tiro,
   tela tremendo (dá para desligar na pausa), parada de impacto em golpes fortes, vinheta nas bordas,
   neblina rolando no pântano, lua vermelha na Lua de Sangue.
-- 7 músicas chiptune (título, uma por cenário e chefão) e uns 20 efeitos sonoros, todos gerados por
+- 8 músicas chiptune (título, uma por cenário, chefão e chefão final) e uns 20 efeitos sonoros, todos gerados por
   `ferramentas/gerar_sons.mjs` (dá para mudar as notas lá e gerar de novo).
 - Todas as imagens novas foram desenhadas em pixel art por scripts.
 
@@ -75,6 +75,12 @@ git (pasta `Jogo1`), então dá para ver o histórico com `git log` e voltar qua
 - **Celular:** joystick na tela, tiro automático, botões de bomba, esquiva, fúria e pausa.
 - **Controle de videogame** (Xbox/PlayStation): dois analógicos, como nos jogos de tiro modernos.
 - **Instalável e offline:** a versão final (`npm run build`) vira aplicativo e funciona sem internet.
+
+## Código
+
+- O `Jogo.js` tinha crescido para quase 4.000 linhas; agora ele guarda só o começo da partida e o
+  laço (entrada → processamento → saída), e o resto está dividido por assunto em `src/jogo/`
+  (elfo, zumbis, chefões, tiros, explosões, itens, melhorias, HUD, clima, controles, desenho, fim).
 
 ## Como foi testado
 
