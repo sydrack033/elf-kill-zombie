@@ -360,6 +360,14 @@ export default class Zumbis {
 		this.encher_furia(R.FURIA.por_morte)
 		if (this.stats.mortos >= 100) desbloquear(this, 'cem')
 		if (this.combo >= 20) desbloquear(this, 'combo20')
+		// marcos do combo: aviso grande que pula na tela
+		const marcos = { 10: 'EMBALADO!', 25: 'IMPARÁVEL!', 50: 'LENDÁRIO!', 100: 'DEUS DOS ELFOS!' }
+		if (marcos[this.combo]) {
+			const aviso = texto(this, this.largura / 2, 96, 'COMBO ' + this.combo + '\n' + marcos[this.combo], 16, '#ff9a3c').setOrigin(0.5).setDepth(12).setScale(0.4)
+			this.tweens.add({ targets: aviso, scale: 1, duration: 260, ease: 'Back.Out' })
+			this.tweens.add({ targets: aviso, alpha: 0, y: 80, delay: 1100, duration: 400, onComplete: () => aviso.destroy() })
+			efeito(this, 'fase', { volume: 0.5, rate: 1.2 })
+		}
 
 		// várias mortes quase juntas: DUPLO!, TRIPLO!, MASSACRE!
 		this.mortes_recentes = this.mortes_recentes.filter((t) => this.quadro_atual - t < 15)
