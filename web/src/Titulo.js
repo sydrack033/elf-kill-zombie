@@ -44,11 +44,20 @@ export default class Titulo extends Phaser.Scene {
 		// 2 jogadores só no computador (o segundo usa as setas ou um controle)
 		this.computador = this.sys.game.device.os.desktop
 		if (this.computador) {
-			this.seletores.push(this.criar_seletor(179, 'JOGADORES', () => this.mudar_jogadores(), () => this.mudar_jogadores()))
+			this.seletor_jogadores = this.criar_seletor(179, 'JOGADORES', () => this.mudar_jogadores(), () => this.mudar_jogadores())
+			this.seletores.push(this.seletor_jogadores)
+		}
+		// começar num capítulo mais adiante (só aparece depois de chegar na fase 11)
+		this.capitulos = R.CAPITULOS.filter((f) => ler_estatisticas().melhor_fase >= f)
+		if (!this.capitulos.includes(opcoes.inicio)) opcoes.inicio = 1
+		if (this.capitulos.length > 1) {
+			this.seletor_inicio = this.criar_seletor(134 + 15 * this.seletores.length, 'COMEÇAR NA', () => this.mudar_inicio(-1), () => this.mudar_inicio(1))
+			this.seletores.push(this.seletor_inicio)
 		}
 		this.atualizar_seletores()
+		const y_comecar = 134 + 15 * this.seletores.length + 12
 
-		this.comecar = texto(this, 0, 206, 'CLIQUE OU\nAPERTE ESPAÇO', 10, '#ffd34d').setOrigin(0.5).setDepth(6)
+		this.comecar = texto(this, 0, y_comecar, 'CLIQUE OU APERTE ESPAÇO', 10, '#ffd34d').setOrigin(0.5).setDepth(6)
 
 		// placar dos 5 melhores
 		const placar = ler_placar()
@@ -56,7 +65,10 @@ export default class Titulo extends Phaser.Scene {
 		const linhas = placar.length
 			? ['MELHORES  (' + this.progresso() + ')'].concat(placar.map((p, i) => i + 1 + '. ' + (p.nome || 'ELF').padEnd(3, ' ') + '  ' + String(p.pontos).padStart(6, ' ') + '  FASE ' + p.fase + (letra[p.dificuldade] || '') + (p.modo == 'chefes' ? '  C' : '')))
 			: ['RECORDE: ' + ler_recorde()]
-		this.placar = texto(this, 0, 264, placar.length || ler_recorde() ? linhas.join('\n') : '', 8, '#ffffff').setOrigin(0.5).setDepth(6)
+		// o placar fica logo embaixo do começar, com as linhas mais juntas (cabe com 5 escolhas)
+		// com a escolha de capítulo na tela, o placar mostra só os 3 primeiros (para não encostar nos controles)
+		const mostradas = this.seletor_inicio ? linhas.slice(0, 4) : linhas
+		this.placar = texto(this, 0, y_comecar + 16, placar.length || ler_recorde() ? mostradas.join('\n') : '', 8, '#ffffff').setOrigin(0.5, 0).setDepth(6).setLineSpacing(3)
 
 		// no celular/tablet as instruções são de toque
 		const celular = !this.sys.game.device.os.desktop
@@ -107,6 +119,7 @@ export default class Titulo extends Phaser.Scene {
 		this.input.keyboard.on('keydown-TWO', () => this.mudar_jogadores())
 		this.input.keyboard.on('keydown-ONE', () => this.mudar_jogadores())
 		this.input.keyboard.on('keydown-X', () => this.mudar_modo())
+		this.input.keyboard.on('keydown-I', () => this.mudar_inicio(1))
 		// controle: direcional escolhe, X troca o modo, Y abre as conquistas, os outros botões começam
 		if (this.input.gamepad) {
 			this.input.gamepad.on('down', (pad, botao) => {
@@ -207,6 +220,17 @@ export default class Titulo extends Phaser.Scene {
 		this.atualizar_seletores()
 	}
 
+	mudar_inicio(passo) {
+		if (!this.seletor_inicio) {
+			return
+		}
+		const i = Math.max(0, this.capitulos.indexOf(opcoes.inicio))
+		opcoes.inicio = this.capitulos[(i + passo + this.capitulos.length) % this.capitulos.length]
+		gravar_opcoes()
+		efeito(this, 'combo', { volume: 0.4, rate: 1.1 })
+		this.atualizar_seletores()
+	}
+
 	mudar_jogadores() {
 		if (!this.computador) {
 			return
@@ -225,10 +249,14 @@ export default class Titulo extends Phaser.Scene {
 		// mostra quantas cores já foram liberadas
 		const liberados = R.ELFOS.filter((e) => R.elfo_liberado(e, this.feitas)).length
 		this.seletores[1].valor.setText(elfo.nome + '  ' + liberados + '/' + R.ELFOS.length)
+		if (this.seletor_inicio) {
+			const cenario = [...R.CENARIOS].reverse().find((c) => opcoes.inicio >= c.a_partir_da_fase)
+			this.seletor_inicio.valor.setText('FASE ' + opcoes.inicio + (cenario.a_partir_da_fase > 1 ? ' (' + cenario.nome.split(' ')[0] + ')' : '')).setColor(opcoes.inicio > 1 ? '#9ff07a' : '#ffffff')
+		}
 		this.seletores[2].valor.setText(opcoes.modo == 'chefes' ? 'SÓ CHEFÕES' : 'AVENTURA').setColor(opcoes.modo == 'chefes' ? '#ff9a3c' : '#ffffff')
-		if (this.seletores[3]) {
+		if (this.seletor_jogadores) {
 			const controle = this.input.gamepad && this.input.gamepad.total > 0
-			this.seletores[3].valor.setText(opcoes.jogadores == 2 ? '2  (P2: ' + (controle ? 'CONTROLE' : 'SETAS') + ')' : '1')
+			this.seletor_jogadores.valor.setText(opcoes.jogadores == 2 ? '2  (P2: ' + (controle ? 'CONTROLE' : 'SETAS') + ')' : '1')
 		}
 		this.demo_arco = elfo.cor == 'arco'
 		if (elfo.cor && !this.demo_arco) {

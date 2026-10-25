@@ -1,5 +1,5 @@
 import Phaser from 'phaser'
-import { ALTURA, ajustar_tela, tecla_tela_cheia, tecla_som, ler_recorde } from './tela.js'
+import { ALTURA, ajustar_tela, tecla_tela_cheia, tecla_som, ler_recorde, ler_estatisticas } from './tela.js'
 import * as R from './regras.js'
 import { tocar_musica, tecla_musica } from './musica.js'
 import { opcoes } from './opcoes.js'
@@ -225,13 +225,20 @@ export default class Jogo extends Phaser.Scene {
 
 		this.aplicar_loja()
 
+		// começar num capítulo adiantado (escolhido no título)
+		const inicio = opcoes.modo == 'chefes' ? 1 : opcoes.inicio
+		this.comecou_adiantado = inicio > 1 && ler_estatisticas().melhor_fase >= inicio
+		if (this.comecou_adiantado) {
+			this.comecar_no_capitulo(inicio)
+		}
+
 		this.modo_chefes = opcoes.modo == 'chefes'
 		if (this.modo_chefes) {
 			this.texto_da_fase = 'CHEFÃO A CAMINHO!'
 			this.subir_nivel()
 			this.oferecer_melhorias()
 		}
-		else {
+		else if (!this.comecou_adiantado) {
 			// abre a partida como um capítulo: CEMITÉRIO, ONDE TUDO COMEÇOU
 			const cenario = this.cenario()
 			this.time.delayedCall(500, () => this.apresentar_chefe(cenario.nome, cenario.lema, '#9ff07a'))
@@ -245,6 +252,21 @@ export default class Jogo extends Phaser.Scene {
 
 		this.tempo_acumulado = 0
 		this.cameras.main.fadeIn(300, 0, 0, 0)
+	}
+
+	// começa na fase escolhida, já com as melhorias que teria pego no caminho (uma a cada 2 fases)
+	comecar_no_capitulo(inicio) {
+		for (let i = 0; i < Math.floor((inicio - 1) / 2); i++) {
+			const possiveis = R.MELHORIAS.filter((mel) => this.m(mel.id) < mel.maximo)
+			if (!possiveis.length) break
+			const mel = Phaser.Utils.Array.GetRandom(possiveis)
+			this.melhorias[mel.id] = this.m(mel.id) + 1
+			this.aplicar_melhoria(mel.id)
+		}
+		this.atualizar_hud_melhorias()
+		this.nivel = inicio - 1
+		this.apanhou_na_fase = true // o salto não ganha bônus de fase perfeita
+		this.subir_nivel()
 	}
 
 	// vantagens compradas na loja valem para o começo de toda partida

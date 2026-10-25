@@ -300,4 +300,7 @@ export const CHEFES = [
 ]
 // chefão final, na fase 50: tem todos os ataques, é maior e bem mais forte; vencer mostra o final do jogo
 export const CHEFE_FINAL = { fase: 50, nome: 'O SENHOR DOS MORTOS', cor: 0xb08aff, vida: 1.6, escala: 2.4 }
+// capítulos em que dá para começar a partida (liberados quando a melhor fase chega neles)
+export const CAPITULOS = [1, 11, 21, 31, 41]
+
 export const OSSOS = { quantos: 6, raio: 58, giro: 0.025, volta_em: 700 }
