@@ -296,6 +296,7 @@ export const MELHORIAS = [
 	{ id: 'fragmentacao', rara: true, quadro: 15, nome: 'FRAGMENTAÇÃO', texto: 'A BOMBA SOLTA ESTILHAÇOS AO EXPLODIR', maximo: 1 },
 	{ id: 'segunda_pele', quadro: 16, nome: 'SEGUNDA PELE', texto: 'O ESCUDO DURA O DOBRO', maximo: 1 },
 	{ id: 'ira', quadro: 17, nome: 'IRA ÉLFICA', texto: 'A FÚRIA ENCHE 40% MAIS RÁPIDO', maximo: 2 },
+	{ id: 'olho', quadro: 18, nome: 'OLHO CLÍNICO', texto: '+8% DE CHANCE DE CRÍTICO', maximo: 2 },
 ]
 export const VIDAS_EXTRAS_MAXIMO = 2 // com o Coração Extra, o máximo de vidas sobe até 5 + 2
 

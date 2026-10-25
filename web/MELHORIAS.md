@@ -33,8 +33,8 @@ git (pasta `Jogo1`), então dá para ver o histórico com `git log` e voltar qua
   A arma aparece na mão do elfo. Pegar a mesma arma de novo sobe o **nível** dela (até III, mais dano).
 - **Torreta:** caixa que monta uma torreta no chão; ela atira sozinha por 12 segundos.
 - **Poderes:** escudo, botas de velocidade e gelo (congela os zumbis).
-- **Melhorias** estilo "roguelite": a cada 2 fases escolha 1 de 3 (18 melhorias diferentes, entre
-  elas Vampiro, Ricochete, Estilhaços, Fragmentação, Segunda Pele e Ira Élfica). A pausa mostra as que você já pegou,
+- **Melhorias** estilo "roguelite": a cada 2 fases escolha 1 de 3 (19 melhorias diferentes, entre
+  elas Vampiro, Ricochete, Estilhaços, Fragmentação, Segunda Pele, Ira Élfica e Olho Clínico). A pausa mostra as que você já pegou,
   e uma vez por partida dá para **trocar as cartas** (tecla R). Algumas são **raras** (borda laranja).
 - **Por um fio:** com 1 coração só, a tela pulsa vermelha e cai o dobro de corações.
 - **Esquiva** (Shift) e **fúria élfica** (E): barra que enche matando e solta um anel de fogo.
