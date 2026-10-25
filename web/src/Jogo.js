@@ -227,6 +227,11 @@ export default class Jogo extends Phaser.Scene {
 			this.subir_nivel()
 			this.oferecer_melhorias()
 		}
+		else {
+			// abre a partida como um capítulo: CEMITÉRIO, ONDE TUDO COMEÇOU
+			const cenario = this.cenario()
+			this.time.delayedCall(500, () => this.apresentar_chefe(cenario.nome, cenario.lema, '#9ff07a'))
+		}
 
 		// modo 2 jogadores (só no computador)
 		this.p2 = null
