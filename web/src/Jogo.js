@@ -106,6 +106,8 @@ export default class Jogo extends Phaser.Scene {
 		this.lapides_quebradas = 0
 		this.dia = dia_de_hoje() // os desafios valem pelo dia em que a partida começou
 		this.faixas = 0
+		this.objetos_final = null
+		this.fila_faixas = [] // inimigos novos esperando a vez de ser apresentados
 		this.moedas_extras = 0 // moedas dos zumbis de elite e das hordas, somadas no fim
 		this.horda = null // { ha, zumbis } enquanto a horda está vindo
 		this.pocas = [] // poças de lodo do pântano: { x, y, sprite }
@@ -138,6 +140,7 @@ export default class Jogo extends Phaser.Scene {
 		this.escuro = this.add.renderTexture(0, 0, 10, ALTURA).setOrigin(0).setDepth(8.37).setVisible(false)
 		this.escuro_forca = 0
 		this.luz = this.make.image({ key: 'luz', add: false })
+		this.events.once('shutdown', () => this.luz.destroy()) // fora da tela, a cena não apaga sozinha
 		this.tom_vermelho = this.add.rectangle(0, 0, 10, ALTURA, 0xb01818, 0).setOrigin(0).setDepth(8.35)
 		this.lua = this.add.circle(0, 36, 11, 0xff4a3a).setDepth(8.36).setAlpha(0)
 		this.lua_brilho = this.add.circle(0, 36, 20, 0xff4a3a).setDepth(8.35).setAlpha(0)

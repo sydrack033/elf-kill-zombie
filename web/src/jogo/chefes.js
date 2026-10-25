@@ -175,7 +175,7 @@ export default class Chefes {
 				}
 			}
 			const amplitude = Math.max(0, this.largura / 2 - tamanho / 2 - 10)
-			chefe.x = this.largura / 2 - tamanho / 2 + Math.sin(chefe.ha / (140 - chefe.numero * 10)) * amplitude
+			chefe.x = this.largura / 2 - tamanho / 2 + Math.sin(chefe.ha / Math.max(40, 140 - chefe.numero * 10)) * amplitude
 			chefe.y = 48 + Math.sin(chefe.ha / 37) * 8
 			this.atacar(chefe)
 			if (chefe.furioso) {
@@ -413,7 +413,7 @@ export default class Chefes {
 		else {
 			// volta para o ponto do balanço onde estava
 			const amplitude = Math.max(0, this.largura / 2 - tamanho / 2 - 10)
-			const volta_x = this.largura / 2 - tamanho / 2 + Math.sin(chefe.ha / (140 - chefe.numero * 10)) * amplitude
+			const volta_x = this.largura / 2 - tamanho / 2 + Math.sin(chefe.ha / Math.max(40, 140 - chefe.numero * 10)) * amplitude
 			const dx = volta_x - chefe.x
 			const dy = 48 - chefe.y
 			const d = Math.hypot(dx, dy)

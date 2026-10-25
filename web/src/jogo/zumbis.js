@@ -190,6 +190,7 @@ export default class Zumbis {
 	apresentar_inimigo(ficha) {
 		// se já tem outra faixa na tela, esta vai embaixo dela (no máximo duas, para não tapar o jogo)
 		if (this.faixas >= 2) {
+			this.fila_faixas.push(ficha) // aparece quando uma das duas sumir
 			return
 		}
 		this.faixas = (this.faixas || 0) + 1
@@ -206,6 +207,9 @@ export default class Zumbis {
 			onComplete: () => {
 				objetos.forEach((o) => o.destroy())
 				this.faixas--
+				if (this.fila_faixas.length) {
+					this.apresentar_inimigo(this.fila_faixas.shift())
+				}
 			},
 		})
 	}
@@ -449,7 +453,7 @@ export default class Zumbis {
 	}
 
 	subir_nivel(venceu_chefe = false) {
-		if (this.estado == 'fim') {
+		if (this.estado == 'fim' || this.estado == 'final') {
 			return
 		}
 		const cenario_antes = this.cenario()

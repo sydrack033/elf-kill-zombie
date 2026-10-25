@@ -49,6 +49,10 @@ export default class Hud {
 		}
 		const meio = this.largura / 2
 		this.chao.setSize(this.largura, ALTURA)
+		// texto e botões do final do jogo acompanham o meio da tela
+		for (const o of this.objetos_final || []) {
+			if (o.active) o.x = meio
+		}
 		if (this.chao_velho && this.chao_velho.active) {
 			this.chao_velho.setSize(this.largura, ALTURA)
 		}

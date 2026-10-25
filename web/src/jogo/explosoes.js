@@ -83,7 +83,8 @@ export default class Explosoes {
 			}
 		}
 
-		for (const zumbi of this.zumbis) {
+		// slice: a gosma que morre aqui cria filhotes, e eles não podem levar a mesma explosão
+		for (const zumbi of this.zumbis.slice()) {
 			if (zumbi.morrendo || zumbi.intangivel || dano == 0) {
 				continue
 			}

@@ -227,6 +227,9 @@ export default class Itens {
 
 	// venceu o chefão final: a história termina (e dá para continuar jogando no modo infinito)
 	mostrar_final() {
+		if (this.estado != 'jogando') {
+			return // o elfo morreu no mesmo instante: vale o fim de jogo
+		}
 		this.estado = 'final'
 		desbloquear(this, 'zerou')
 		this.dica_texto.setVisible(false)
@@ -289,7 +292,10 @@ export default class Itens {
 				this.estado = 'jogando'
 				this.tempo_acumulado = 0
 				tocar_musica(this, this.cenario().musica)
+				this.dica_texto.setVisible(true)
 				this.subir_nivel(true)
+				// aparece depois da escolha da melhoria (escolher() anuncia o texto_da_fase)
+				this.texto_da_fase = 'MODO INFINITO!'
 				this.anunciar('MODO INFINITO!', 250, '#c08aff')
 			}
 			else {

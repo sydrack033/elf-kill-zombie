@@ -20,7 +20,7 @@ export default class Tiros {
 				tiro.sprite.setFrame(Math.floor(this.quadro_atual / 4) % 2)
 			}
 
-			for (const zumbi of this.zumbis) {
+			for (const zumbi of this.zumbis.slice()) { // slice: filhotes de gosma nascem durante o laço
 				// fantasma transparente: o tiro passa direto
 				if (zumbi.morrendo || zumbi.intangivel || tiro.acertou.has(zumbi)) {
 					continue

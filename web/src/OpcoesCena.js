@@ -126,6 +126,7 @@ export default class OpcoesCena extends Phaser.Scene {
 		for (const l of this.linhas) {
 			if (l.chave) {
 				l.rotulo.x = meio - 50
+				l.rotulo.setScale(Math.min(1, (meio - 54) / l.rotulo.width)) // celular estreito
 				l.menos.x = meio - 38
 				l.mais.x = meio + 62
 				if (l.valor) l.valor.x = meio + 12

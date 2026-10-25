@@ -279,8 +279,12 @@ export default class Melhorias {
 		const objetos = []
 		objetos.push(texto(this, meio, ALTURA / 2 - 70, 'PAUSADO', 16, '#ffd34d').setOrigin(0.5).setDepth(11))
 		const faltam = R.CHEFE_FINAL.fase - this.nivel
-		const caminho = faltam > 0 ? 'FASE ' + this.nivel + '   •   CHEFÃO FINAL EM ' + faltam + (faltam == 1 ? ' FASE' : ' FASES') : 'FASE ' + this.nivel + '   •   MODO INFINITO'
-		objetos.push(texto(this, meio, ALTURA / 2 - 50, caminho, 8, '#9fbf8a').setOrigin(0.5).setDepth(11))
+		const chefoes = Math.ceil(faltam / R.NIVEIS_ENTRE_CHEFOES)
+		const caminho = faltam > 0 && this.modo_chefes ? 'FASE ' + this.nivel + '   •   CHEFÃO FINAL EM ' + chefoes + (chefoes == 1 ? ' CHEFÃO' : ' CHEFÕES')
+			: faltam > 0 ? 'FASE ' + this.nivel + '   •   CHEFÃO FINAL EM ' + faltam + (faltam == 1 ? ' FASE' : ' FASES') : 'FASE ' + this.nivel + '   •   MODO INFINITO'
+		const linha_caminho = texto(this, meio, ALTURA / 2 - 50, caminho, 8, '#9fbf8a').setOrigin(0.5).setDepth(11)
+		linha_caminho.setScale(Math.min(1, (this.largura - 10) / linha_caminho.width))
+		objetos.push(linha_caminho)
 		// as melhorias pegas nesta partida, com o nome e quantas vezes
 		const pegas = R.MELHORIAS.filter((mel) => this.m(mel.id) > 0)
 		if (pegas.length) {

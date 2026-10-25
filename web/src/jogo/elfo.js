@@ -444,7 +444,7 @@ export default class Elfo {
 		const cy = this.heroi_y + 12
 		const onda = this.add.circle(cx, cy, 10).setStrokeStyle(3, 0x9ff07a).setDepth(7)
 		this.tweens.add({ targets: onda, radius: 140, alpha: 0, duration: 500, onComplete: () => onda.destroy() })
-		for (const zumbi of this.zumbis) {
+		for (const zumbi of this.zumbis.slice()) {
 			const c = corpo(zumbi)
 			if (!zumbi.morrendo && Phaser.Math.Distance.Between(cx, cy, c.x + c.l / 2, c.y + c.a / 2) < 140) {
 				this.matar_zumbi(zumbi)
