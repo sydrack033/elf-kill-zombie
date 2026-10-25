@@ -5,6 +5,7 @@ const s = await teste.comecar()
 const r = { erros: [], fases: [] }
 for (let fase = 1; fase <= 46; fase++) {
 	s.nivel = fase - 1
+	s.vidas_max = 999 // (o Coração Extra cortaria as vidas de teste para o máximo normal)
 	s.vidas = 99
 	s.subir_nivel()
 	const res = teste.piloto(fase % 5 == 0 ? 900 : 500)

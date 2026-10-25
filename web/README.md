@@ -81,7 +81,12 @@ funciona **sem internet** depois da primeira visita.
 
 - `src/regras.js`: **todos os números do jogo** (velocidades, armas, zumbis, chefões, melhorias,
   dificuldade). É o lugar para ajustar o jogo.
-- `src/Jogo.js`: o jogo em si (as funções `entrada`, `processamento` e `saida`, como no original).
+- `src/Jogo.js`: a cena do jogo: o começo da partida e o laço (as funções `entrada`, `processamento`
+  e `saida`, como no original).
+- `src/jogo/`: o resto da cena, dividido por assunto: `elfo.js`, `zumbis.js`, `chefes.js`,
+  `tiros.js`, `explosoes.js`, `itens.js`, `melhorias.js`, `hud.js`, `clima.js`, `controles.js`,
+  `desenho.js`, `fim.js` e `comum.js` (funções usadas por todos). Os métodos de cada arquivo são
+  copiados para a cena no fim do `Jogo.js`, então dentro deles `this` é a própria cena.
 - `src/Titulo.js`: tela de título com a demonstração, placar e escolhas.
 - `src/ConquistasCena.js` e `src/conquistas.js`: conquistas (e as estatísticas de todas as partidas).
 - `src/LojaCena.js` e `src/moedas.js`: loja e moedas.
