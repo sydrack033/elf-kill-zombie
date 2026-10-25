@@ -2135,7 +2135,10 @@ export default class Jogo extends Phaser.Scene {
 
 	// primeira vez que um tipo de zumbi aparece: faixa em cima com o nome e a dica
 	apresentar_inimigo(ficha) {
-		// se já tem outra faixa na tela, esta vai embaixo dela
+		// se já tem outra faixa na tela, esta vai embaixo dela (no máximo duas, para não tapar o jogo)
+		if (this.faixas >= 2) {
+			return
+		}
 		this.faixas = (this.faixas || 0) + 1
 		const y = 70 + (this.faixas - 1) * 40
 		const fundo = this.add.rectangle(this.largura / 2, y, 210, 34, 0x1c1630, 0.92).setStrokeStyle(1, 0xff6a6a).setDepth(12.5)
@@ -2202,8 +2205,10 @@ export default class Jogo extends Phaser.Scene {
 			return zumbi
 		}
 		zumbi.sprite = this.add.sprite(x, y, 'zumbi', zumbi.xi).setOrigin(0).setScale(regra.escala).setDepth(2)
-		if (regra.cor) {
-			zumbi.sprite.setTint(regra.cor)
+		// os zumbis sem cor própria pegam o tom do cenário (azulados no gelo, avermelhados no inferno...)
+		zumbi.cor = regra.cor || this.cenario().cor_zumbi || null
+		if (zumbi.cor) {
+			zumbi.sprite.setTint(zumbi.cor)
 		}
 		if (regra.escudo) {
 			zumbi.escudo = zumbi.escudo_max = regra.escudo + Math.floor(n / 4)
@@ -3570,7 +3575,7 @@ export default class Jogo extends Phaser.Scene {
 				const e = zumbi.escala
 				s.setPosition(Math.round(zumbi.x + (22 - 30) * e), Math.round(zumbi.y + (44 - 71) * e))
 			}
-			this.pintar(s, zumbi.flash, zumbi.regra.cor)
+			this.pintar(s, zumbi.flash, zumbi.cor)
 			// elite: pisca dourado e solta faíscas
 			if (zumbi.elite && !zumbi.morrendo && zumbi.flash == 0 && !this.congelado) {
 				if (Math.floor(this.quadro_atual / 8) % 2 == 0) {
