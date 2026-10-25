@@ -1,6 +1,6 @@
 import Phaser from 'phaser'
 import { ALTURA, ajustar_tela, texto, ler_estatisticas } from './tela.js'
-import { ZUMBIS, CHEFES, CHEFE_FINAL } from './regras.js'
+import { ZUMBIS, CHEFES, CHEFE_FINAL, ITENS, ARMAS, PODERES } from './regras.js'
 
 // Galeria dos inimigos que o jogador já encontrou (tecla B na tela de título).
 const CHAVE = 'elf-kill-zombie-vistos'
@@ -54,6 +54,20 @@ export default class Bestiario extends Phaser.Scene {
 		const vistos = ler_vistos()
 		const abatidos = ler_estatisticas().por_tipo || {}
 		this.titulo = texto(this, 0, 14, 'BESTIÁRIO  ' + FICHAS.filter((f) => vistos.has(f.tipo)).length + '/' + FICHAS.length, 16, '#ffd34d').setOrigin(0.5, 0)
+		// duas abas: os inimigos e as caixas (o que cada uma faz)
+		this.abas = ['INIMIGOS', 'CAIXAS'].map((nome, i) => {
+			const aba = texto(this, 0, 42, nome, 8, '#ffffff').setOrigin(0.5).setInteractive({ useHandCursor: true })
+			aba.on('pointerdown', () => this.mostrar_aba(i))
+			return aba
+		})
+		this.caixas = ITENS.map((item) => {
+			const nome = ARMAS[item.tipo] ? ARMAS[item.tipo].nome : PODERES[item.tipo] ? PODERES[item.tipo].nome : item.tipo.toUpperCase()
+			return {
+				icone: this.add.sprite(0, 0, 'itens', item.quadro).setScale(1.5),
+				nome: texto(this, 0, 0, nome, 8, '#ffd34d'),
+				desc: texto(this, 0, 0, item.texto || '', 8, '#cfcfcf'),
+			}
+		})
 		this.cartas = FICHAS.map((ficha) => {
 			const visto = vistos.has(ficha.tipo)
 			const fundo = this.add.rectangle(0, 0, 92, 84, 0x101018, 0.75).setStrokeStyle(1, visto ? 0x6a8a5a : 0x3a3a44)
@@ -89,8 +103,36 @@ export default class Bestiario extends Phaser.Scene {
 		this.input.keyboard.once('keydown-ESC', voltar)
 		this.input.keyboard.once('keydown-SPACE', voltar)
 		this.input.keyboard.once('keydown-B', voltar)
-		this.input.once('pointerdown', voltar)
-		if (this.input.gamepad) this.input.gamepad.once('down', voltar)
+		// tocar fora das abas volta; setas e TAB trocam de aba
+		this.input.on('pointerdown', (p, alvos) => {
+			if (!alvos.length) voltar()
+		})
+		this.input.keyboard.on('keydown-LEFT', () => this.mostrar_aba(0))
+		this.input.keyboard.on('keydown-RIGHT', () => this.mostrar_aba(1))
+		this.input.keyboard.on('keydown-TAB', (ev) => {
+			ev.preventDefault()
+			this.mostrar_aba(1 - this.aba)
+		})
+		if (this.input.gamepad) {
+			this.input.gamepad.on('down', (pad, botao) => {
+				if (botao.index == 14 || botao.index == 4) this.mostrar_aba(0)
+				else if (botao.index == 15 || botao.index == 5) this.mostrar_aba(1)
+				else voltar()
+			})
+		}
+		this.mostrar_aba(0)
+	}
+
+	mostrar_aba(i) {
+		this.aba = i
+		this.abas.forEach((a, n) => a.setColor(n == i ? '#ffd34d' : '#8a8a90').setText(n == i ? '[ ' + ['INIMIGOS', 'CAIXAS'][n] + ' ]' : ['INIMIGOS', 'CAIXAS'][n]))
+		for (const c of this.cartas) {
+			for (const o of [c.fundo, c.figura, c.nome, c.desc, c.conta]) o.setVisible(i == 0)
+		}
+		for (const c of this.caixas) {
+			for (const o of [c.icone, c.nome, c.desc]) o.setVisible(i == 1)
+		}
+		if (this.largura) this.ao_redimensionar()
 	}
 
 	// cartas em grade: quantas colunas couberem na largura
@@ -98,15 +140,30 @@ export default class Bestiario extends Phaser.Scene {
 		this.chao.setSize(this.largura, ALTURA)
 		this.titulo.x = this.largura / 2
 		this.voltar.x = this.largura / 2
+		this.abas.forEach((a, i) => (a.x = this.largura / 2 + (i - 0.5) * 100))
+		// caixas: lista em uma ou duas colunas
+		const colunas_caixas = this.largura >= 520 ? 2 : 1
+		const largura_caixa = Math.min(250, (this.largura - 16) / colunas_caixas)
+		const linhas_caixas = Math.ceil(this.caixas.length / colunas_caixas)
+		const espaco = Math.min(30, (ALTURA - 80) / linhas_caixas)
+		const x0 = (this.largura - largura_caixa * colunas_caixas) / 2
+		this.caixas.forEach((c, i) => {
+			const coluna = Math.floor(i / linhas_caixas)
+			const y = 60 + (i % linhas_caixas) * espaco
+			const x = x0 + coluna * largura_caixa
+			c.icone.setPosition(x + 14, y + 8)
+			c.nome.setPosition(x + 30, y)
+			c.desc.setPosition(x + 30, y + 10).setScale(Math.min(1, (largura_caixa - 34) / c.desc.width))
+		})
 		const colunas = Math.max(2, Math.min(6, Math.floor((this.largura - 10) / 98)))
 		const linhas = Math.ceil(this.cartas.length / colunas)
-		const escala = Math.min(1, (ALTURA - 60) / (linhas * 90))
+		const escala = Math.min(1, (ALTURA - 78) / (linhas * 90))
 		const largura_grade = colunas * 98 * escala
 		this.cartas.forEach((c, i) => {
 			const coluna = i % colunas
 			const linha = Math.floor(i / colunas)
 			const x = (this.largura - largura_grade) / 2 + (coluna + 0.5) * 98 * escala
-			const y = 42 + (linha + 0.5) * 90 * escala
+			const y = 54 + (linha + 0.5) * 90 * escala
 			c.fundo.setPosition(x, y).setScale(escala)
 			c.figura.setPosition(x, y - 18 * escala).setScale(c.base * escala)
 			c.nome.setPosition(x, y + 12 * escala).setScale(escala)
