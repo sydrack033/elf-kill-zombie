@@ -341,6 +341,8 @@ export default class Titulo extends Phaser.Scene {
 		if (this.seletor_classe) {
 			const classe = R.CLASSES.find((c) => c.id == opcoes.classe)
 			this.seletor_classe.valor.setText(classe.nome).setColor(classe.id == 'guerreiro' ? '#ffffff' : '#9fd8ff')
+			// a Partida do Dia é igual para todos: classe não vale
+			for (const o of Object.values(this.seletor_classe)) o.setAlpha(opcoes.modo == 'diario' ? 0.35 : 1)
 		}
 		if (this.seletor_inicio) {
 			// no modo chefões o começo adiantado não vale
