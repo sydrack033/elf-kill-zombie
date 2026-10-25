@@ -6,7 +6,7 @@ import { opcoes, efeito } from './opcoes.js'
 import { ler_loja } from './moedas.js'
 import { dia_de_hoje } from './desafios.js'
 import { ler_conquistas } from './conquistas.js'
-import { memoria } from './jogo/comum.js'
+import { memoria, sorteador } from './jogo/comum.js'
 import Hud from './jogo/hud.js'
 import Melhorias from './jogo/melhorias.js'
 import Controles from './jogo/controles.js'
@@ -60,7 +60,14 @@ export default class Jogo extends Phaser.Scene {
 
 		this.dificuldade = { ...(R.DIFICULDADES[opcoes.dificuldade] || R.DIFICULDADES.normal) }
 		// modificadores das Opções: mudam a dificuldade desta partida e multiplicam os pontos
-		this.mod = { ...opcoes.modificadores }
+		// Partida do Dia: sem loja, classe, modificadores nem começo adiantado, e o sorteio dos zumbis e
+		// caixas com a data como semente (a mesma sequência para todo mundo naquele dia)
+		this.diario = opcoes.modo == 'diario'
+		this.rng = this.diario ? sorteador(dia_de_hoje()) : Math.random
+		if (this.diario) {
+			this.dificuldade = { ...R.DIFICULDADES.normal }
+		}
+		this.mod = this.diario ? {} : { ...opcoes.modificadores }
 		this.multiplicador_mod = 1 // as moedas da loja não ganham com os modificadores
 		for (const [id, m] of Object.entries(R.MODIFICADORES)) {
 			if (!this.mod[id]) continue
@@ -244,12 +251,14 @@ export default class Jogo extends Phaser.Scene {
 			this.ligar_toque()
 		}
 
-		this.aplicar_loja()
+		if (!this.diario) {
+			this.aplicar_loja()
+		}
 
 		// (definido antes do começo adiantado: a cena é reaproveitada e guardaria o valor da partida anterior)
 		this.modo_chefes = opcoes.modo == 'chefes'
 		// começar num capítulo adiantado (escolhido no título)
-		const inicio = this.modo_chefes ? 1 : opcoes.inicio
+		const inicio = this.modo_chefes || this.diario ? 1 : opcoes.inicio
 		this.comecou_adiantado = inicio > 1 && ler_estatisticas().melhor_fase >= inicio
 		if (this.comecou_adiantado) {
 			this.comecar_no_capitulo(inicio)

@@ -1,10 +1,10 @@
 import Phaser from 'phaser'
-import { ALTURA, ajustar_tela, texto, tecla_tela_cheia, tecla_som, ler_recorde, ler_placar, ler_estatisticas } from './tela.js'
+import { ALTURA, ajustar_tela, texto, tecla_tela_cheia, tecla_som, ler_recorde, ler_placar, ler_estatisticas, ler_recorde_do_dia } from './tela.js'
 import { tocar_musica, tecla_musica } from './musica.js'
 import { opcoes, gravar_opcoes, efeito } from './opcoes.js'
 import { ler_conquistas } from './conquistas.js'
 import { ler_loja } from './moedas.js'
-import { desafios_de_hoje } from './desafios.js'
+import { desafios_de_hoje, dia_de_hoje } from './desafios.js'
 import * as R from './regras.js'
 
 // versão das novidades: troque quando quiser mostrar o painel de novidades de novo
@@ -43,6 +43,7 @@ export default class Titulo extends Phaser.Scene {
 			this.subtitulo.setText(mods.map((id) => R.MODIFICADORES[id].nome).join(' + ') + '   (PONTOS X' + String(vezes).replace('.', ',') + ')').setColor('#ff9a9a')
 		}
 
+		this.subtitulo_normal = { texto: this.subtitulo.text, cor: this.subtitulo.style.color }
 		// escolhas: dificuldade e cor do elfo (setas na tela, teclado ou controle)
 		this.feitas = ler_conquistas()
 		this.seletores = [
@@ -80,7 +81,7 @@ export default class Titulo extends Phaser.Scene {
 		const placar = ler_placar()
 		const letra = { facil: '  F', normal: '', dificil: '  D' } // F = fácil, D = difícil, C = modo chefões
 		const linhas = placar.length
-			? ['MELHORES  (' + this.progresso() + ')'].concat(placar.map((p, i) => i + 1 + '. ' + (p.nome || 'ELF').padEnd(3, ' ') + '  ' + String(p.pontos).padStart(6, ' ') + '  FASE ' + p.fase + (letra[p.dificuldade] || '') + (p.modo == 'chefes' ? '  C' : '')))
+			? ['MELHORES  (' + this.progresso() + ')'].concat(placar.map((p, i) => i + 1 + '. ' + (p.nome || 'ELF').padEnd(3, ' ') + '  ' + String(p.pontos).padStart(6, ' ') + '  FASE ' + p.fase + (letra[p.dificuldade] || '') + (p.modo == 'chefes' ? '  C' : p.modo == 'diario' ? '  DIA' : '')))
 			: ['RECORDE: ' + ler_recorde()]
 		// o placar fica logo embaixo do começar, com as linhas mais juntas (cabe com 5 escolhas)
 		// com a escolha de capítulo na tela, o placar mostra só os 3 primeiros (para não encostar nos controles)
@@ -290,7 +291,8 @@ export default class Titulo extends Phaser.Scene {
 	}
 
 	mudar_modo() {
-		opcoes.modo = opcoes.modo == 'chefes' ? 'aventura' : 'chefes'
+		const modos = ['aventura', 'chefes', 'diario']
+		opcoes.modo = modos[(modos.indexOf(opcoes.modo) + 1) % modos.length]
 		gravar_opcoes()
 		efeito(this, 'combo', { volume: 0.4, rate: 0.8 })
 		this.atualizar_seletores()
@@ -342,11 +344,21 @@ export default class Titulo extends Phaser.Scene {
 		}
 		if (this.seletor_inicio) {
 			// no modo chefões o começo adiantado não vale
-			for (const o of Object.values(this.seletor_inicio)) o.setAlpha(opcoes.modo == 'chefes' ? 0.35 : 1)
+			for (const o of Object.values(this.seletor_inicio)) o.setAlpha(opcoes.modo != 'aventura' ? 0.35 : 1)
 			const cenario = [...R.CENARIOS].reverse().find((c) => opcoes.inicio >= c.a_partir_da_fase)
 			this.seletor_inicio.valor.setText('FASE ' + opcoes.inicio + (cenario.a_partir_da_fase > 1 ? ' (' + cenario.nome.split(' ')[0] + ')' : '')).setColor(opcoes.inicio > 1 ? '#9ff07a' : '#ffffff')
 		}
-		this.seletores[2].valor.setText(opcoes.modo == 'chefes' ? 'SÓ CHEFÕES' : 'AVENTURA').setColor(opcoes.modo == 'chefes' ? '#ff9a3c' : '#ffffff')
+		const nome_modo = { aventura: 'AVENTURA', chefes: 'SÓ CHEFÕES', diario: 'PARTIDA DO DIA' }[opcoes.modo] || 'AVENTURA'
+		const cor_modo = { chefes: '#ff9a3c', diario: '#9fd8ff' }[opcoes.modo] || '#ffffff'
+		this.seletores[2].valor.setText(nome_modo).setColor(cor_modo)
+		// na Partida do Dia: o recorde de hoje aparece no subtítulo
+		if (this.subtitulo && opcoes.modo == 'diario') {
+			this.subtitulo.setText('PARTIDA DO DIA: TODO MUNDO PEGA OS MESMOS ZUMBIS HOJE   (SEU MELHOR: ' + ler_recorde_do_dia(dia_de_hoje()) + ')').setColor('#9fd8ff')
+		}
+		else if (this.subtitulo && this.subtitulo_normal) {
+			this.subtitulo.setText(this.subtitulo_normal.texto).setColor(this.subtitulo_normal.cor)
+		}
+		if (this.largura && this.subtitulo) this.subtitulo.setScale(Math.min(1, (this.largura - 10) / this.subtitulo.width))
 		if (this.seletor_jogadores) {
 			const controle = this.input.gamepad && this.input.gamepad.total > 0
 			this.seletor_jogadores.valor.setText(opcoes.jogadores == 2 ? '2  (P2: ' + (controle ? 'CONTROLE' : 'SETAS') + ')' : '1')

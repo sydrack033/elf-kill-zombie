@@ -10,9 +10,9 @@ export function encostou(ax, ay, al, aa, bx, by, bl, ba) {
 }
 
 // sorteia um item de uma lista em que cada um tem um peso (chance relativa)
-export function sortear(lista, peso) {
+export function sortear(lista, peso, aleatorio = Math.random) {
 	const total = lista.reduce((soma, item) => soma + peso(item), 0)
-	let sorteio = Math.random() * total
+	let sorteio = aleatorio() * total
 	for (const item of lista) {
 		sorteio -= peso(item)
 		if (sorteio < 0) {
@@ -44,6 +44,18 @@ export function corpo_chefe(chefe) {
 	const e = chefe.escala || R.CHEFE.escala
 	const c = R.CHEFE.corpo
 	return { x: chefe.x + c.x * e, y: chefe.y + c.y * e, l: c.l * e, a: c.a * e }
+}
+
+// sorteio com semente (mulberry32): a mesma semente dá sempre a mesma sequência
+export function sorteador(semente) {
+	let a = semente >>> 0
+	return () => {
+		a = (a + 0x6d2b79f5) >>> 0
+		let t = a
+		t = Math.imul(t ^ (t >>> 15), t | 1)
+		t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
+		return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+	}
 }
 
 // quem já jogou com toque continua com os controles na tela ao jogar de novo

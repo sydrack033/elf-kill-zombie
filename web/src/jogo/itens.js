@@ -14,14 +14,15 @@ export default class Itens {
 		if (this.proximo_item > 0) {
 			return
 		}
-		this.proximo_item = Phaser.Math.Between(R.ITEM_A_CADA[0], R.ITEM_A_CADA[1])
-		this.soltar_item(Phaser.Math.Between(8, Math.floor(this.largura) - 24), -16)
+		const r = this.rng
+		this.proximo_item = R.ITEM_A_CADA[0] + Math.floor(r() * (R.ITEM_A_CADA[1] - R.ITEM_A_CADA[0] + 1))
+		this.soltar_item(8 + Math.floor(r() * (this.largura - 32)), -16, r)
 	}
 
-	soltar_item(x, y) {
+	soltar_item(x, y, aleatorio = Math.random) {
 		// com o Só Pistola não caem armas (o resto continua)
 		const possiveis = R.ITENS.filter((item) => item.nivel <= this.nivel && !(this.mod.pistola && R.ARMAS[item.tipo]))
-		const item = sortear(possiveis, (i) => i.peso)
+		const item = sortear(possiveis, (i) => i.peso, aleatorio)
 		const sprite = this.add.sprite(x, y, 'itens', item.quadro).setOrigin(0).setDepth(1.8)
 		this.itens.push({ sprite, tipo: item.tipo, x, y })
 	}

@@ -21,15 +21,18 @@ export default class Zumbis {
 			return
 		}
 
+		// (na Partida do Dia o sorteio tem semente: a mesma sequência para todo mundo naquele dia)
+		const r = this.rng
+		const entre = (a, b) => a + Math.floor(r() * (b - a + 1))
 		// quanto maior o nível, mais zumbis e mais rápidos
 		const n = this.nivel - 1
-		this.proximo_zumbi = (Math.max(35, 140 - n * 8) + Phaser.Math.Between(0, 60)) / this.dificuldade.frequencia
+		this.proximo_zumbi = (Math.max(35, 140 - n * 8) + entre(0, 60)) / this.dificuldade.frequencia
 
 		// às vezes vem uma fileira de zumbis juntos
-		if (this.nivel >= 3 && Math.random() < 0.12) {
-			const quantos = Phaser.Math.Between(3, 5)
+		if (this.nivel >= 3 && r() < 0.12) {
+			const quantos = entre(3, 5)
 			const espaco = Math.min(50, (this.largura - 44) / quantos)
-			const inicio = Phaser.Math.Between(0, Math.max(0, Math.floor(this.largura - 44 - espaco * (quantos - 1))))
+			const inicio = entre(0, Math.max(0, Math.floor(this.largura - 44 - espaco * (quantos - 1))))
 			for (let i = 0; i < quantos; i++) {
 				this.criar_zumbi('comum', inicio + i * espaco, -44 - (i % 2) * 20)
 			}
@@ -38,14 +41,14 @@ export default class Zumbis {
 		}
 
 		const tipos = Object.keys(R.ZUMBIS)
-		const tipo = sortear(tipos, (t) => R.ZUMBIS[t].peso(this.nivel))
+		const tipo = sortear(tipos, (t) => R.ZUMBIS[t].peso(this.nivel), r)
 		const tamanho = 44 * R.ZUMBIS[tipo].escala
 		if (R.ZUMBIS[tipo].cava) {
 			this.criar_escavador()
 			return
 		}
-		const zumbi = this.criar_zumbi(tipo, Phaser.Math.Between(0, Math.max(0, Math.floor(this.largura - tamanho))), -tamanho)
-		if (this.nivel >= R.ELITE.a_partir_da_fase && Math.random() < R.ELITE.chance) {
+		const zumbi = this.criar_zumbi(tipo, entre(0, Math.max(0, Math.floor(this.largura - tamanho))), -tamanho)
+		if (this.nivel >= R.ELITE.a_partir_da_fase && r() < R.ELITE.chance) {
 			this.tornar_elite(zumbi)
 		}
 	}

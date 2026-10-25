@@ -170,6 +170,26 @@ export function gravar_historico(partida) {
 	}
 }
 
+// recorde da Partida do Dia (só vale o do dia de hoje)
+export function ler_recorde_do_dia(dia) {
+	try {
+		const d = JSON.parse(localStorage.getItem('elf-kill-zombie-diario') || '{}')
+		return d.dia == dia ? d.pontos : 0
+	} catch {
+		return 0
+	}
+}
+
+export function gravar_recorde_do_dia(dia, pontos) {
+	if (pontos > ler_recorde_do_dia(dia)) {
+		try {
+			localStorage.setItem('elf-kill-zombie-diario', JSON.stringify({ dia, pontos }))
+		} catch {
+			// sem localStorage: não guarda
+		}
+	}
+}
+
 // troca o nome provisório depois que o jogador digita as 3 letras
 export function renomear_no_placar(id, nome) {
 	const placar = ler_placar()

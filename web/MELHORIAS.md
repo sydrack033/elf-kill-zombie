@@ -46,7 +46,9 @@ git (pasta `Jogo1`), então dá para ver o histórico com `git log` e voltar qua
   (neve e granizo). Cada um com sua música e uma **abertura de capítulo** com o nome do lugar.
   No modo infinito, depois da fase 50, os cenários recomeçam. O que cai do céu avisa antes com uma sombra no chão.
   A noite cai ao longo das fases, com chuva, raios e (no inferno) brasas subindo.
-- **Modos:** Aventura (o normal) e **Só Chefões** (uma luta atrás da outra, com melhoria entre elas),
+- **Modos:** Aventura (o normal), **Só Chefões** (uma luta atrás da outra, com melhoria entre elas),
+  **Partida do Dia** (zumbis e caixas sorteados com a data como semente: a mesma sequência para todo
+  mundo no dia, sem loja nem bônus, com recorde do dia)
   e **2 jogadores** no mesmo computador (o segundo elfo anda com as setas ou um controle, mira
   sozinho e usa as armas que pegar).
 - **Loja do elfo:** cada partida rende moedas (pontos, chefões, elites, hordas e moedas que caem dos
