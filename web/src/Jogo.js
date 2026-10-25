@@ -1843,6 +1843,7 @@ export default class Jogo extends Phaser.Scene {
 			this.soltar_coracao(meio - 7, -50)
 			this.moedas_extras += R.HORDA.moedas
 			this.flutuar(meio, ALTURA / 2 - 30, '+' + R.HORDA.moedas + ' MOEDAS', '#ffd34d')
+			efeito(this, 'moeda', { volume: 0.6 })
 		}
 	}
 
@@ -1908,7 +1909,7 @@ export default class Jogo extends Phaser.Scene {
 		zumbi.escudo -= tiro.dano
 		zumbi.lapide_flash = 4
 		const l = zumbi.lapide
-		efeito(this, 'acerto', { volume: 0.35, rate: 2.2 + Math.random() * 0.3 })
+		efeito(this, 'pedra', { volume: 0.45, rate: 0.9 + Math.random() * 0.2 })
 		for (let i = 0; i < 3; i++) {
 			const faisca = this.add.rectangle(tiro.x, l.y + 2, 2, 2, 0xffe9a0).setDepth(7)
 			this.tweens.add({
@@ -1994,7 +1995,7 @@ export default class Jogo extends Phaser.Scene {
 			this.soltar_item(ce.x + ce.l / 2 - 8, ce.y + ce.a / 2)
 			this.moedas_extras += R.ELITE.moedas
 			this.flutuar(ce.x + ce.l / 2, ce.y - 22, '+' + R.ELITE.moedas + ' MOEDAS', '#ffd34d')
-			efeito(this, 'item', { volume: 0.6, rate: 0.7 })
+			efeito(this, 'moeda', { volume: 0.6 })
 		}
 		this.pontos += ganho
 		if (this.pontos >= 50000) desbloquear(this, 'rico')
@@ -2705,6 +2706,7 @@ export default class Jogo extends Phaser.Scene {
 		const barra = this.add.rectangle(x - 8, y + 12, 16, 2, 0x5fbf3a).setOrigin(0, 0.5).setDepth(2.6)
 		this.torretas.push({ x, y, base, cano, barra, ha: 0, espera: 0 })
 		this.anunciar('TORRETA!', 100, '#9ff07a')
+		efeito(this, 'torreta', { volume: 0.6 })
 	}
 
 	mover_torretas() {

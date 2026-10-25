@@ -73,7 +73,7 @@ export default class Loja extends Phaser.Scene {
 	comprar_escolhido() {
 		const linha = this.linhas[this.escolhido]
 		if (comprar(linha.produto)) {
-			efeito(this, 'item', { volume: 0.7, rate: 1.1 })
+			efeito(this, 'moeda', { volume: 0.7 })
 			this.cameras.main.flash(150, 255, 220, 120)
 			this.tweens.add({ targets: [linha.nome], scale: 1.15, duration: 90, yoyo: true })
 		}

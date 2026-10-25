@@ -92,7 +92,7 @@ export const ARMAS = {
 	bumerangue: {
 		nome: 'BUMERANGUE', quadro: 7, espera: 40, tiros: 1, abertura: 0, tremida: 0, municao: 25,
 		projetil: 'bumerangue', velocidade: 5, dano: 2, empurra: 2, atravessa: true, volta: 40,
-		som: { chave: 'arremesso', volume: 0.5, rate: 1.4 },
+		som: { chave: 'bumerangue', volume: 0.6, rate: 1 },
 	},
 }
 

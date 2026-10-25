@@ -65,6 +65,7 @@ export default class Carregar extends Phaser.Scene {
 		const sons = [
 			'tiro', 'laser', 'foguete', 'acerto', 'explosao', 'zumbi_morre', 'rugido', 'cuspe', 'item', 'poder',
 			'escudo_quebra', 'perder_vida', 'arremesso', 'combo', 'fase', 'fim', 'trovao', 'fantasma', 'chama', 'raio',
+			'pedra', 'bumerangue', 'torreta', 'moeda',
 		]
 		for (const som of sons) {
 			this.load.audio(som, 'assets/sons/' + som + '.wav')

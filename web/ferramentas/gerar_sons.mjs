@@ -413,3 +413,25 @@ salvar('raio', gerar(0.35, (t, p, osc) => {
 
 // combo: plim curto (toca mais agudo conforme o multiplicador)
 salvar('combo', gerar(0.12, (t, p, osc) => ONDAS.fina(osc(1320)) * 0.2 * (1 - p)))
+
+// pedra: "tim" seco de tiro batendo na lápide do coveiro
+anterior = 0
+salvar('pedra', gerar(0.12, (t, p, osc) => {
+	anterior = anterior * 0.4 + ruido() * 0.6
+	return (ONDAS.triangulo(osc(1900 - 700 * p)) * 0.25 + anterior * 0.25) * Math.pow(1 - p, 3)
+}))
+
+// bumerangue: "vuuum" girando, com o volume pulsando a cada volta
+salvar('bumerangue', gerar(0.45, (t, p, osc) => {
+	const giro = 0.5 + 0.5 * Math.sin(t * 2 * Math.PI * 14)
+	return Math.sin(osc(260 + 90 * Math.sin(p * Math.PI)) * 2 * Math.PI) * 0.3 * giro * Math.sin(p * Math.PI)
+}))
+
+// torreta: dois estalos metálicos (montando)
+salvar('torreta', gerar(0.3, (t, p, osc) => {
+	const batida = (t < 0.06 ? 1 - t / 0.06 : 0) + (t > 0.15 && t < 0.21 ? 1 - (t - 0.15) / 0.06 : 0)
+	return (quadrada(osc(t < 0.15 ? 700 : 980)) * 0.25 + ruido() * 0.15) * batida
+}))
+
+// moeda: dois plins agudos (si, mi)
+salvar('moeda', gerar(0.22, (t, p, osc) => quadrada(osc(p < 0.35 ? 988 : 1319)) * 0.18 * (p < 0.35 ? 1 : 1 - (p - 0.35) / 0.65)))
