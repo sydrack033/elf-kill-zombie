@@ -19,7 +19,8 @@ git (pasta `Jogo1`), então dá para ver o histórico com `git log` e voltar qua
 - **Final do jogo:** na fase 50 vem o chefão final, **O Senhor dos Mortos** (maior e com todos os
   ataques). Vencendo, a história termina e dá para continuar no **modo infinito** ou encerrar.
 - **Armas:** triplo, metralhadora, laser (atravessa), bazuca (explode), lança-chamas, raio (pula de
-  zumbi em zumbi), bumerangue (vai, faz a curva e volta), espingarda (chumbos em leque, de perto) e arco élfico\n  (segure para carregar e solte: a flecha atravessa tudo).
+  zumbi em zumbi), bumerangue (vai, faz a curva e volta), espingarda (chumbos em leque, de perto) e arco élfico
+  (segure para carregar e solte: a flecha atravessa tudo).
   A arma aparece na mão do elfo. Pegar a mesma arma de novo sobe o **nível** dela (até III, mais dano).
 - **Torreta:** caixa que monta uma torreta no chão; ela atira sozinha por 12 segundos.
 - **Poderes:** escudo, botas de velocidade e gelo (congela os zumbis).
