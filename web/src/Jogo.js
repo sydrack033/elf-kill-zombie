@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 import { ALTURA, ajustar_tela, texto, tecla_tela_cheia, tecla_som, ler_recorde, gravar_recorde, gravar_placar } from './tela.js'
 import * as R from './regras.js'
 import { tocar_musica, parar_musica, tecla_musica } from './musica.js'
+import { desbloquear } from './conquistas.js'
 
 // Igual à versão do Portugol, o jogo anda em "ticks" de 10 ms e cada tick roda
 // entrada() -> processamento() -> saida(). Os números de dificuldade ficam em regras.js.
@@ -72,6 +73,8 @@ export default class Jogo extends Phaser.Scene {
 		this.vidas = R.VIDAS_NO_COMECO
 		this.vidas_max = R.VIDAS_NO_MAXIMO
 		this.melhorias = {} // id da melhoria -> quantas vezes foi pega
+		this.armas_usadas = new Set(['pistola']) // para a conquista Arsenal
+		this.apanhou_na_fase = false // para a conquista Intocável
 		this.invencivel = 0
 		this.pontos = 0
 		this.nivel = 1
@@ -306,6 +309,7 @@ export default class Jogo extends Phaser.Scene {
 		}
 		const mel = this.opcoes[i]
 		this.melhorias[mel.id] = this.m(mel.id) + 1
+		if (Object.values(this.melhorias).reduce((a, b) => a + b, 0) >= 6) desbloquear(this, 'colecao')
 		this.aplicar_melhoria(mel.id)
 		for (const objeto of this.objetos_escolha) {
 			objeto.destroy()
@@ -774,6 +778,8 @@ export default class Jogo extends Phaser.Scene {
 
 	trocar_arma(arma) {
 		this.arma = arma
+		this.armas_usadas.add(arma)
+		if (this.armas_usadas.size >= Object.keys(R.ARMAS).length) desbloquear(this, 'arsenal')
 		// o Cinto de Balas aumenta a munição das armas especiais
 		this.municao = Math.round(R.ARMAS[arma].municao * (1 + 0.5 * this.m('cinto')))
 		this.arma_na_mao.setFrame(R.ARMAS[arma].quadro)
@@ -800,6 +806,7 @@ export default class Jogo extends Phaser.Scene {
 			return
 		}
 		this.vidas--
+		this.apanhou_na_fase = true
 		this.invencivel = R.INVENCIVEL_DEPOIS_DE_APANHAR
 		this.dano_ha = 30
 		this.combo = 0
@@ -877,6 +884,7 @@ export default class Jogo extends Phaser.Scene {
 		if (fere_heroi && Phaser.Math.Distance.Between(x, y, this.heroi_x + 12, this.heroi_y + 12) < raio * 0.8) {
 			this.levar_dano()
 		}
+		const mortos_antes = this.stats.mortos
 
 		for (const zumbi of this.zumbis) {
 			if (zumbi.morrendo || dano == 0) {
@@ -887,6 +895,9 @@ export default class Jogo extends Phaser.Scene {
 				this.espirrar_sangue(c.x + c.l / 2, c.y + c.a / 2)
 				this.ferir_zumbi(zumbi, dano, 6)
 			}
+		}
+		if (this.stats.mortos - mortos_antes >= 5) {
+			desbloquear(this, 'bomba5')
 		}
 		if (this.chefe && this.chefe.fase != 'morrendo') {
 			const c = corpo_chefe(this.chefe)
@@ -1069,9 +1080,13 @@ export default class Jogo extends Phaser.Scene {
 			this.sound.play('combo', { volume: 0.5, rate: 0.8 + this.multiplicador * 0.15 })
 		}
 		this.stats.melhor_combo = Math.max(this.stats.melhor_combo, this.combo)
+		desbloquear(this, 'primeiro')
+		if (this.stats.mortos >= 100) desbloquear(this, 'cem')
+		if (this.combo >= 20) desbloquear(this, 'combo20')
 
 		const ganho = zumbi.regra.pontos * this.nivel * this.multiplicador
 		this.pontos += ganho
+		if (this.pontos >= 50000) desbloquear(this, 'rico')
 		const c = corpo(zumbi)
 		this.flutuar(c.x + c.l / 2, c.y, '+' + ganho, this.multiplicador > 1 ? '#ff9a3c' : '#ffffff')
 		if (!zumbi.regra.fantasma) {
@@ -1097,7 +1112,11 @@ export default class Jogo extends Phaser.Scene {
 	}
 
 	subir_nivel(venceu_chefe = false) {
+		if (!this.apanhou_na_fase && this.nivel >= 3) desbloquear(this, 'intocavel')
+		this.apanhou_na_fase = false
 		this.nivel++
+		if (this.nivel >= 10) desbloquear(this, 'fase10')
+		if (this.nivel >= 20) desbloquear(this, 'fase20')
 		this.mortes_no_nivel = 0
 		this.pintar_noite()
 		if (this.m('anjo')) {
@@ -1281,6 +1300,7 @@ export default class Jogo extends Phaser.Scene {
 			chefe.fase = 'morrendo'
 			chefe.morto_ha = 0
 			this.stats.chefes++
+			desbloquear(this, 'chefe' + (((chefe.numero - 1) % R.CHEFES.length) + 1))
 			const ganho = R.CHEFE.pontos * chefe.numero
 			this.pontos += ganho
 			this.flutuar(chefe.x + 64, chefe.y + 20, '+' + ganho, '#ff9a3c')
@@ -1551,6 +1571,7 @@ export default class Jogo extends Phaser.Scene {
 		const segundos = Math.floor(this.stats.ticks / 100)
 		const tempo = Math.floor(segundos / 60) + ':' + String(segundos % 60).padStart(2, '0')
 		const pontaria = this.stats.disparos ? Math.round((100 * this.stats.acertos) / this.stats.disparos) : 0
+		if (pontaria >= 70 && this.stats.disparos >= 200) desbloquear(this, 'mira')
 
 		this.escurecer.setVisible(true)
 		this.vermelho.setFillStyle(0xff0000, 0)

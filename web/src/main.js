@@ -4,6 +4,7 @@ import '@fontsource/silkscreen/700.css'
 import Carregar from './Carregar.js'
 import Titulo from './Titulo.js'
 import Jogo from './Jogo.js'
+import ConquistasCena from './ConquistasCena.js'
 
 // espera a fonte carregar antes de criar o jogo, senão os textos saem com a fonte padrão
 Promise.all([document.fonts.load('8px Silkscreen'), document.fonts.load('bold 8px Silkscreen')]).finally(() => {
@@ -19,7 +20,7 @@ Promise.all([document.fonts.load('8px Silkscreen'), document.fonts.load('bold 8p
 			width: window.innerWidth,
 			height: window.innerHeight,
 		},
-		scene: [Carregar, Titulo, Jogo],
+		scene: [Carregar, Titulo, Jogo, ConquistasCena],
 	})
 
 	// só no modo de desenvolvimento (npm run dev): deixa o jogo acessível no console do navegador

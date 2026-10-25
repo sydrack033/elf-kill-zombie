@@ -37,7 +37,7 @@ export default class Titulo extends Phaser.Scene {
 
 		this.controles = texto(
 			this, 0, 318,
-			'WASD/SETAS: ANDAR   MOUSE: MIRAR\nCLIQUE: ATIRAR   CLIQUE DIREITO: BOMBA\nP: PAUSA  F: TELA CHEIA  M: SOM  N: MÚSICA',
+			'WASD/SETAS: ANDAR   MOUSE: MIRAR\nCLIQUE: ATIRAR   CLIQUE DIREITO: BOMBA\nP: PAUSA  F: TELA CHEIA  M: SOM  N: MÚSICA\nC: CONQUISTAS',
 			8, '#cfcfcf',
 		).setOrigin(0.5).setDepth(6)
 
@@ -51,7 +51,19 @@ export default class Titulo extends Phaser.Scene {
 		const comecar = () => this.scene.start('Jogo')
 		this.input.keyboard.once('keydown-SPACE', comecar)
 		this.input.keyboard.once('keydown-ENTER', comecar)
-		this.input.once('pointerdown', comecar)
+		this.input.keyboard.once('keydown-C', () => this.scene.start('Conquistas'))
+		this.input.once('pointerdown', (p) => {
+			// no celular, tocar no troféu abre as conquistas
+			if (this.botao_trofeu && this.botao_trofeu.getBounds().contains(p.worldX, p.worldY)) {
+				this.scene.start('Conquistas')
+			}
+			else {
+				comecar()
+			}
+		})
+		// troféu no canto (para quem joga no celular e não tem a tecla C)
+		this.botao_trofeu = this.add.sprite(0, 14, 'trofeu', 0).setScale(1.5).setDepth(6)
+		this.ao_redimensionar()
 	}
 
 	ao_redimensionar() {
@@ -60,6 +72,9 @@ export default class Titulo extends Phaser.Scene {
 		this.veu.setSize(this.largura, ALTURA)
 		for (const objeto of [this.nome, this.subtitulo, this.comecar, this.placar, this.controles]) {
 			objeto.x = meio
+		}
+		if (this.botao_trofeu) {
+			this.botao_trofeu.x = this.largura - 14
 		}
 		// em tela estreita os controles ficam grandes demais: diminui para caber
 		const escala = Math.min(1, (this.largura - 10) / this.controles.width)

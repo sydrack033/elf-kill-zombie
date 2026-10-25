@@ -1,0 +1,52 @@
+import Phaser from 'phaser'
+import { ALTURA, ajustar_tela, texto } from './tela.js'
+import { CONQUISTAS, ler_conquistas } from './conquistas.js'
+
+// tela com a lista de conquistas (aberta pelo título com a tecla C)
+export default class ConquistasCena extends Phaser.Scene {
+	constructor() {
+		super('Conquistas')
+	}
+
+	create() {
+		this.chao = this.add.tileSprite(0, 0, 10, ALTURA, 'chao').setOrigin(0).setTint(0x606878)
+		const feitas = ler_conquistas()
+		this.objetos = []
+		this.titulo = texto(this, 0, 18, 'CONQUISTAS  ' + feitas.size + '/' + CONQUISTAS.length, 16, '#ffd34d').setOrigin(0.5, 0)
+
+		CONQUISTAS.forEach((c, i) => {
+			const tem = feitas.has(c.id)
+			const y = 46 + i * 22
+			const trofeu = this.add.sprite(0, y + 6, 'trofeu', tem ? 0 : 1)
+			const nome = texto(this, 0, y, c.nome, 8, tem ? '#ffd34d' : '#8a8a90')
+			const desc = texto(this, 0, y + 10, c.texto, 8, tem ? '#ffffff' : '#6a6a70')
+			this.objetos.push({ trofeu, nome, desc })
+		})
+		this.voltar = texto(this, 0, ALTURA - 14, 'ESC, ESPAÇO OU CLIQUE: VOLTAR', 8, '#cfcfcf').setOrigin(0.5)
+
+		ajustar_tela(this)
+		const voltar = () => this.scene.start('Titulo')
+		this.input.keyboard.once('keydown-ESC', voltar)
+		this.input.keyboard.once('keydown-SPACE', voltar)
+		this.input.keyboard.once('keydown-C', voltar)
+		this.input.once('pointerdown', voltar)
+	}
+
+	ao_redimensionar() {
+		this.chao.setSize(this.largura, ALTURA)
+		this.titulo.x = this.largura / 2
+		this.voltar.x = this.largura / 2
+		// lista alinhada à esquerda, com a coluna centralizada na tela
+		const largura_lista = Math.max(...this.objetos.map((o) => Math.max(o.nome.width, o.desc.width))) + 18
+		const x = Math.max(6, (this.largura - largura_lista) / 2)
+		for (const o of this.objetos) {
+			o.trofeu.x = x + 6
+			o.nome.x = x + 16
+			o.desc.x = x + 16
+		}
+	}
+
+	update() {
+		this.chao.tilePositionY -= 0.2
+	}
+}
