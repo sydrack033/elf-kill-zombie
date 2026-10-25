@@ -186,12 +186,7 @@ export default class Jogo extends Phaser.Scene {
 		for (const tecla in direcoes) {
 			this.input.keyboard.on('keydown-' + tecla, () => this.tecla_no_menu(direcoes[tecla]))
 		}
-		this.input.keyboard.on('keydown-T', () => {
-			if (this.estado == 'pausado') {
-				this.sound.resumeAll()
-				this.scene.start('Titulo')
-			}
-		})
+		this.input.keyboard.on('keydown-T', () => this.sair_para_menu())
 
 		// botões do controle que não são "segurar": Start pausa, e A/direcional servem nos menus
 		this.mira_controle = null
@@ -582,6 +577,14 @@ export default class Jogo extends Phaser.Scene {
 		}
 	}
 
+	// da pausa, volta para a tela de título (a partida é abandonada)
+	sair_para_menu() {
+		if (this.estado == 'pausado') {
+			this.sound.resumeAll()
+			this.scene.start('Titulo')
+		}
+	}
+
 	// a tela só treme se o jogador não desligou isso nas opções
 	tremer(duracao, intensidade) {
 		if (opcoes.tremor) {
@@ -621,6 +624,13 @@ export default class Jogo extends Phaser.Scene {
 			? 'TOQUE FORA PARA CONTINUAR'
 			: 'SETAS: AJUSTAR\nP OU ESC: CONTINUAR   T: SAIR PARA O MENU'
 		objetos.push(texto(this, meio, ALTURA / 2 + 50, ajuda, 8, '#cfcfcf').setOrigin(0.5, 0).setDepth(11))
+		// no celular não tem tecla T: um botão para sair
+		if (this.modo_toque) {
+			const sair = texto(this, meio, ALTURA / 2 + 80, '[ SAIR PARA O MENU ]', 8, '#ff9a9a').setOrigin(0.5).setDepth(11)
+				.setInteractive({ useHandCursor: true })
+			sair.on('pointerdown', (p, x, y, ev) => { ev.stopPropagation(); this.sair_para_menu() })
+			objetos.push(sair)
+		}
 		this.menu_pausa = objetos
 		this.linha_escolhida = 0
 		this.desenhar_menu_pausa()
@@ -773,6 +783,9 @@ export default class Jogo extends Phaser.Scene {
 		else if (this.estado == 'pausado' && indice == 0) {
 			this.pausar()
 		}
+		else if (this.estado == 'pausado' && indice == 8) {
+			this.sair_para_menu() // Select / Back
+		}
 		else if (this.estado == 'pausado' && indice >= 12 && indice <= 15) {
 			this.tecla_no_menu(['cima', 'baixo', 'esquerda', 'direita'][indice - 12])
 		}
@@ -786,6 +799,9 @@ export default class Jogo extends Phaser.Scene {
 		}
 		else if (this.estado == 'fim' && this.pode_reiniciar && (indice == 0 || indice == 9)) {
 			this.scene.restart()
+		}
+		else if (this.estado == 'fim' && this.pode_reiniciar && indice == 8) {
+			this.scene.start('Titulo')
 		}
 	}
 
