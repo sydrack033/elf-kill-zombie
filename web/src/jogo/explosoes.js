@@ -46,6 +46,9 @@ export default class Explosoes {
 				bomba.explodiu = true
 				bomba.sprite.destroy()
 				this.explodir(bomba.x1, bomba.y1, R.RAIO_DA_EXPLOSAO * this.tamanho_explosao(), R.DANO_DA_EXPLOSAO)
+				if (this.m('fragmentacao')) {
+					this.soltar_estilhacos(bomba.x1, bomba.y1, 8) // Fragmentação
+				}
 			}
 		}
 		this.bombas_voando = this.bombas_voando.filter((bomba) => !bomba.explodiu)

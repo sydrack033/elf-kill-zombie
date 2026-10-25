@@ -289,7 +289,7 @@ export default class Elfo {
 
 	encher_furia(quanto) {
 		const antes = this.furia
-		this.furia = Math.min(1, this.furia + quanto)
+		this.furia = Math.min(1, this.furia + quanto * (1 + 0.4 * this.m('ira'))) // Ira Élfica
 		if (antes < 1 && this.furia >= 1) {
 			this.flutuar(this.heroi_x + 12, this.heroi_y - 10, 'FÚRIA PRONTA!', '#ff9aff')
 			efeito(this, 'poder', { volume: 0.5, rate: 1.3 })

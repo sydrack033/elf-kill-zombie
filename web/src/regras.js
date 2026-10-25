@@ -248,6 +248,9 @@ export const MELHORIAS = [
 	{ id: 'vampiro', quadro: 12, nome: 'VAMPIRO', texto: 'A CADA 30 ZUMBIS, CURA 1 CORAÇÃO', maximo: 1 },
 	{ id: 'ricochete', quadro: 13, nome: 'RICOCHETE', texto: 'O TIRO QUICA NAS BORDAS DA TELA', maximo: 1 },
 	{ id: 'estilhacos', quadro: 14, nome: 'ESTILHAÇOS', texto: 'ZUMBI MORTO SOLTA ESTILHAÇOS', maximo: 2 },
+	{ id: 'fragmentacao', quadro: 15, nome: 'FRAGMENTAÇÃO', texto: 'A BOMBA SOLTA ESTILHAÇOS AO EXPLODIR', maximo: 1 },
+	{ id: 'segunda_pele', quadro: 16, nome: 'SEGUNDA PELE', texto: 'O ESCUDO DURA O DOBRO', maximo: 1 },
+	{ id: 'ira', quadro: 17, nome: 'IRA ÉLFICA', texto: 'A FÚRIA ENCHE 40% MAIS RÁPIDO', maximo: 2 },
 ]
 export const VIDAS_EXTRAS_MAXIMO = 2 // com o Coração Extra, o máximo de vidas sobe até 5 + 2
 

@@ -106,7 +106,8 @@ export default class Itens {
 			this.anunciar('+' + R.BOMBAS_POR_CAIXA + ' BOMBAS', 100)
 		}
 		else if (R.PODERES[tipo]) {
-			this.poderes[tipo] = R.PODERES[tipo].duracao
+			// Segunda Pele: o escudo dura o dobro
+			this.poderes[tipo] = R.PODERES[tipo].duracao * (tipo == 'escudo' && this.m('segunda_pele') ? 2 : 1)
 			this.anunciar(R.PODERES[tipo].nome + '!', 100, '#9fd8ff')
 		}
 		else {
