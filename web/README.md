@@ -95,6 +95,8 @@ funciona **sem internet** depois da primeira visita.
 - `src/ConquistasCena.js` e `src/conquistas.js`: conquistas (e as estatísticas de todas as partidas).
 - `src/LojaCena.js` e `src/moedas.js`: loja e moedas.
 - `src/DesafiosCena.js` e `src/desafios.js`: desafios do dia.
+- `src/OpcoesCena.js`: opções (volumes, tremor, tiro automático, modificadores, vitrola).
+- `src/EstatisticasCena.js`: estatísticas e últimas partidas.
 - `src/Bestiario.js` e `src/Historia.js`: galeria dos inimigos e a história do começo.
 - `src/Carregar.js`: carrega imagens e sons (com barra de carregamento).
 - `src/tela.js`: ajuste da tela cheia, textos, recorde e placar.
