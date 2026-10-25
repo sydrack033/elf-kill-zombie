@@ -140,7 +140,16 @@ export default class Chefes {
 				}
 				else {
 					tocar_musica(this, this.cenario().musica)
+					// depois do 2º, 4º, 6º... chefão vem a chuva de moedas
+					if (chefe.numero % 2 == 0 && !this.modo_chefes) {
+						this.chuva_de_moedas = R.CHUVA_DE_MOEDAS.duracao
+					}
 					this.subir_nivel(true)
+					if (this.chuva_de_moedas > 0) {
+						// (a escolha de melhoria anuncia o texto_da_fase quando fechar)
+						this.texto_da_fase = 'FASE ' + this.nivel + '\nCHUVA DE MOEDAS!'
+						if (this.estado == 'jogando') this.anunciar(this.texto_da_fase, 250, '#ffd34d')
+					}
 				}
 			}
 			return

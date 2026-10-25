@@ -242,6 +242,9 @@ export const ZUMBIS = {
 	},
 }
 
+// chuva de moedas: depois de vencer o 2º, 4º, 6º... chefão, alguns segundos sem zumbis e com moedas caindo
+export const CHUVA_DE_MOEDAS = { duracao: 700, a_cada: 9 }
+
 // horda: na metade das fases 8, 13, 18... vem uma enxurrada de zumbis; quem sobrevive ganha um prêmio
 export const HORDA = { fase: 3, a_partir_da_fase: 8, duracao: 400, a_cada: 15, moedas: 10 }
 

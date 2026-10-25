@@ -13,7 +13,7 @@ export default class Zumbis {
 
 	criar_zumbis() {
 		// enquanto o chefão está na tela (ou chegando), só ele manda zumbis; na horda, só ela
-		if (this.chefe || this.chefe_em > 0 || (this.horda && this.horda.ha < R.HORDA.duracao)) {
+		if (this.chefe || this.chefe_em > 0 || this.chuva_de_moedas > 0 || (this.horda && this.horda.ha < R.HORDA.duracao)) {
 			return
 		}
 		this.proximo_zumbi--
@@ -53,6 +53,7 @@ export default class Zumbis {
 	// escombros (ruínas) e meteoros (inferno): a sombra cresce no chão e depois a coisa cai
 	mover_perigos() {
 		this.mover_lodo()
+		this.mover_chuva_de_moedas()
 		const regra = R.PERIGOS[this.cenario().perigo]
 		if (regra && !this.chefe && this.chefe_em == 0) {
 			this.proxima_queda--
@@ -126,6 +127,27 @@ export default class Zumbis {
 	// o ponto (x, y) está dentro de alguma poça de lodo?
 	no_lodo(x, y) {
 		return this.pocas.some((p) => ((x - p.x) / (R.LODO.largura / 2)) ** 2 + ((y - p.y) / (R.LODO.altura / 2)) ** 2 < 1)
+	}
+
+	// fase bônus: moedas (e às vezes um coração) caindo do céu, sem zumbis
+	mover_chuva_de_moedas() {
+		if (this.chuva_de_moedas <= 0 || this.estado != 'jogando') {
+			return
+		}
+		this.chuva_de_moedas--
+		if (this.chuva_de_moedas % R.CHUVA_DE_MOEDAS.a_cada == 0) {
+			const x = Phaser.Math.Between(10, Math.floor(this.largura - 20))
+			if (Math.random() < 0.04) {
+				this.soltar_coracao(x, -14)
+			}
+			else {
+				const sprite = this.add.sprite(x, -10, 'moeda').setScale(1.5).setDepth(1.8)
+				this.moedas.push({ sprite, x: x - 6, y: -16 })
+			}
+		}
+		if (this.chuva_de_moedas == 0) {
+			this.anunciar('FIM DO BÔNUS!', 150, '#ffd34d')
+		}
 	}
 
 	comecar_horda() {

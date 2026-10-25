@@ -117,6 +117,7 @@ export default class Jogo extends Phaser.Scene {
 		this.fila_faixas = [] // inimigos novos esperando a vez de ser apresentados
 		this.moedas_extras = 0 // moedas dos zumbis de elite e das hordas, somadas no fim
 		this.horda = null // { ha, zumbis } enquanto a horda está vindo
+		this.chuva_de_moedas = 0 // ticks que faltam da fase bônus
 		this.pocas = [] // poças de lodo do pântano: { x, y, sprite }
 		this.proxima_poca = 0
 		this.quedas = [] // escombros e meteoros caindo: { x, y, ha, sombra, pedra, regra }
