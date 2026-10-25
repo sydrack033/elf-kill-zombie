@@ -75,7 +75,7 @@ export default class Titulo extends Phaser.Scene {
 		this.atualizar_seletores()
 		const y_comecar = 134 + 15 * this.seletores.length + 12
 
-		this.comecar = texto(this, 0, y_comecar, 'CLIQUE OU APERTE ESPAÇO', 10, '#ffd34d').setOrigin(0.5).setDepth(6)
+		this.comecar = texto(this, 0, y_comecar, this.sys.game.device.os.desktop ? 'CLIQUE OU APERTE ESPAÇO' : 'TOQUE PARA JOGAR', 10, '#ffd34d').setOrigin(0.5).setDepth(6)
 
 		// placar dos 5 melhores
 		const placar = ler_placar()
