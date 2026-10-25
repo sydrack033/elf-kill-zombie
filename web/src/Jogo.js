@@ -2079,6 +2079,19 @@ export default class Jogo extends Phaser.Scene {
 		}
 	}
 
+	// primeira vez que um tipo de zumbi aparece: faixa em cima com o nome e a dica
+	apresentar_inimigo(ficha) {
+		const y = 70
+		const fundo = this.add.rectangle(this.largura / 2, y, 210, 34, 0x1c1630, 0.92).setStrokeStyle(1, 0xff6a6a).setDepth(12.5)
+		const nome = texto(this, this.largura / 2, y - 8, 'NOVO: ' + ficha.nome, 8, '#ff9a9a').setOrigin(0.5).setDepth(12.5)
+		const dica = texto(this, this.largura / 2, y + 7, ficha.texto.replace('\n', ' '), 8, '#ffffff').setOrigin(0.5).setDepth(12.5)
+		dica.setScale(Math.min(1, 200 / dica.width))
+		const objetos = [fundo, nome, dica]
+		for (const o of objetos) o.setAlpha(0)
+		this.tweens.add({ targets: objetos, alpha: 1, duration: 200 })
+		this.tweens.add({ targets: objetos, alpha: 0, delay: 3500, duration: 400, onComplete: () => objetos.forEach((o) => o.destroy()) })
+	}
+
 	tornar_elite(zumbi) {
 		zumbi.elite = true
 		zumbi.vida = zumbi.vida_max = zumbi.vida * R.ELITE.vida
@@ -2092,7 +2105,10 @@ export default class Jogo extends Phaser.Scene {
 
 	criar_zumbi(tipo, x, y) {
 		const regra = R.ZUMBIS[tipo]
-		marcar_visto(tipo) // para o bestiário
+		const novo = marcar_visto(tipo) // para o bestiário
+		if (novo && this.nivel > 1) {
+			this.apresentar_inimigo(novo)
+		}
 		const n = this.nivel - 1
 		const persegue = Math.random() < Math.min(0.7, 0.2 + n * 0.08)
 		const zumbi = {

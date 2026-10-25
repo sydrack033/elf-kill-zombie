@@ -18,16 +18,19 @@ const FICHAS = [
 	...CHEFES.map((c, i) => ({ tipo: 'chefe' + (i + 1), nome: c.nome, texto: 'CHEFÃO DA FASE ' + (i + 1) * 5 + '.', chefe: c })),
 ]
 
+// devolve a ficha do inimigo se for a primeira vez que ele aparece (senão, null)
 export function marcar_visto(tipo) {
 	try {
 		const vistos = new Set(JSON.parse(localStorage.getItem(CHAVE) || '[]'))
 		if (!vistos.has(tipo)) {
 			vistos.add(tipo)
 			localStorage.setItem(CHAVE, JSON.stringify([...vistos]))
+			return FICHAS.find((f) => f.tipo == tipo) || null
 		}
 	} catch {
 		// sem localStorage: a galeria só não guarda
 	}
+	return null
 }
 
 function ler_vistos() {
