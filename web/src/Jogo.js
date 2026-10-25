@@ -2381,6 +2381,7 @@ export default class Jogo extends Phaser.Scene {
 		}
 		this.chefe.sprite = this.add.sprite(this.chefe.x, this.chefe.y, 'chefe', 0).setOrigin(0).setScale(R.CHEFE.escala).setDepth(3)
 		this.barra_nome.setText(this.chefe.nome)
+		this.barra_vida.setFillStyle(0xd02828)
 		this.barra_rastro.setSize(this.largura_barra, 4)
 		this.apresentar_chefe(this.chefe.nome, numero)
 		efeito(this, 'rugido', { volume: 0.9 })
@@ -2393,6 +2394,14 @@ export default class Jogo extends Phaser.Scene {
 		chefe.vida -= dano
 		chefe.flash = 5
 		this.encher_furia(R.FURIA.por_acerto_no_chefe)
+		// com metade da vida ele enfurece: anda e ataca mais rápido
+		if (!chefe.furioso && chefe.vida > 0 && chefe.vida <= chefe.vida_max / 2) {
+			chefe.furioso = true
+			this.anunciar('ENFURECIDO!', 150, '#ff5a5a')
+			efeito(this, 'rugido', { volume: 0.9, rate: 1.15 })
+			this.tremer(300, 0.008)
+			this.barra_vida.setFillStyle(0xff7a20)
+		}
 		this.espirrar_sangue(x, y)
 		if (chefe.vida <= 0) {
 			for (const osso of chefe.ossos.slice()) {
@@ -2474,6 +2483,13 @@ export default class Jogo extends Phaser.Scene {
 			chefe.x = this.largura / 2 - tamanho / 2 + Math.sin(chefe.ha / (140 - chefe.numero * 10)) * amplitude
 			chefe.y = 48 + Math.sin(chefe.ha / 37) * 8
 			this.atacar(chefe)
+			if (chefe.furioso) {
+				chefe.ha += 0.3
+				// os relógios dos ataques andam 50% mais rápido
+				if (chefe.ha % 2 < 1) {
+					this.atacar(chefe)
+				}
+			}
 		}
 		if (chefe.atacando > 0)
 			chefe.atacando--
@@ -3213,7 +3229,9 @@ export default class Jogo extends Phaser.Scene {
 		chefe.sprite.setPosition(Math.round(chefe.x), Math.round(chefe.y))
 		// avisando a investida: pisca vermelho
 		const avisando = chefe.investida && chefe.investida.etapa == 'aviso' && Math.floor(this.quadro_atual / 6) % 2 == 0
-		this.pintar(chefe.sprite, chefe.flash, avisando ? 0xff3030 : chefe.cor)
+		// enfurecido: pulsa avermelhado
+		const bravo = chefe.furioso && Math.floor(this.quadro_atual / 15) % 2 == 0
+		this.pintar(chefe.sprite, chefe.flash, avisando ? 0xff3030 : bravo ? 0xff8a7a : chefe.cor)
 		const tp = chefe.teleporte
 		chefe.sprite.setAlpha(tp ? (tp.ha < 30 ? 1 - tp.ha / 30 : (tp.ha - 30) / 30) : 1)
 
