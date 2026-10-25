@@ -648,6 +648,19 @@ export default class Jogo extends Phaser.Scene {
 		const meio = this.largura / 2
 		const objetos = []
 		objetos.push(texto(this, meio, ALTURA / 2 - 70, 'PAUSADO', 16, '#ffd34d').setOrigin(0.5).setDepth(11))
+		// as melhorias pegas nesta partida, com o nome e quantas vezes
+		const pegas = R.MELHORIAS.filter((mel) => this.m(mel.id) > 0)
+		if (pegas.length) {
+			const largura_item = Math.min(60, (this.largura - 10) / pegas.length)
+			const x0 = meio - (largura_item * (pegas.length - 1)) / 2
+			pegas.forEach((mel, i) => {
+				const x = x0 + i * largura_item
+				objetos.push(this.add.sprite(x, 66, 'melhorias', mel.quadro).setDepth(11))
+				const n = this.m(mel.id)
+				objetos.push(texto(this, x, 80, mel.nome + (n > 1 ? ' ' + n : ''), 8, '#c08aff').setOrigin(0.5, 0).setDepth(11)
+					.setScale(Math.min(0.75, (largura_item - 2) / 60)).setWordWrapWidth(70).setLineSpacing(1))
+			})
+		}
 		this.linhas_menu = []
 		const linhas = [
 			{ rotulo: 'MÚSICA', chave: 'musica' },
@@ -2855,6 +2868,9 @@ export default class Jogo extends Phaser.Scene {
 			'+' + moedas + ' MOEDAS  (' + carteira + ' NA CARTEIRA)',
 		)
 		this.instrucao = texto(this, this.largura / 2, ALTURA - 50, '', 8, '#cfcfcf').setOrigin(0.5).setDepth(10)
+		if (novo_recorde && this.pontos > 0) {
+			this.soltar_confete()
+		}
 
 		// entrou no placar e tem teclado: pede as 3 letras do nome, como nos fliperamas
 		const usa_controle = this.input.gamepad && this.input.gamepad.total > 0
@@ -2864,6 +2880,25 @@ export default class Jogo extends Phaser.Scene {
 		else {
 			this.liberar_reinicio()
 		}
+	}
+
+	// novo recorde: chuva de papel picado colorido
+	soltar_confete() {
+		const cores = [0xffd34d, 0x9ff07a, 0xff6a6a, 0x9fd8ff, 0xc08aff]
+		for (let i = 0; i < 70; i++) {
+			const x = Math.random() * this.largura
+			const papel = this.add.rectangle(x, -10 - Math.random() * 120, 3, 5, cores[i % cores.length]).setDepth(9.5)
+			this.tweens.add({
+				targets: papel,
+				y: ALTURA + 10,
+				x: x + Phaser.Math.Between(-40, 40),
+				angle: Phaser.Math.Between(-540, 540),
+				duration: Phaser.Math.Between(1800, 3200),
+				delay: Math.random() * 600,
+				onComplete: () => papel.destroy(),
+			})
+		}
+		efeito(this, 'fase', { volume: 0.6 })
 	}
 
 	pedir_nome(id) {
