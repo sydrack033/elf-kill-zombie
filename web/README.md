@@ -38,18 +38,34 @@ funciona **sem internet** depois da primeira visita.
 | Tela cheia | F | | |
 | Som / música | M / N | | |
 | Conquistas (no título) | C | troféu no canto | Y |
+| Loja (no título) | L | moeda no canto | Select |
+| Modo de jogo (no título) | X | setas na tela | X |
+| Bestiário / história (no título) | B / H | | |
+| Sair para o menu (na pausa) | T | botão na pausa | Select |
+| Jogador 2 (no computador) | setas para andar, mira e tiro automáticos | | segundo controle |
 
 ## Regras
 
 - Você começa com 3 vidas (5 no fácil, 2 no difícil). Perde uma quando é mordido, atingido por
   cuspe ou quando um zumbi passa por você.
-- **Caixas** descem rolando: armas (triplo, metralhadora, laser, bazuca, lança-chamas, raio),
-  bombas e poderes (escudo, botas, gelo). Quando a munição acaba, o elfo volta para a pistola.
+- **Caixas** descem rolando: armas (triplo, metralhadora, laser, bazuca, lança-chamas, raio,
+  bumerangue), bombas, torreta (atira sozinha por 12 segundos) e poderes (escudo, botas, gelo).
+  Quando a munição acaba, o elfo volta para a pistola.
 - A cada 2 fases (e depois de cada chefão) você escolhe **1 de 3 melhorias**.
-- A cada 5 fases vem um **chefão** (Rei Zumbi, Carniceiro, Podre... e eles voltam mais fortes).
+- A cada 5 fases vem um **chefão**: Rei Zumbi, Carniceiro, Podre, Bruxa e Necromante (depois eles
+  voltam mais fortes e com todos os ataques).
+- **Zumbis**: comum, corredor, brutamontes, cuspidor, bombado (explode), fantasma (fica transparente),
+  escavador (sai da terra), coveiro (lápide como escudo) e corvos em bando. Às vezes vem um de
+  **elite**, dourado e mais forte, que dá moedas e uma caixa.
 - A cada 10 fases o **cenário** muda: cemitério, pântano, cidade em ruínas e inferno.
 - Mortes emendadas fazem **combo** (até x5 nos pontos). Matar enche a **fúria élfica**.
-- **Conquistas** liberam cores novas para o elfo.
+- **Eventos**: a **Horda** (fases 8, 13, 18...) manda uma enxurrada de zumbis e dá prêmio a quem
+  sobrevive; a **Lua de Sangue** deixa uma fase com zumbis mais rápidos e pontos em dobro.
+- **Modo Chefões**: só as lutas contra chefões, com uma melhoria entre cada uma.
+- **Moedas**: cada partida rende moedas (pontos, chefões, elites e hordas). Na **loja** elas compram
+  vantagens para o começo de todas as partidas (bombas, corações, triplo, fúria, ímã, melhoria).
+- **2 jogadores** no mesmo computador: o segundo elfo anda com as setas (ou um controle) e atira sozinho.
+- **Conquistas** liberam cores novas para o elfo. O **bestiário** guarda os inimigos já vistos.
 
 ## Onde está cada coisa
 
@@ -57,7 +73,9 @@ funciona **sem internet** depois da primeira visita.
   dificuldade). É o lugar para ajustar o jogo.
 - `src/Jogo.js`: o jogo em si (as funções `entrada`, `processamento` e `saida`, como no original).
 - `src/Titulo.js`: tela de título com a demonstração, placar e escolhas.
-- `src/ConquistasCena.js` e `src/conquistas.js`: conquistas.
+- `src/ConquistasCena.js` e `src/conquistas.js`: conquistas (e as estatísticas de todas as partidas).
+- `src/LojaCena.js` e `src/moedas.js`: loja e moedas.
+- `src/Bestiario.js` e `src/Historia.js`: galeria dos inimigos e a história do começo.
 - `src/Carregar.js`: carrega imagens e sons (com barra de carregamento).
 - `src/tela.js`: ajuste da tela cheia, textos, recorde e placar.
 - `src/musica.js` e `src/opcoes.js`: música, volume e opções guardadas no navegador.
@@ -75,5 +93,12 @@ node ferramentas/testar.mjs --arquivo ferramentas/cenas/dificuldade.js
 Isso abre o jogo num Chrome invisível, joga 5 partidas com o piloto automático e mostra até que
 fase ele chegou. Outras cenas em `ferramentas/cenas/` testam o toque no celular (`--celular`),
 o controle de videogame, os chefões, as armas e tiram fotos (`--foto arquivo.png`).
+
+```bash
+node ferramentas/testar.mjs --arquivo ferramentas/cenas/verificar.js
+```
+
+roda uma bateria de verificações das regras (tiro, mordida, escudo, bomba, melhoria, chefão,
+pausa, fim de jogo...) e imprime OK ou FALHOU em cada uma.
 No console do navegador (modo dev) também existe `teste.comecar()`, `teste.ticks(n)` e
 `teste.piloto(n)`.
