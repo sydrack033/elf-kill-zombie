@@ -72,8 +72,9 @@ git (pasta `Jogo1`), então dá para ver o histórico com `git log` e voltar qua
 
 - Tela de título com demonstração rodando no fundo, placar e escolhas (dificuldade, cor do elfo,
   modo, jogadores), moedas e atalhos para loja, conquistas, bestiário e história.
-- Tela de **Opções** no título (tecla O): volumes, tremor, **tiro automático** no computador, tela
-  cheia e rever as dicas.
+- Tela de **Opções** no título (tecla O): volumes, tremor, **tiro automático** no computador,
+  números de dano, tela cheia, rever as dicas e créditos.
+- Um painel de **NOVIDADES** aparece uma vez no título (para quem já tinha jogado antes).
 - Pausa com opções de volume (música e efeitos) e tremor, guardadas no navegador, recomeçar e saída
   para o menu. O controle de videogame vibra quando o elfo apanha e nas explosões.
 - Confete quando bate o recorde.
