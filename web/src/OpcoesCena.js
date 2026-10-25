@@ -10,6 +10,9 @@ const LINHAS = [
 	{ rotulo: 'TREMOR', chave: 'tremor', liga: true },
 	{ rotulo: 'TIRO AUTOMÁTICO', chave: 'tiro_auto', liga: true }, // no computador: atira sem segurar o botão
 	{ rotulo: 'NÚMEROS DE DANO', chave: 'numeros_dano', liga: true },
+	{ rotulo: 'ELFO DE VIDRO (PONTOS X2)', modificador: 'vidro', liga: true },
+	{ rotulo: 'TURBO (PONTOS X1,5)', modificador: 'turbo', liga: true },
+	{ rotulo: 'SÓ PISTOLA (PONTOS X1,5)', modificador: 'pistola', liga: true },
 	{ rotulo: 'TELA CHEIA', acao: 'tela_cheia' },
 	{ rotulo: 'VER AS DICAS DE NOVO', acao: 'dicas' },
 	{ rotulo: 'CRÉDITOS', acao: 'creditos' },
@@ -22,14 +25,15 @@ export default class OpcoesCena extends Phaser.Scene {
 
 	create() {
 		this.chao = this.add.tileSprite(0, 0, 10, ALTURA, 'chao').setOrigin(0).setTint(0x505868)
-		this.titulo = texto(this, 0, 50, 'OPÇÕES', 16, '#ffd34d').setOrigin(0.5)
+		this.titulo = texto(this, 0, 36, 'OPÇÕES', 16, '#ffd34d').setOrigin(0.5)
 		this.linhas = LINHAS.map((linha, i) => {
-			const y = 100 + i * 30
-			const rotulo = texto(this, 0, y, linha.rotulo, 8, '#ffffff').setOrigin(linha.chave ? 1 : 0.5, 0.5)
+			const y = 70 + i * 23
+			const tem_valor = linha.chave || linha.modificador
+			const rotulo = texto(this, 0, y, linha.rotulo, 8, linha.modificador ? '#ff9a9a' : '#ffffff').setOrigin(tem_valor ? 1 : 0.5, 0.5)
 				.setInteractive({ useHandCursor: true })
 			rotulo.on('pointerdown', () => this.mexer(i, 1))
 			const objetos = { ...linha, rotulo, barras: [], valor: null, menos: null, mais: null }
-			if (linha.chave) {
+			if (tem_valor) {
 				objetos.menos = texto(this, 0, y, '<', 8).setOrigin(0.5).setInteractive({ useHandCursor: true })
 				objetos.mais = texto(this, 0, y, '>', 8).setOrigin(0.5).setInteractive({ useHandCursor: true })
 				objetos.menos.on('pointerdown', () => this.mexer(i, -1))
@@ -43,7 +47,7 @@ export default class OpcoesCena extends Phaser.Scene {
 			}
 			return objetos
 		})
-		this.aviso = texto(this, 0, 336, '', 8, '#9ff07a').setOrigin(0.5).setLineSpacing(2)
+		this.aviso = texto(this, 0, 342, '', 8, '#9ff07a').setOrigin(0.5).setLineSpacing(2)
 		this.voltar = texto(this, 0, ALTURA - 14, 'SETAS: ESCOLHER E AJUSTAR   ESC: VOLTAR', 8, '#cfcfcf').setOrigin(0.5)
 		this.escolhida = 0
 		this.desenhar()
@@ -84,7 +88,7 @@ export default class OpcoesCena extends Phaser.Scene {
 		this.escolhida = i
 		const linha = this.linhas[i]
 		if (linha.liga) {
-			opcoes[linha.chave] = !opcoes[linha.chave]
+			this.gravar(linha, !this.ler(linha))
 		}
 		else if (linha.chave) {
 			opcoes[linha.chave] = Math.round(Phaser.Math.Clamp(opcoes[linha.chave] + direcao * 0.1, 0, 1) * 10) / 10
@@ -113,11 +117,25 @@ export default class OpcoesCena extends Phaser.Scene {
 		this.desenhar()
 	}
 
+	// os modificadores ficam guardados em opcoes.modificadores; o resto direto em opcoes
+	ler(linha) {
+		return linha.modificador ? !!opcoes.modificadores[linha.modificador] : opcoes[linha.chave]
+	}
+
+	gravar(linha, valor) {
+		if (linha.modificador) {
+			opcoes.modificadores = { ...opcoes.modificadores, [linha.modificador]: valor }
+		}
+		else {
+			opcoes[linha.chave] = valor
+		}
+	}
+
 	desenhar() {
 		this.linhas.forEach((l, i) => {
-			l.rotulo.setColor(i == this.escolhida ? '#ffd34d' : '#ffffff')
+			l.rotulo.setColor(i == this.escolhida ? '#ffd34d' : l.modificador ? '#ff9a9a' : '#ffffff')
 			if (l.valor) {
-				l.valor.setText(opcoes[l.chave] ? 'LIGADO' : 'DESLIGADO').setColor(opcoes[l.chave] ? '#9ff07a' : '#ff6a6a')
+				l.valor.setText(this.ler(l) ? 'LIGADO' : 'DESLIGADO').setColor(this.ler(l) ? '#9ff07a' : '#ff6a6a')
 			}
 			const valor = Math.round((opcoes[l.chave] || 0) * 10)
 			l.barras.forEach((b, n) => b.setFillStyle(n < valor ? 0x9ff07a : 0x3a3a44))
@@ -130,7 +148,7 @@ export default class OpcoesCena extends Phaser.Scene {
 		for (const o of [this.titulo, this.aviso, this.voltar]) o.x = meio
 		this.voltar.setScale(Math.min(1, (this.largura - 8) / this.voltar.width))
 		for (const l of this.linhas) {
-			if (l.chave) {
+			if (l.chave || l.modificador) {
 				l.rotulo.x = meio - 50
 				l.rotulo.setScale(Math.min(1, (meio - 54) / l.rotulo.width)) // celular estreito
 				l.menos.x = meio - 38

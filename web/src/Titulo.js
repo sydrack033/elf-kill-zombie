@@ -36,6 +36,12 @@ export default class Titulo extends Phaser.Scene {
 
 		this.nome = texto(this, 0, 64, 'ELF KILL\nZOMBIE', 24, '#e8f5c8').setOrigin(0.5).setDepth(6)
 		this.subtitulo = texto(this, 0, 112, 'O CEMITÉRIO NÃO DORME', 8, '#9fbf8a').setOrigin(0.5).setDepth(6)
+		// com modificadores ligados (nas Opções), o subtítulo avisa quais e quanto valem
+		const mods = Object.keys(R.MODIFICADORES).filter((id) => (opcoes.modificadores || {})[id])
+		if (mods.length) {
+			const vezes = mods.reduce((total, id) => total * R.MODIFICADORES[id].pontos, 1)
+			this.subtitulo.setText(mods.map((id) => R.MODIFICADORES[id].nome).join(' + ') + '   (PONTOS X' + String(vezes).replace('.', ',') + ')').setColor('#ff9a9a')
+		}
 
 		// escolhas: dificuldade e cor do elfo (setas na tela, teclado ou controle)
 		this.feitas = ler_conquistas()

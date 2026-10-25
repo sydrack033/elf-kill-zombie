@@ -57,7 +57,17 @@ export default class Jogo extends Phaser.Scene {
 		this.chapeu = opcoes.chapeu && compras[opcoes.chapeu] ? this.add.sprite(0, 0, opcoes.chapeu).setOrigin(0.5, 1).setDepth(5.5) : null
 		this.bolha = this.add.circle(0, 0, 21).setStrokeStyle(2, 0x70c8ff, 0.9).setFillStyle(0x70c8ff, 0.15).setDepth(6.5).setVisible(false)
 
-		this.dificuldade = R.DIFICULDADES[opcoes.dificuldade] || R.DIFICULDADES.normal
+		this.dificuldade = { ...(R.DIFICULDADES[opcoes.dificuldade] || R.DIFICULDADES.normal) }
+		// modificadores das Opções: mudam a dificuldade desta partida e multiplicam os pontos
+		this.mod = { ...opcoes.modificadores }
+		for (const [id, m] of Object.entries(R.MODIFICADORES)) {
+			if (!this.mod[id]) continue
+			this.dificuldade.pontos *= m.pontos
+			if (m.velocidade) {
+				this.dificuldade.velocidade *= m.velocidade
+				this.dificuldade.frequencia *= m.velocidade
+			}
+		}
 		this.vidas = this.dificuldade.vidas
 		const elfo = R.ELFOS.find((e) => e.id == opcoes.elfo)
 		this.cor_do_elfo = elfo ? elfo.cor : null
@@ -301,10 +311,13 @@ export default class Jogo extends Phaser.Scene {
 			this.melhorias[mel.id] = this.m(mel.id) + 1
 			this.aplicar_melhoria(mel.id)
 		}
-		if (compras.arma) {
+		if (compras.arma && !this.mod.pistola) {
 			this.trocar_arma('triplo')
 		}
 		this.pode_reviver = !!compras.reviver
+		if (this.mod.vidro) {
+			this.vidas = this.vidas_max = 1 // Elfo de Vidro: um golpe e acabou
+		}
 		this.atualizar_hud_melhorias()
 		this.atualizar_hud()
 	}

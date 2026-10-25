@@ -19,7 +19,8 @@ export default class Itens {
 	}
 
 	soltar_item(x, y) {
-		const possiveis = R.ITENS.filter((item) => item.nivel <= this.nivel)
+		// com o Só Pistola não caem armas (o resto continua)
+		const possiveis = R.ITENS.filter((item) => item.nivel <= this.nivel && !(this.mod.pistola && R.ARMAS[item.tipo]))
 		const item = sortear(possiveis, (i) => i.peso)
 		const sprite = this.add.sprite(x, y, 'itens', item.quadro).setOrigin(0).setDepth(1.8)
 		this.itens.push({ sprite, tipo: item.tipo, x, y })

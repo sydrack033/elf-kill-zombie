@@ -99,6 +99,9 @@ export default class Melhorias {
 
 	// o que muda na hora em que a melhoria é escolhida (o resto é conferido durante o jogo com this.m())
 	aplicar_melhoria(id) {
+		if (id == 'vida_max' && this.mod.vidro) {
+			return // no Elfo de Vidro o Coração Extra não muda nada
+		}
 		if (id == 'vida_max') {
 			this.vidas_max++
 			this.vidas = Math.min(this.vidas_max, this.vidas + 1)

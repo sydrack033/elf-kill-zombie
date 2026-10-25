@@ -303,6 +303,13 @@ export const CHEFES = [
 ]
 // chefão final, na fase 50: tem todos os ataques, é maior e bem mais forte; vencer mostra o final do jogo
 export const CHEFE_FINAL = { fase: 50, nome: 'O SENHOR DOS MORTOS', cor: 0xb08aff, vida: 1.6, escala: 2.4 }
+// modificadores (ligados nas Opções): deixam o jogo mais difícil e multiplicam os pontos
+export const MODIFICADORES = {
+	vidro: { nome: 'ELFO DE VIDRO', pontos: 2 }, // só 1 vida
+	turbo: { nome: 'TURBO', pontos: 1.5, velocidade: 1.3 }, // zumbis mais rápidos e mais frequentes
+	pistola: { nome: 'SÓ PISTOLA', pontos: 1.5 }, // não caem caixas de arma
+}
+
 // capítulos em que dá para começar a partida (liberados quando a melhor fase chega neles)
 export const CAPITULOS = [1, 11, 21, 31, 41]
 
