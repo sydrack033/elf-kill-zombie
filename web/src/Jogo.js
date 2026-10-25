@@ -137,6 +137,8 @@ export default class Jogo extends Phaser.Scene {
 		this.lapides_quebradas = 0
 		this.moedas_extras = 0 // moedas dos zumbis de elite e das hordas, somadas no fim
 		this.horda = null // { ha, zumbis } enquanto a horda está vindo
+		this.quedas = [] // escombros e meteoros caindo: { x, y, ha, sombra, pedra, regra }
+		this.proxima_queda = 300
 		this.horda_na_fase = 0
 		this.torretas = [] // torretas montadas: { x, y, base, cano, barra, ha, espera }
 		this.proximo_item = 500
@@ -1038,6 +1040,7 @@ export default class Jogo extends Phaser.Scene {
 		this.jogar_bomba()
 		this.criar_zumbis()
 		this.mover_horda()
+		this.mover_perigos()
 		this.chamar_chefe()
 		this.criar_revoada()
 		this.criar_itens()
@@ -1860,6 +1863,43 @@ export default class Jogo extends Phaser.Scene {
 		if (this.nivel >= R.ELITE.a_partir_da_fase && Math.random() < R.ELITE.chance) {
 			this.tornar_elite(zumbi)
 		}
+	}
+
+	// escombros (ruínas) e meteoros (inferno): a sombra cresce no chão e depois a coisa cai
+	mover_perigos() {
+		const regra = R.PERIGOS[this.cenario().perigo]
+		if (regra && !this.chefe && this.chefe_em == 0) {
+			this.proxima_queda--
+			if (this.proxima_queda <= 0) {
+				this.proxima_queda = Phaser.Math.Between(regra.a_cada[0], regra.a_cada[1])
+				const h = this.heroi_mais_perto(this.heroi_x, this.heroi_y)
+				const x = Phaser.Math.Clamp(h.x + 12 + Phaser.Math.Between(-70, 70), 20, this.largura - 20)
+				const y = Phaser.Math.Clamp(h.y + 18 + Phaser.Math.Between(-60, 30), ALTURA * 0.35, ALTURA - 20)
+				const sombra = this.add.ellipse(x, y, 4, 2, 0x000000, 0.45).setDepth(1.6)
+				const pedra = this.add.circle(x, -20, regra.raio * 0.35, regra.cor).setStrokeStyle(2, 0x000000).setDepth(7.5)
+				this.quedas.push({ x, y, ha: 0, sombra, pedra, regra })
+			}
+		}
+		for (const q of this.quedas) {
+			q.ha++
+			const t = q.ha / q.regra.aviso
+			q.sombra.setSize(q.regra.raio * 2 * t, q.regra.raio * t)
+			q.sombra.setFillStyle(0x000000, 0.2 + 0.35 * t)
+			// cai nos últimos 30% do aviso
+			const queda = Phaser.Math.Clamp((t - 0.7) / 0.3, 0, 1)
+			q.pedra.setPosition(q.x, -20 + (q.y + 20) * queda * queda)
+			if (q.regra.cor == 0xff7a2a && this.quadro_atual % 3 == 0 && queda > 0) {
+				// rastro de fogo do meteoro
+				const brasa = this.add.circle(q.x + Phaser.Math.Between(-3, 3), q.pedra.y - 6, 3, 0xffc040, 0.8).setDepth(7.4)
+				this.tweens.add({ targets: brasa, alpha: 0, scale: 0.3, duration: 300, onComplete: () => brasa.destroy() })
+			}
+			if (q.ha >= q.regra.aviso) {
+				q.sombra.destroy()
+				q.pedra.destroy()
+				this.explodir(q.x, q.y, q.regra.raio, 3, true, true)
+			}
+		}
+		this.quedas = this.quedas.filter((q) => q.ha < q.regra.aviso)
 	}
 
 	comecar_horda() {

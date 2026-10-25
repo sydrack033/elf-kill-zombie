@@ -36,6 +36,12 @@ export const ACELERACAO_POR_NIVEL = 0.08 // quanto os zumbis ficam mais rápidos
 export const NIVEIS_ENTRE_CHEFOES = 5 // nível 5, 10, 15... tem chefão
 export const COMBO_TEMPO = 150 // ticks para emendar a próxima morte no combo
 export const ROLAGEM_DO_CHAO = 0.3 // o chão desce esta quantidade por tick
+// perigos de cenário: algo cai do céu num ponto perto do elfo (a sombra avisa antes) e machuca quem estiver embaixo
+export const PERIGOS = {
+	escombros: { cor: 0x8a8070, raio: 26, a_cada: [520, 820], aviso: 100 },
+	meteoros: { cor: 0xff7a2a, raio: 34, a_cada: [420, 700], aviso: 90 },
+}
+
 // lua de sangue: de vez em quando uma fase inteira com zumbis mais rápidos que valem o dobro
 export const LUA_DE_SANGUE = { a_partir_da_fase: 6, chance: 0.15, velocidade: 1.25, pontos: 2 }
 
@@ -45,8 +51,8 @@ export const FASE_DA_CHUVA = 6 // dentro de cada cenário, a partir desta fase c
 export const CENARIOS = [
 	{ a_partir_da_fase: 1, textura: 'chao', nome: 'CEMITÉRIO', clima: 'chuva', musica: 'musica_jogo' },
 	{ a_partir_da_fase: 10, textura: 'chao_pantano', nome: 'PÂNTANO', clima: 'chuva', musica: 'musica_pantano', neblina: 0.4 },
-	{ a_partir_da_fase: 20, textura: 'chao_ruinas', nome: 'CIDADE EM RUÍNAS', clima: 'chuva', musica: 'musica_ruinas', neblina: 0.2 },
-	{ a_partir_da_fase: 30, textura: 'chao_inferno', nome: 'INFERNO', clima: 'brasas', musica: 'musica_inferno' },
+	{ a_partir_da_fase: 20, textura: 'chao_ruinas', nome: 'CIDADE EM RUÍNAS', clima: 'chuva', musica: 'musica_ruinas', neblina: 0.2, perigo: 'escombros' },
+	{ a_partir_da_fase: 30, textura: 'chao_inferno', nome: 'INFERNO', clima: 'brasas', musica: 'musica_inferno', perigo: 'meteoros' },
 ]
 export const COMBO_MAXIMO = 5 // multiplicador máximo de pontos
 
