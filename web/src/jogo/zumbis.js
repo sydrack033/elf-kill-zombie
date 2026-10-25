@@ -524,7 +524,7 @@ export default class Zumbis {
 			this.nivel = Math.ceil((this.nivel + 1) / R.NIVEIS_ENTRE_CHEFOES) * R.NIVEIS_ENTRE_CHEFOES - 1
 		}
 		this.nivel++
-		const de_verdade = !this.comecou_adiantado && !this.modo_chefes // fases pulando não contam
+		const de_verdade = !this.comecou_adiantado && !this.modo_chefes && !this.treino // fases pulando não contam
 		if (this.nivel >= 10 && de_verdade) desbloquear(this, 'fase10')
 		if (this.nivel >= 20 && de_verdade) desbloquear(this, 'fase20')
 		if (this.nivel >= 10 && this.mod.vidro && de_verdade) desbloquear(this, 'vidro10')

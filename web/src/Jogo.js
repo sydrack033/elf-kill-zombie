@@ -273,6 +273,7 @@ export default class Jogo extends Phaser.Scene {
 			this.ganhar_melhorias(Math.min(14, this.treino * 2))
 			this.vidas = this.vidas_max
 			this.nivel = this.treino * 5 - 1
+			this.apanhou_na_fase = true // o salto não ganha bônus
 			this.subir_nivel()
 			this.anunciar('TREINO!', 200, '#9fd8ff')
 		}
