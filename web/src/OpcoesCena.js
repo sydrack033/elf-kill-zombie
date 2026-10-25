@@ -12,6 +12,7 @@ const LINHAS = [
 	{ rotulo: 'NÚMEROS DE DANO', chave: 'numeros_dano', liga: true },
 	{ rotulo: 'TELA CHEIA', acao: 'tela_cheia' },
 	{ rotulo: 'VER AS DICAS DE NOVO', acao: 'dicas' },
+	{ rotulo: 'CRÉDITOS', acao: 'creditos' },
 ]
 
 export default class OpcoesCena extends Phaser.Scene {
@@ -23,7 +24,7 @@ export default class OpcoesCena extends Phaser.Scene {
 		this.chao = this.add.tileSprite(0, 0, 10, ALTURA, 'chao').setOrigin(0).setTint(0x505868)
 		this.titulo = texto(this, 0, 50, 'OPÇÕES', 16, '#ffd34d').setOrigin(0.5)
 		this.linhas = LINHAS.map((linha, i) => {
-			const y = 110 + i * 34
+			const y = 100 + i * 30
 			const rotulo = texto(this, 0, y, linha.rotulo, 8, '#ffffff').setOrigin(linha.chave ? 1 : 0.5, 0.5)
 				.setInteractive({ useHandCursor: true })
 			rotulo.on('pointerdown', () => this.mexer(i, 1))
@@ -42,7 +43,7 @@ export default class OpcoesCena extends Phaser.Scene {
 			}
 			return objetos
 		})
-		this.aviso = texto(this, 0, 345, '', 8, '#9ff07a').setOrigin(0.5)
+		this.aviso = texto(this, 0, 336, '', 8, '#9ff07a').setOrigin(0.5).setLineSpacing(2)
 		this.voltar = texto(this, 0, ALTURA - 14, 'SETAS: ESCOLHER E AJUSTAR   ESC: VOLTAR', 8, '#cfcfcf').setOrigin(0.5)
 		this.escolhida = 0
 		this.desenhar()
@@ -92,6 +93,10 @@ export default class OpcoesCena extends Phaser.Scene {
 		else if (linha.acao == 'tela_cheia') {
 			this.scale.toggleFullscreen()
 		}
+		else if (linha.acao == 'creditos') {
+			this.aviso.setText('ELF KILL ZOMBIE COMEÇOU COMO UM JOGO EM PORTUGOL STUDIO, NA FACULDADE.\nVERSÃO WEB FEITA COM PHASER 4 E VITE.\nIMAGENS E SONS NOVOS GERADOS POR SCRIPTS (PASTA FERRAMENTAS).').setColor('#cfcfcf')
+			this.aviso.setScale(Math.min(1, (this.largura - 10) / this.aviso.width))
+		}
 		else if (linha.acao == 'dicas') {
 			// a próxima partida mostra as dicas, e as caixas voltam a ser explicadas
 			// (os inimigos não: o bestiário continua com os que já foram vistos)
@@ -101,7 +106,7 @@ export default class OpcoesCena extends Phaser.Scene {
 			} catch {
 				// sem localStorage: as dicas já aparecem sempre
 			}
-			this.aviso.setText('AS DICAS VÃO APARECER NA PRÓXIMA PARTIDA')
+			this.aviso.setText('AS DICAS VÃO APARECER NA PRÓXIMA PARTIDA').setColor('#9ff07a').setScale(1)
 		}
 		gravar_opcoes()
 		efeito(this, 'combo', { volume: 0.5 })
