@@ -1,7 +1,8 @@
 // Parte da cena Jogo: tiros, bumerangue e acertos.
 // Os métodos desta classe são copiados para a cena em Jogo.js (por isso usam this como se fossem dela).
 import Phaser from 'phaser'
-import { ALTURA } from '../tela.js'
+import { ALTURA, texto } from '../tela.js'
+import { CRITICO } from '../regras.js'
 import { efeito } from '../opcoes.js'
 import { desbloquear } from '../conquistas.js'
 import { encostou, corpo, corpo_chefe } from './comum.js'
@@ -41,7 +42,13 @@ export default class Tiros {
 						break
 					}
 					this.acertar(tiro, Phaser.Math.Clamp(tiro.x, c.x, c.x + c.l), Phaser.Math.Clamp(tiro.y, c.y, c.y + c.a))
-					this.ferir_zumbi(zumbi, tiro.dano, tiro.arma.empurra)
+					// acerto crítico: dano dobrado (só avisa quando faz diferença)
+					const critico = !tiro.arma.furia && Math.random() < CRITICO.chance
+					if (critico && zumbi.vida > tiro.dano) {
+						const aviso = texto(this, c.x + c.l / 2, c.y - 4, 'CRÍTICO!', 8, '#ff9a3c').setOrigin(0.5).setDepth(8)
+						this.tweens.add({ targets: aviso, y: aviso.y - 16, alpha: 0, duration: 600, onComplete: () => aviso.destroy() })
+					}
+					this.ferir_zumbi(zumbi, critico ? tiro.dano * CRITICO.multiplicador : tiro.dano, tiro.arma.empurra)
 					tiro.acertou.add(zumbi)
 					// flecha que já matou 5
 					if (tiro.arma.carrega && zumbi.morrendo) {

@@ -52,6 +52,7 @@ export const MORTES_POR_NIVEL = (nivel) => 10 + nivel * 2 // fase 1: 12, fase 5:
 export const ACELERACAO_POR_NIVEL = 0.08 // quanto os zumbis ficam mais rápidos a cada fase (8%)
 export const NIVEIS_ENTRE_CHEFOES = 5 // nível 5, 10, 15... tem chefão
 export const COMBO_TEMPO = 150 // ticks para emendar a próxima morte no combo
+export const CRITICO = { chance: 0.07, multiplicador: 2 } // de vez em quando um tiro acerta em cheio
 export const ROLAGEM_DO_CHAO = 0.3 // o chão desce esta quantidade por tick
 // perigos de cenário: algo cai do céu num ponto perto do elfo (a sombra avisa antes) e machuca quem estiver embaixo
 export const PERIGOS = {
