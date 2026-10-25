@@ -708,20 +708,32 @@ export default class Zumbis {
 		}
 		this.proxima_revoada = Phaser.Math.Between(R.CORVOS.a_cada[0], R.CORVOS.a_cada[1])
 		const da_esquerda = Math.random() < 0.5
+		this.revoada_de_morcegos = Math.random() < 0.5
 		const quantos = Phaser.Math.Between(R.CORVOS.quantos[0], R.CORVOS.quantos[1])
 		for (let i = 0; i < quantos; i++) {
 			const x = da_esquerda ? -20 - i * 18 : this.largura + 4 + i * 18
-			const corvo = this.criar_zumbi('corvo', x, 10 + i * 12 + Math.random() * 30)
+			// da fase 16 em diante, metade das revoadas são de morcegos
+			const tipo = this.nivel >= 16 && this.revoada_de_morcegos ? 'morcego' : 'corvo'
+			const corvo = this.criar_zumbi(tipo, x, 10 + i * 12 + Math.random() * 30)
+			if (tipo == 'morcego') corvo.sprite.setTint(0x8a6aaa)
 			corvo.vx = (da_esquerda ? 1 : -1) * R.CORVOS.velocidade * (0.9 + Math.random() * 0.2)
 			corvo.vy = 0.5 + Math.random() * 0.25
 			corvo.voo = Math.random() * 100
 		}
-		efeito(this, 'fantasma', { volume: 0.2, rate: 1.8 }) // grasnado
+		efeito(this, 'fantasma', { volume: 0.2, rate: this.revoada_de_morcegos && this.nivel >= 16 ? 2.6 : 1.8 }) // grasnado (ou guincho)
 	}
 
 	voar(corvo) {
 		corvo.voo++
-		corvo.x += corvo.vx
+		if (corvo.regra.mergulha && !corvo.mergulhou && corvo.voo > 70 && Math.random() < 0.02) {
+			// morcego: mergulha na direção do elfo (uma vez)
+			const h = this.heroi_mais_perto(corvo.x, corvo.y)
+			const ang = Math.atan2(h.y + 12 - corvo.y, h.x + 12 - corvo.x)
+			corvo.vx = Math.cos(ang) * 2.4
+			corvo.vy = Math.sin(ang) * 2.4
+			corvo.mergulhou = true
+		}
+		corvo.x += corvo.vx + (corvo.regra.mergulha && !corvo.mergulhou ? Math.sin(corvo.voo / 6) * 1.2 : 0) // zigue-zague
 		corvo.y += corvo.vy + Math.sin(corvo.voo / 12) * 0.6 // voo ondulado
 		const c = corpo(corvo)
 		if (!this.intocavel && this.encosta_em_heroi(c.x, c.y, c.l, c.a)) {

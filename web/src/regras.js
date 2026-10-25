@@ -240,6 +240,12 @@ export const ZUMBIS = {
 		textura: 'corvo', corpo: { x: 0, y: 0, l: 16, a: 12 }, // desenhado 40% maior
 		peso: () => 0,
 	},
+	// morcego: vem em revoadas como o corvo (fase 16+), mas faz zigue-zague e mergulha no elfo
+	morcego: {
+		escala: 1, cor: 0x8a6aaa, vida: 1, vy: 0, pontos: 25, empurravel: false, voa: true, mergulha: true,
+		textura: 'corvo', corpo: { x: 0, y: 0, l: 16, a: 12 },
+		peso: () => 0,
+	},
 }
 
 // chuva de moedas: depois de vencer o 2º, 4º, 6º... chefão, alguns segundos sem zumbis e com moedas caindo
