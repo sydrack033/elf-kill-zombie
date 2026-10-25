@@ -290,16 +290,16 @@ export const CHEFE = { escala: 2, vida_base: 45, vida_por_chefe: 25, pontos: 100
 //   cuspe = leque de cuspe no elfo, chamar = chama zumbis corredores,
 //   investida = avisa (fica vermelho e treme) e desce correndo em cima do elfo, chuva = cuspe caindo do céu
 export const CHEFES = [
-	{ nome: 'O REI ZUMBI', cor: null, ataques: ['cuspe', 'chamar'] },
-	{ nome: 'O CARNICEIRO', cor: 0xff9a9a, ataques: ['cuspe', 'investida'] },
-	{ nome: 'O PODRE', cor: 0xa8ff8a, ataques: ['cuspe', 'chuva', 'chamar'] },
+	{ nome: 'O REI ZUMBI', cor: null, ataques: ['cuspe', 'chamar'], fala: 'MAS ELE ERA SÓ O PRIMEIRO...' },
+	{ nome: 'O CARNICEIRO', cor: 0xff9a9a, ataques: ['cuspe', 'investida'], fala: 'O PÂNTANO FICOU EM SILÊNCIO.' },
+	{ nome: 'O PODRE', cor: 0xa8ff8a, ataques: ['cuspe', 'chuva', 'chamar'], fala: 'O CHEIRO JÁ ESTÁ INDO EMBORA.' },
 	// teleporte = some e aparece em outro lugar; fantasmas = chama zumbis fantasmas
-	{ nome: 'A BRUXA', cor: 0xd08aff, ataques: ['cuspe', 'teleporte', 'fantasmas'] },
+	{ nome: 'A BRUXA', cor: 0xd08aff, ataques: ['cuspe', 'teleporte', 'fantasmas'], fala: 'O FEITIÇO SOBRE A VILA SE QUEBROU.' },
 	// ossos = ossos girando em volta dele seguram os tiros (voltam depois de um tempo);
 	// levantar = zumbis saem das manchas de sangue do chão
-	{ nome: 'O NECROMANTE', cor: 0x7af0d8, ataques: ['cuspe', 'ossos', 'levantar'] },
+	{ nome: 'O NECROMANTE', cor: 0x7af0d8, ataques: ['cuspe', 'ossos', 'levantar'], fala: 'ALGO DESPERTOU LÁ EMBAIXO, NO FOGO...' },
 	// meteoros = chama meteoros perto do elfo; labareda = jorro de fogo que vai seguindo o elfo
-	{ nome: 'O DEMÔNIO', cor: 0xff6a4a, ataques: ['cuspe', 'meteoros', 'labareda'] },
+	{ nome: 'O DEMÔNIO', cor: 0xff6a4a, ataques: ['cuspe', 'meteoros', 'labareda'], fala: 'O FRIO VEM DO NORTE. O FIM ESTÁ PERTO.' },
 ]
 // chefão final, na fase 50: tem todos os ataques, é maior e bem mais forte; vencer mostra o final do jogo
 export const CHEFE_FINAL = { fase: 50, nome: 'O SENHOR DOS MORTOS', cor: 0xb08aff, vida: 1.6, escala: 2.4 }

@@ -141,6 +141,11 @@ export default class Chefes {
 				else {
 					tocar_musica(this, this.cenario().musica)
 					// depois do 2º, 4º, 6º... chefão vem a chuva de moedas
+					// uma frase da história depois de cada chefão (só na primeira volta)
+					const tipo = R.CHEFES[chefe.numero - 1]
+					if (tipo && tipo.fala) {
+						this.capitulo_pendente = { nome: tipo.nome + ' CAIU', lema: tipo.fala }
+					}
 					if (chefe.numero % 2 == 0 && !this.modo_chefes) {
 						this.chuva_de_moedas = R.CHUVA_DE_MOEDAS.duracao
 					}
