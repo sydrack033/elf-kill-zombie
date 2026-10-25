@@ -62,7 +62,7 @@ git (pasta `Jogo1`), então dá para ver o histórico com `git log` e voltar qua
 - **Loja do elfo:** cada partida rende moedas (pontos, chefões, elites, hordas e moedas que caem dos
   zumbis), que compram vantagens permanentes para o começo do jogo (bombas, corações, começar com o
   triplo, com meia fúria, com o ímã, com uma melhoria) a **Segunda Chance** (volta uma vez ao morrer) a **Fada Companheira** (atira junto com você) e a **Forja Élfica** (armas já vêm no nível II).
-- **Chapéus** para o elfo (gorro de Natal, cartola, chapéu de bruxa, elmo viking e coroa), numa aba
+- **Chapéus** para o elfo (gorro de Natal, cartola, chapéu de bruxa, elmo viking, abóbora, chapéu de pirata e coroa), numa aba
   da loja; o chapéu aparece no jogo e na demonstração do título.
 - **Desafios do dia:** 3 missões que mudam todo dia (tecla D no título), cada uma vale 25 moedas.
 - **Dificuldade** fácil / normal / difícil (vale também para a vida dos chefões) e **cores do elfo**

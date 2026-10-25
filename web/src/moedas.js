@@ -8,6 +8,8 @@ export const CHAPEUS = [
 	{ id: 'chapeu_cartola', nome: 'CARTOLA', texto: 'ELEGÂNCIA NO CEMITÉRIO', custo: [100] },
 	{ id: 'chapeu_bruxa', nome: 'CHAPÉU DE BRUXA', texto: 'ROUBADO DA BRUXA', custo: [120] },
 	{ id: 'chapeu_viking', nome: 'ELMO VIKING', texto: 'PARA GUERREIROS DO NORTE', custo: [150] },
+	{ id: 'chapeu_abobora', nome: 'ABÓBORA', texto: 'FELIZ HALLOWEEN', custo: [90] },
+	{ id: 'chapeu_pirata', nome: 'CHAPÉU DE PIRATA', texto: 'O TESOURO É DO SAQUEADOR', custo: [180] },
 	{ id: 'chapeu_coroa', nome: 'COROA', texto: 'DO REI ZUMBI', custo: [250] },
 ]
 

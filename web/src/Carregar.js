@@ -118,6 +118,9 @@ export default class Carregar extends Phaser.Scene {
 			chapeu_gorro: [[0xffffff, 0, 7, 14, 3], [0x8a1010, 3, 2, 8, 5], [0xd82a2a, 4, 3, 6, 4], [0x8a1010, 9, 0, 3, 3], [0xd82a2a, 9, 1, 2, 2], [0xffffff, 11, 0, 3, 3]],
 			chapeu_bruxa: [[0x1a0a2a, 0, 7, 14, 3], [0x5a2a8a, 1, 8, 12, 1], [0x1a0a2a, 4, 2, 6, 6], [0x5a2a8a, 5, 3, 4, 4], [0x1a0a2a, 6, 0, 3, 3], [0x5a2a8a, 7, 1, 1, 2], [0xffd34d, 5, 6, 4, 1]],
 			chapeu_viking: [[0x2a2a30, 2, 3, 10, 7], [0x9aa0aa, 3, 4, 8, 5], [0xc8ccd4, 4, 4, 3, 2], [0xf0e8d0, 0, 0, 2, 5], [0xf0e8d0, 12, 0, 2, 5], [0x8a7a5a, 1, 4, 2, 2], [0x8a7a5a, 11, 4, 2, 2], [0x6a6a74, 3, 8, 8, 1]],
+			chapeu_abobora: [[0x7a3a08, 1, 2, 12, 8], [0xff8a1a, 2, 3, 10, 6], [0xd86a10, 6, 3, 2, 6], [0xffa84a, 3, 3, 1, 3], [0x3a6a1a, 6, 0, 2, 3], [0x5a9a2a, 8, 0, 2, 1],
+				[0x2a1000, 3, 4, 2, 2], [0x2a1000, 9, 4, 2, 2], [0xffe070, 3, 5, 1, 1], [0xffe070, 10, 5, 1, 1], [0x2a1000, 4, 7, 6, 1], [0xff8a1a, 5, 7, 1, 1], [0xff8a1a, 8, 7, 1, 1]],
+			chapeu_pirata: [[0x1a1a1a, 0, 5, 14, 4], [0x1a1a1a, 2, 1, 10, 5], [0x2a2a2a, 3, 2, 8, 3], [0xd8b04a, 0, 8, 14, 1], [0xf0f0e8, 5, 2, 4, 3], [0x1a1a1a, 6, 3, 1, 1], [0x1a1a1a, 8, 3, 1, 1], [0xf0f0e8, 4, 6, 6, 1]],
 		}
 		for (const [chave, partes] of Object.entries(CHAPEUS)) {
 			g.clear()
