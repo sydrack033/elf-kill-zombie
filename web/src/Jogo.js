@@ -837,7 +837,9 @@ export default class Jogo extends Phaser.Scene {
 		this.dir_on = (setas && t.direita.isDown) || t.d.isDown
 		this.cima_on = (setas && t.acima.isDown) || t.w.isDown
 		this.baixo_on = (setas && t.abaixo.isDown) || t.s.isDown
-		this.atirar_on = t.espaco.isDown || (mouse.leftButtonDown() && !mouse.wasTouch)
+		// com o tiro automático das opções, atira sozinho sempre que tem zumbi na tela (a mira continua no mouse)
+		this.atirar_on = t.espaco.isDown || (mouse.leftButtonDown() && !mouse.wasTouch) ||
+			(opcoes.tiro_auto && this.inimigo_mais_perto() != null)
 		this.bomba_on = t.q.isDown || (mouse.rightButtonDown() && !mouse.wasTouch)
 		this.esquiva_on = t.shift.isDown
 		this.furia_on = t.e.isDown || mouse.middleButtonDown()

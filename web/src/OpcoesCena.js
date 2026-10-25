@@ -8,6 +8,7 @@ const LINHAS = [
 	{ rotulo: 'MÚSICA', chave: 'musica' },
 	{ rotulo: 'EFEITOS', chave: 'efeitos' },
 	{ rotulo: 'TREMOR', chave: 'tremor', liga: true },
+	{ rotulo: 'TIRO AUTOMÁTICO', chave: 'tiro_auto', liga: true }, // no computador: atira sem segurar o botão
 	{ rotulo: 'TELA CHEIA', acao: 'tela_cheia' },
 	{ rotulo: 'VER AS DICAS DE NOVO', acao: 'dicas' },
 ]
@@ -40,7 +41,7 @@ export default class OpcoesCena extends Phaser.Scene {
 			}
 			return objetos
 		})
-		this.aviso = texto(this, 0, 300, '', 8, '#9ff07a').setOrigin(0.5)
+		this.aviso = texto(this, 0, 320, '', 8, '#9ff07a').setOrigin(0.5)
 		this.voltar = texto(this, 0, ALTURA - 14, 'SETAS: ESCOLHER E AJUSTAR   ESC: VOLTAR', 8, '#cfcfcf').setOrigin(0.5)
 		this.escolhida = 0
 		this.desenhar()
