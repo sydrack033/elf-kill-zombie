@@ -1240,21 +1240,33 @@ export default class Jogo extends Phaser.Scene {
 		const numero = this.nivel / R.NIVEIS_ENTRE_CHEFOES
 		const vida = R.CHEFE.vida_base + R.CHEFE.vida_por_chefe * (numero - 1)
 		const tamanho = 64 * R.CHEFE.escala
+		const tipo = R.CHEFES[(numero - 1) % R.CHEFES.length]
+		// quando os chefões voltam do começo ganham um número: O REI ZUMBI II, III...
+		const volta = Math.floor((numero - 1) / R.CHEFES.length) + 1
+		const romanos = ['', '', ' II', ' III', ' IV', ' V', ' VI', ' VII', ' VIII', ' IX', ' X']
 		this.chefe = {
 			numero,
+			nome: tipo.nome + (romanos[volta] ?? ' ' + volta),
+			cor: tipo.cor,
+			// do 4º chefão em diante ele usa todos os ataques
+			ataques: numero > R.CHEFES.length ? ['cuspe', 'chamar', 'investida', 'chuva'] : tipo.ataques,
 			x: this.largura / 2 - tamanho / 2,
 			y: -tamanho,
 			vida,
 			vida_max: vida,
 			fase: 'entrando',
-			ha: 0,
+			ha: 0, // relógio do balanço de um lado para o outro (para durante a investida)
 			flash: 0,
 			atacando: 0,
 			espera_cuspe: 120,
 			espera_chamar: 400,
+			espera_investida: 300,
+			espera_chuva: 250,
+			investida: null, // { etapa: 'aviso' | 'descendo' | 'voltando', ha, alvo_x, alvo_y }
 			morto_ha: 0,
 		}
 		this.chefe.sprite = this.add.sprite(this.chefe.x, this.chefe.y, 'chefe', 0).setOrigin(0).setScale(R.CHEFE.escala).setDepth(3)
+		this.barra_nome.setText(this.chefe.nome)
 		this.sound.play('rugido', { volume: 0.9 })
 		tocar_musica(this, 'musica_chefe')
 		this.cameras.main.shake(400, 0.008)
@@ -1309,47 +1321,120 @@ export default class Jogo extends Phaser.Scene {
 			return
 		}
 
-		chefe.ha++
 		const tamanho = 64 * R.CHEFE.escala
 		if (chefe.fase == 'entrando') {
 			chefe.y += 0.5
 			if (chefe.y >= 48) {
 				chefe.fase = 'lutando'
 				chefe.ha = 0
-				chefe.base_x = chefe.x
 			}
+		}
+		else if (chefe.investida) {
+			this.investir(chefe, tamanho)
 		}
 		else {
 			// anda de um lado para o outro na parte de cima, balançando
+			chefe.ha++
 			const amplitude = Math.max(0, this.largura / 2 - tamanho / 2 - 10)
 			chefe.x = this.largura / 2 - tamanho / 2 + Math.sin(chefe.ha / (140 - chefe.numero * 10)) * amplitude
 			chefe.y = 48 + Math.sin(chefe.ha / 37) * 8
-
-			chefe.espera_cuspe--
-			if (chefe.espera_cuspe <= 0) {
-				const c = corpo_chefe(chefe)
-				const quantos = Math.min(9, 3 + chefe.numero * 2)
-				this.cuspir(c.x + c.l / 2, c.y + c.a * 0.4, quantos, 0.18)
-				chefe.atacando = 40
-				chefe.espera_cuspe = Math.max(70, 150 - chefe.numero * 15)
-			}
-			chefe.espera_chamar--
-			if (chefe.espera_chamar <= 0) {
-				// chama ajudantes
-				const c = corpo_chefe(chefe)
-				for (let i = 0; i < 1 + chefe.numero; i++) {
-					this.criar_zumbi('corredor', Phaser.Math.Clamp(c.x + Math.random() * c.l - 18, 0, this.largura - 36), c.y + c.a - 20)
-				}
-				chefe.atacando = 40
-				chefe.espera_chamar = 500
-			}
-			if (chefe.atacando > 0)
-				chefe.atacando--
+			this.atacar(chefe)
 		}
+		if (chefe.atacando > 0)
+			chefe.atacando--
 
 		const c = corpo_chefe(chefe)
 		if (encostou(c.x, c.y, c.l, c.a, this.heroi_x + 4, this.heroi_y + 2, 17, 22)) {
 			this.levar_dano()
+		}
+	}
+
+	// cada ataque tem seu relógio; o chefão só usa os ataques da lista dele
+	atacar(chefe) {
+		const tem = (ataque) => chefe.ataques.includes(ataque)
+		const c = corpo_chefe(chefe)
+
+		chefe.espera_cuspe--
+		if (tem('cuspe') && chefe.espera_cuspe <= 0) {
+			const quantos = Math.min(9, 3 + chefe.numero * 2)
+			this.cuspir(c.x + c.l / 2, c.y + c.a * 0.4, quantos, 0.18)
+			chefe.atacando = 40
+			chefe.espera_cuspe = Math.max(70, 150 - chefe.numero * 15)
+		}
+
+		chefe.espera_chamar--
+		if (tem('chamar') && chefe.espera_chamar <= 0) {
+			for (let i = 0; i < 1 + chefe.numero; i++) {
+				this.criar_zumbi('corredor', Phaser.Math.Clamp(c.x + Math.random() * c.l - 18, 0, this.largura - 36), c.y + c.a - 20)
+			}
+			chefe.atacando = 40
+			chefe.espera_chamar = 500
+		}
+
+		chefe.espera_chuva--
+		if (tem('chuva') && chefe.espera_chuva <= 0) {
+			// cuspe caindo do céu em lugares sorteados (um deles sempre em cima do elfo)
+			const quantos = 5 + chefe.numero
+			for (let i = 0; i < quantos; i++) {
+				const x = i == 0 ? this.heroi_x + 12 : Math.random() * this.largura
+				const sprite = this.add.sprite(x, -10 - Math.random() * 120, 'cuspe', 0).setDepth(4.5)
+				this.cuspes.push({ sprite, x, y: sprite.y, vx: 0, vy: R.VELOCIDADE_CUSPE * 1.1 })
+			}
+			this.sound.play('cuspe', { volume: 0.6, rate: 0.7 })
+			chefe.atacando = 40
+			chefe.espera_chuva = Math.max(220, 380 - chefe.numero * 20)
+		}
+
+		chefe.espera_investida--
+		if (tem('investida') && chefe.espera_investida <= 0) {
+			chefe.investida = { etapa: 'aviso', ha: 0 }
+			chefe.espera_investida = Math.max(300, 520 - chefe.numero * 30)
+			this.sound.play('rugido', { volume: 0.7, rate: 1.3 })
+		}
+	}
+
+	// investida: treme vermelho por um tempo (dá para fugir), desce correndo e volta para o lugar
+	investir(chefe, tamanho) {
+		const inv = chefe.investida
+		inv.ha++
+		if (inv.etapa == 'aviso') {
+			chefe.x += Math.random() < 0.5 ? -1 : 1 // tremendo
+			if (inv.ha >= 70) {
+				inv.etapa = 'descendo'
+				// mira onde o elfo está agora
+				inv.alvo_x = Phaser.Math.Clamp(this.heroi_x + 12 - tamanho / 2, 0, this.largura - tamanho)
+				inv.alvo_y = ALTURA - tamanho - 10
+				this.cameras.main.shake(300, 0.006)
+			}
+		}
+		else if (inv.etapa == 'descendo') {
+			const dx = inv.alvo_x - chefe.x
+			const dy = inv.alvo_y - chefe.y
+			const d = Math.hypot(dx, dy)
+			const v = 3.5 + chefe.numero * 0.2
+			if (d <= v) {
+				inv.etapa = 'voltando'
+				this.cameras.main.shake(200, 0.01)
+			}
+			else {
+				chefe.x += (dx / d) * v
+				chefe.y += (dy / d) * v
+			}
+		}
+		else {
+			// volta para o ponto do balanço onde estava
+			const amplitude = Math.max(0, this.largura / 2 - tamanho / 2 - 10)
+			const volta_x = this.largura / 2 - tamanho / 2 + Math.sin(chefe.ha / (140 - chefe.numero * 10)) * amplitude
+			const dx = volta_x - chefe.x
+			const dy = 48 - chefe.y
+			const d = Math.hypot(dx, dy)
+			if (d <= 1.6) {
+				chefe.investida = null
+			}
+			else {
+				chefe.x += (dx / d) * 1.6
+				chefe.y += (dy / d) * 1.6
+			}
 		}
 	}
 
@@ -1614,18 +1699,19 @@ export default class Jogo extends Phaser.Scene {
 			// linha 6 a partir da 3ª coluna e linha 7: pegando fogo e virando fumaça
 			quadro = Math.min(55, 44 + Math.floor(chefe.morto_ha / 10))
 		}
-		else if (chefe.atacando > 0) {
-			quadro = 28 + (Math.floor(chefe.ha / 8) % 4) // linha 4: braços para cima
+		else if (chefe.atacando > 0 || chefe.investida) {
+			quadro = 28 + (Math.floor(this.quadro_atual / 8) % 4) // linha 4: braços para cima
 		}
 		else {
-			quadro = Math.floor(chefe.ha / 10) % 7 // linha 0: andando para baixo
+			quadro = Math.floor(this.quadro_atual / 10) % 7 // linha 0: andando para baixo
 		}
 		chefe.sprite.setFrame(quadro)
 		chefe.sprite.setPosition(Math.round(chefe.x), Math.round(chefe.y))
-		this.pintar(chefe.sprite, chefe.flash, null)
+		// avisando a investida: pisca vermelho
+		const avisando = chefe.investida && chefe.investida.etapa == 'aviso' && Math.floor(this.quadro_atual / 6) % 2 == 0
+		this.pintar(chefe.sprite, chefe.flash, avisando ? 0xff3030 : chefe.cor)
 
 		this.barra_vida.setSize(Math.max(0, (this.largura_barra * chefe.vida) / chefe.vida_max), 4)
-		this.barra_nome.setText('ZUMBI REI ' + chefe.numero)
 	}
 
 	desenhar_resto() {
