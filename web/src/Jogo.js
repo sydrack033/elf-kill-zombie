@@ -109,6 +109,7 @@ export default class Jogo extends Phaser.Scene {
 		this.lapides_quebradas = 0
 		this.dia = dia_de_hoje() // os desafios valem pelo dia em que a partida começou
 		this.faixas = 0
+		this.explicacao = null
 		this.capitulo_pendente = null
 		this.tweens.resumeAll() // se a partida anterior acabou pausada
 		this.time.paused = false

@@ -91,7 +91,10 @@ export default class Itens {
 		} catch {
 			// sem localStorage: não guarda
 		}
+		// só uma explicação por vez: a nova troca a anterior
+		if (this.explicacao && this.explicacao.active) this.explicacao.destroy()
 		const explicacao = texto(this, this.largura / 2, ALTURA / 2 - 28, item.texto, 8, '#ffffff').setOrigin(0.5).setDepth(10)
+		this.explicacao = explicacao
 		this.tweens.add({ targets: explicacao, alpha: 0, delay: 2600, duration: 500, onComplete: () => explicacao.destroy() })
 	}
 

@@ -194,7 +194,7 @@ export default class Zumbis {
 			return
 		}
 		this.faixas = (this.faixas || 0) + 1
-		const y = 70 + (this.faixas - 1) * 40
+		const y = 104 + (this.faixas - 1) * 38 // abaixo do aviso de conquista
 		const fundo = this.add.rectangle(this.largura / 2, y, 210, 34, 0x1c1630, 0.92).setStrokeStyle(1, 0xff6a6a).setDepth(12.5)
 		const nome = texto(this, this.largura / 2, y - 8, 'NOVO: ' + ficha.nome, 8, '#ff9a9a').setOrigin(0.5).setDepth(12.5)
 		const dica = texto(this, this.largura / 2, y + 7, ficha.texto.replace('\n', ' '), 8, '#ffffff').setOrigin(0.5).setDepth(12.5)
