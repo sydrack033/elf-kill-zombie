@@ -121,6 +121,7 @@ export default class Jogo extends Phaser.Scene {
 		this.faixas = 0
 		this.explicacao = null
 		this.capitulo_pendente = null
+		this.cartao_ate = 0 // até quando o cartão de cinema atual fica na tela
 		this.tweens.resumeAll() // se a partida anterior acabou pausada
 		this.time.paused = false
 		this.objetos_final = null

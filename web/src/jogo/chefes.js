@@ -213,6 +213,13 @@ export default class Chefes {
 	// entrada de cinema: faixas pretas em cima e embaixo e o nome do chefão atravessando a tela
 	// também usada na chegada de cada cenário (com outra cor)
 	apresentar_chefe(nome, subtitulo, cor = '#ff5a5a') {
+		// um cartão por vez: se já tem um na tela, este espera ele acabar
+		const agora = this.time.now
+		if (this.cartao_ate && this.cartao_ate > agora) {
+			this.time.delayedCall(this.cartao_ate - agora + 50, () => this.apresentar_chefe(nome, subtitulo, cor))
+			return
+		}
+		this.cartao_ate = agora + 2450
 		const L = this.largura
 		const faixa_cima = this.add.rectangle(0, 0, L, 0, 0x000000).setOrigin(0).setDepth(9.6)
 		const faixa_baixo = this.add.rectangle(0, ALTURA, L, 0, 0x000000).setOrigin(0, 1).setDepth(9.6)
