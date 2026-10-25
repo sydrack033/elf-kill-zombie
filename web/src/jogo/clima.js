@@ -5,6 +5,7 @@ import { ALTURA } from '../tela.js'
 import * as R from '../regras.js'
 import { efeito } from '../opcoes.js'
 import { progresso_de_hoje } from '../desafios.js'
+import { corpo } from './comum.js'
 
 export default class Clima {
 	// ------------------------------------------------------------------ manchas, chuva e relâmpagos
@@ -91,8 +92,31 @@ export default class Clima {
 				this.proximo_trovao = Phaser.Math.Between(1200, 2600)
 				this.relampago_ha = 40
 				efeito(this, 'trovao', { volume: 0.55 })
+				this.raio_do_ceu()
 			}
 		}
+	}
+
+	// o relâmpago da tempestade cai em cima de um zumbi na tela (zigue-zague do céu até ele)
+	raio_do_ceu() {
+		const alvos = this.zumbis.filter((z) => !z.morrendo && !z.intangivel && !z.regra.voa && z.y > 20 && z.y < ALTURA - 80)
+		if (!alvos.length) {
+			return
+		}
+		const z = Phaser.Utils.Array.GetRandom(alvos)
+		const c = corpo(z)
+		const x = c.x + c.l / 2
+		const y = c.y + c.a / 2
+		const g = this.add.graphics().setDepth(8.2)
+		g.lineStyle(2, 0xe8f0ff, 1)
+		g.beginPath()
+		g.moveTo(x + Phaser.Math.Between(-30, 30), 0)
+		for (let i = 1; i <= 6; i++) {
+			g.lineTo(x + (i < 6 ? Phaser.Math.Between(-14, 14) : 0), (y * i) / 6)
+		}
+		g.strokePath()
+		this.tweens.add({ targets: g, alpha: 0, duration: 350, onComplete: () => g.destroy() })
+		this.explodir(x, y, 24, 4, false, false, true)
 	}
 
 	contar_tempos() {
