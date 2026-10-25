@@ -217,6 +217,14 @@ export default class Jogo extends Phaser.Scene {
 		this.game.events.on(Phaser.Core.Events.BLUR, ao_perder_foco)
 		this.events.once('shutdown', () => this.game.events.off(Phaser.Core.Events.BLUR, ao_perder_foco))
 
+		// modo chefões: um chefão atrás do outro, começando com uma melhoria
+		this.modo_chefes = opcoes.modo == 'chefes'
+		if (this.modo_chefes) {
+			this.texto_da_fase = 'CHEFÃO A CAMINHO!'
+			this.subir_nivel()
+			this.oferecer_melhorias()
+		}
+
 		// modo 2 jogadores (só no computador)
 		this.p2 = null
 		if (opcoes.jogadores == 2 && this.sys.game.device.os.desktop) {
@@ -1786,6 +1794,10 @@ export default class Jogo extends Phaser.Scene {
 		const cenario_antes = this.cenario()
 		if (!this.apanhou_na_fase && this.nivel >= 3) desbloquear(this, 'intocavel')
 		this.apanhou_na_fase = false
+		// modo chefões: pula direto para a próxima fase de chefão
+		if (this.modo_chefes) {
+			this.nivel = Math.ceil((this.nivel + 1) / R.NIVEIS_ENTRE_CHEFOES) * R.NIVEIS_ENTRE_CHEFOES - 1
+		}
 		this.nivel++
 		if (this.nivel >= 10) desbloquear(this, 'fase10')
 		if (this.nivel >= 20) desbloquear(this, 'fase20')
@@ -1800,7 +1812,12 @@ export default class Jogo extends Phaser.Scene {
 		}
 		if (this.nivel % R.NIVEIS_ENTRE_CHEFOES == 0) {
 			this.chefe_em = 300
-			this.anunciar('ZUMBI REI!', 300, '#ff5a5a')
+			this.anunciar('CHEFÃO A CAMINHO!', 300, '#ff5a5a')
+			// no modo chefões, cada vitória dá uma melhoria antes do próximo
+			if (this.modo_chefes && venceu_chefe) {
+				this.texto_da_fase = 'CHEFÃO A CAMINHO!'
+				this.oferecer_melhorias()
+			}
 		}
 		else {
 			this.texto_da_fase = cenario != cenario_antes ? cenario.nome + '\nFASE ' + this.nivel : 'FASE ' + this.nivel
@@ -2056,6 +2073,7 @@ export default class Jogo extends Phaser.Scene {
 			this.parada = 18
 			this.stats.chefes++
 			desbloquear(this, 'chefe' + (((chefe.numero - 1) % R.CHEFES.length) + 1))
+			if (this.modo_chefes && this.stats.chefes >= 4) desbloquear(this, 'maratona')
 			const ganho = R.CHEFE.pontos * chefe.numero
 			this.pontos += ganho
 			this.flutuar(chefe.x + 64, chefe.y + 20, '+' + ganho, '#ff9a3c')
@@ -2402,7 +2420,7 @@ export default class Jogo extends Phaser.Scene {
 			this.recorde = this.pontos
 			gravar_recorde(this.pontos)
 		}
-		const { posicao, id } = gravar_placar(this.pontos, this.nivel, opcoes.dificuldade)
+		const { posicao, id } = gravar_placar(this.pontos, this.nivel, opcoes.dificuldade, opcoes.modo)
 		somar_estatisticas({ zumbis: this.stats.mortos, chefes: this.stats.chefes, segundos: Math.floor(this.stats.ticks / 100), fase: this.nivel })
 		const segundos = Math.floor(this.stats.ticks / 100)
 		const tempo = Math.floor(segundos / 60) + ':' + String(segundos % 60).padStart(2, '0')
