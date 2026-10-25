@@ -5,7 +5,7 @@ import { ALTURA, texto } from '../tela.js'
 import * as R from '../regras.js'
 import { desbloquear } from '../conquistas.js'
 import { marcar_visto } from '../Bestiario.js'
-import { efeito } from '../opcoes.js'
+import { efeito, opcoes } from '../opcoes.js'
 import { sortear, corpo } from './comum.js'
 
 export default class Zumbis {
@@ -343,6 +343,12 @@ export default class Zumbis {
 	ferir_zumbi(zumbi, dano, empurra = 0) {
 		zumbi.vida -= dano
 		zumbi.flash = 5
+		if (opcoes.numeros_dano) {
+			// número do dano subindo (opção da tela de Opções)
+			const c = corpo(zumbi)
+			const n = texto(this, c.x + c.l / 2 + Phaser.Math.Between(-6, 6), c.y, String(dano), 8, dano >= 3 ? '#ffd34d' : '#ffffff').setOrigin(0.5).setDepth(8)
+			this.tweens.add({ targets: n, y: n.y - 14, alpha: 0, duration: 450, onComplete: () => n.destroy() })
+		}
 		if (zumbi.regra.empurravel) {
 			zumbi.y -= empurra
 		}
