@@ -137,6 +137,8 @@ export default class Jogo extends Phaser.Scene {
 		this.lapides_quebradas = 0
 		this.moedas_extras = 0 // moedas dos zumbis de elite e das hordas, somadas no fim
 		this.horda = null // { ha, zumbis } enquanto a horda está vindo
+		this.pocas = [] // poças de lodo do pântano: { x, y, sprite }
+		this.proxima_poca = 0
 		this.quedas = [] // escombros e meteoros caindo: { x, y, ha, sombra, pedra, regra }
 		this.proxima_queda = 300
 		this.horda_na_fase = 0
@@ -1179,7 +1181,8 @@ export default class Jogo extends Phaser.Scene {
 
 	mover_heroi() {
 		// o elfo anda pela parte de baixo da tela
-		const v = (this.poderes.velocidade > 0 ? R.VELOCIDADE_HEROI_RAPIDO : R.VELOCIDADE_HEROI) * (1 + 0.12 * this.m('velocidade'))
+		const lodo = this.no_lodo(this.heroi_x + 12, this.heroi_y + 22) ? R.LODO.lenta : 1
+		const v = (this.poderes.velocidade > 0 ? R.VELOCIDADE_HEROI_RAPIDO : R.VELOCIDADE_HEROI) * (1 + 0.12 * this.m('velocidade')) * lodo
 		let vx = 0
 		let vy = 0
 		if (this.toque_vx || this.toque_vy) {
@@ -1285,7 +1288,8 @@ export default class Jogo extends Phaser.Scene {
 
 	processar_p2() {
 		const p2 = this.p2
-		const v = (this.poderes.velocidade > 0 ? R.VELOCIDADE_HEROI_RAPIDO : R.VELOCIDADE_HEROI) * (1 + 0.12 * this.m('velocidade'))
+		const lodo = this.no_lodo(this.heroi_x + 12, this.heroi_y + 22) ? R.LODO.lenta : 1
+		const v = (this.poderes.velocidade > 0 ? R.VELOCIDADE_HEROI_RAPIDO : R.VELOCIDADE_HEROI) * (1 + 0.12 * this.m('velocidade')) * lodo
 		p2.x = Phaser.Math.Clamp(p2.x + p2.vx * v, 0, this.largura - 25)
 		p2.y = Phaser.Math.Clamp(p2.y + p2.vy * v, ALTURA * 0.55, ALTURA - 27)
 
@@ -1867,6 +1871,7 @@ export default class Jogo extends Phaser.Scene {
 
 	// escombros (ruínas) e meteoros (inferno): a sombra cresce no chão e depois a coisa cai
 	mover_perigos() {
+		this.mover_lodo()
 		const regra = R.PERIGOS[this.cenario().perigo]
 		if (regra && !this.chefe && this.chefe_em == 0) {
 			this.proxima_queda--
@@ -1900,6 +1905,37 @@ export default class Jogo extends Phaser.Scene {
 			}
 		}
 		this.quedas = this.quedas.filter((q) => q.ha < q.regra.aviso)
+	}
+
+	mover_lodo() {
+		if (this.cenario().perigo == 'lodo') {
+			this.proxima_poca--
+			if (this.proxima_poca <= 0) {
+				this.proxima_poca = Phaser.Math.Between(R.LODO.a_cada[0], R.LODO.a_cada[1])
+				const x = Phaser.Math.Between(30, Math.max(31, Math.floor(this.largura - 30)))
+				const sprite = this.add.ellipse(x, -20, R.LODO.largura, R.LODO.altura, 0x2c3a1c, 0.85).setStrokeStyle(2, 0x4a5a2a, 0.9).setDepth(1.55)
+				this.pocas.push({ x, y: -20, sprite })
+			}
+		}
+		for (const p of this.pocas) {
+			p.y += R.ROLAGEM_DO_CHAO
+			p.sprite.setY(Math.round(p.y))
+			// bolhas de vez em quando
+			if (Math.random() < 0.01) {
+				const bolha = this.add.circle(p.x + Phaser.Math.Between(-20, 20), p.y + Phaser.Math.Between(-6, 6), 2, 0x6a7a3a).setDepth(1.56)
+				this.tweens.add({ targets: bolha, scale: 2, alpha: 0, duration: 600, onComplete: () => bolha.destroy() })
+			}
+			if (p.y > ALTURA + 30) {
+				p.sprite.destroy()
+				p.sumiu = true
+			}
+		}
+		this.pocas = this.pocas.filter((p) => !p.sumiu)
+	}
+
+	// o ponto (x, y) está dentro de alguma poça de lodo?
+	no_lodo(x, y) {
+		return this.pocas.some((p) => ((x - p.x) / (R.LODO.largura / 2)) ** 2 + ((y - p.y) / (R.LODO.altura / 2)) ** 2 < 1)
 	}
 
 	comecar_horda() {

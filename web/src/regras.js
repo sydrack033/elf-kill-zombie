@@ -42,6 +42,9 @@ export const PERIGOS = {
 	meteoros: { cor: 0xff7a2a, raio: 34, a_cada: [420, 700], aviso: 90 },
 }
 
+// lodo (pântano): poças que descem com o chão e deixam o elfo lento enquanto ele pisa nelas
+export const LODO = { a_cada: [300, 520], lenta: 0.55, largura: 60, altura: 24 }
+
 // lua de sangue: de vez em quando uma fase inteira com zumbis mais rápidos que valem o dobro
 export const LUA_DE_SANGUE = { a_partir_da_fase: 6, chance: 0.15, velocidade: 1.25, pontos: 2 }
 
@@ -50,7 +53,7 @@ export const FASE_DA_CHUVA = 6 // dentro de cada cenário, a partir desta fase c
 // o cenário muda a cada 10 fases; clima = o que cai do céu (chuva) ou sobe do chão (brasas)
 export const CENARIOS = [
 	{ a_partir_da_fase: 1, textura: 'chao', nome: 'CEMITÉRIO', clima: 'chuva', musica: 'musica_jogo' },
-	{ a_partir_da_fase: 10, textura: 'chao_pantano', nome: 'PÂNTANO', clima: 'chuva', musica: 'musica_pantano', neblina: 0.4 },
+	{ a_partir_da_fase: 10, textura: 'chao_pantano', nome: 'PÂNTANO', clima: 'chuva', musica: 'musica_pantano', neblina: 0.4, perigo: 'lodo' },
 	{ a_partir_da_fase: 20, textura: 'chao_ruinas', nome: 'CIDADE EM RUÍNAS', clima: 'chuva', musica: 'musica_ruinas', neblina: 0.2, perigo: 'escombros' },
 	{ a_partir_da_fase: 30, textura: 'chao_inferno', nome: 'INFERNO', clima: 'brasas', musica: 'musica_inferno', perigo: 'meteoros' },
 ]
