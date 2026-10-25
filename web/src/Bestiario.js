@@ -32,6 +32,7 @@ const EVENTOS = [
 	{ nome: 'LODO (PÂNTANO)', cor: '#9fbf8a', texto: 'POÇAS QUE DESCEM COM O CHÃO E DEIXAM O ELFO LENTO.' },
 	{ nome: 'ESCOMBROS, METEOROS E GRANIZO', cor: '#ff9a3c', texto: 'CAEM DO CÉU NAS RUÍNAS, NO INFERNO E NO GELO. A SOMBRA NO CHÃO AVISA ANTES.' },
 	{ nome: 'CHEFÃO ENFURECIDO', cor: '#ff8a7a', texto: 'COM METADE DA VIDA, O CHEFÃO ANDA E ATACA MAIS RÁPIDO.' },
+	{ nome: 'CHUVA DE MOEDAS', cor: '#ffd34d', texto: 'DEPOIS DO 2º, 4º, 6º... CHEFÃO: ALGUNS SEGUNDOS SEM ZUMBIS, COM MOEDAS CAINDO DO CÉU.' },
 	{ nome: 'FASE PERFEITA', cor: '#9ff07a', texto: 'PASSE UMA FASE SEM APANHAR: PONTOS EXTRAS E UMA MOEDA.' },
 ]
 

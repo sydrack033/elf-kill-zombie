@@ -34,6 +34,7 @@ git (pasta `Jogo1`), então dá para ver o histórico com `git log` e voltar qua
 - **Eventos:** a **Horda** (na metade das fases 8, 13, 18...) manda uma enxurrada de zumbis e dá
   prêmio a quem sobrevive; a **Lua de Sangue** deixa uma fase vermelha, com zumbis mais rápidos e
   pontos em dobro; o **Eclipse** deixa a fase escura, com luz só em volta do elfo e das explosões.
+- **Chuva de Moedas:** depois do 2º, 4º, 6º... chefão, uma fase bônus sem zumbis com moedas caindo.
 - **Fase perfeita:** passar uma fase sem apanhar dá pontos extras e uma moeda.
 - **Cenários** a cada 10 fases: cemitério, pântano (neblina e poças de lodo que deixam o elfo lento),
   cidade em ruínas (escombros caindo), inferno (meteoros) e, da fase 40 em diante, a **Terra Gelada**
