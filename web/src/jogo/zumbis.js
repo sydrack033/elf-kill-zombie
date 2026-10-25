@@ -523,6 +523,7 @@ export default class Zumbis {
 		this.nivel++
 		if (this.nivel >= 10 && !this.comecou_adiantado) desbloquear(this, 'fase10')
 		if (this.nivel >= 20 && !this.comecou_adiantado) desbloquear(this, 'fase20')
+		if (this.nivel >= 10 && this.mod.vidro && !this.comecou_adiantado) desbloquear(this, 'vidro10')
 		this.mortes_no_nivel = 0
 		const fase_de_chefao = this.nivel % R.NIVEIS_ENTRE_CHEFOES == 0
 		if (fase_de_chefao) {

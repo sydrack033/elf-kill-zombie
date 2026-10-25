@@ -27,6 +27,7 @@ export const CONQUISTAS = [
 	{ id: 'horda', nome: 'MURALHA', texto: 'DERROTE UMA HORDA' },
 	{ id: 'lua', nome: 'NOITE VERMELHA', texto: 'PASSE UMA FASE DE LUA DE SANGUE' },
 	{ id: 'loja', nome: 'FREGUÊS', texto: 'COMPRE TUDO NA LOJA' },
+	{ id: 'vidro10', nome: 'VIDRO BLINDADO', texto: 'CHEGUE À FASE 10 COMO ELFO DE VIDRO' },
 ]
 
 const CHAVE = 'elf-kill-zombie-conquistas'
