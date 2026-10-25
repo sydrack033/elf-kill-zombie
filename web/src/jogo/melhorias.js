@@ -3,6 +3,7 @@
 import Phaser from 'phaser'
 import { ALTURA, texto } from '../tela.js'
 import * as R from '../regras.js'
+import { sortear } from './comum.js'
 import { tocar_musica, atualizar_volume_musica } from '../musica.js'
 import { desbloquear } from '../conquistas.js'
 import { efeito, opcoes, gravar_opcoes } from '../opcoes.js'
@@ -27,7 +28,14 @@ export default class Melhorias {
 		if (possiveis.length == 0) {
 			return
 		}
-		const opcoes = Phaser.Utils.Array.Shuffle(possiveis.slice()).slice(0, 3)
+		// sorteio com peso: as raras aparecem bem menos
+		const sobra = possiveis.slice()
+		const opcoes = []
+		while (opcoes.length < 3 && sobra.length) {
+			const mel = sortear(sobra, (m) => (m.rara ? 0.35 : 1))
+			opcoes.push(mel)
+			sobra.splice(sobra.indexOf(mel), 1)
+		}
 		this.estado = 'escolhendo'
 		this.opcoes = opcoes
 		this.escurecer.setVisible(true)
@@ -42,7 +50,7 @@ export default class Melhorias {
 		opcoes.forEach((mel, i) => {
 			const x = meio + (i - 1) * (largura_carta + 6)
 			const carta = this.add.rectangle(x, topo, largura_carta, altura_carta, 0x1c1630, 0.95)
-				.setOrigin(0.5, 0).setStrokeStyle(2, 0x7a3ab0).setDepth(11).setInteractive({ useHandCursor: true })
+				.setOrigin(0.5, 0).setStrokeStyle(2, mel.rara ? 0xff9a3c : 0x7a3ab0).setDepth(11).setInteractive({ useHandCursor: true })
 			carta.on('pointerover', () => this.destacar_carta(i))
 			carta.on('pointerdown', () => this.escolher(i))
 			const icone = this.add.sprite(x, topo + 22, 'melhorias', mel.quadro).setScale(2).setDepth(12)
@@ -53,6 +61,9 @@ export default class Melhorias {
 			desc.setWordWrapWidth(largura_carta - 8).setLineSpacing(2)
 			const tecla = texto(this, x, topo + altura_carta - 7, this.modo_toque ? '' : String(i + 1), 8, '#9a8ab0').setOrigin(0.5).setDepth(12)
 			objetos.push(carta, icone, nome, desc, tecla)
+			if (mel.rara) {
+				objetos.push(texto(this, x - largura_carta / 2 + 4, topo + 3, 'RARA', 8, '#ff9a3c').setOrigin(0, 0).setDepth(12).setScale(0.75))
+			}
 		})
 		// uma vez por partida dá para sortear as cartas de novo
 		if (!this.ja_trocou) {
@@ -80,7 +91,7 @@ export default class Melhorias {
 	// a carta destacada fica com a borda amarela (mouse em cima ou direcional do controle)
 	destacar_carta(i) {
 		this.carta_destacada = i
-		this.cartas.forEach((carta, j) => carta.setStrokeStyle(2, j == i ? 0xffd34d : 0x7a3ab0))
+		this.cartas.forEach((carta, j) => carta.setStrokeStyle(2, j == i ? 0xffd34d : this.opcoes[j].rara ? 0xff9a3c : 0x7a3ab0))
 	}
 
 	// sorteia outras 3 cartas (só uma vez por partida)
