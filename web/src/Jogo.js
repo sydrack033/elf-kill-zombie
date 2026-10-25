@@ -29,6 +29,7 @@ export default class Jogo extends Phaser.Scene {
 
 	create() {
 		// a cena é reaproveitada quando o jogo recomeça: esquece os objetos da partida anterior
+		this.treino = (this.scene.settings.data && this.scene.settings.data.treino) || 0 // treino de chefão (bestiário)
 		this.hud_pontos = null
 		this.botao_bomba = null
 		this.botao_furia = null
