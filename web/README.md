@@ -41,6 +41,7 @@ funciona **sem internet** depois da primeira visita.
 | Loja (no título) | L | moeda no canto | Select |
 | Modo de jogo (no título) | X | setas na tela | X |
 | Bestiário / história (no título) | B / H | | |
+| Opções (no título) | O | "OPÇÕES" no canto | |
 | Desafios do dia (no título) | D | "DESAFIOS" no canto | |
 | Recomeçar (na pausa) | R | botão na pausa | |
 | Sair para o menu (na pausa) | T | botão na pausa | Select |
@@ -51,23 +52,24 @@ funciona **sem internet** depois da primeira visita.
 - Você começa com 3 vidas (5 no fácil, 2 no difícil). Perde uma quando é mordido, atingido por
   cuspe ou quando um zumbi passa por você.
 - **Caixas** descem rolando: armas (triplo, metralhadora, laser, bazuca, lança-chamas, raio,
-  bumerangue), bombas, torreta (atira sozinha por 12 segundos) e poderes (escudo, botas, gelo).
+  bumerangue, espingarda), bombas, torreta (atira sozinha por 12 segundos) e poderes (escudo, botas, gelo).
   Quando a munição acaba, o elfo volta para a pistola.
 - A cada 2 fases (e depois de cada chefão) você escolhe **1 de 3 melhorias**.
 - A cada 5 fases vem um **chefão**: Rei Zumbi, Carniceiro, Podre, Bruxa, Necromante e Demônio
   (depois eles voltam mais fortes e com todos os ataques). Com metade da vida eles enfurecem.
 - **Zumbis**: comum, corredor, brutamontes, cuspidor, bombado (explode), fantasma (fica transparente),
-  escavador (sai da terra), coveiro (lápide como escudo) e corvos em bando. Às vezes vem um de
+  escavador (sai da terra), coveiro (lápide como escudo), gosma (se divide) e corvos em bando. Às vezes vem um de
   **elite**, dourado e mais forte, que dá moedas e uma caixa.
 - A cada 10 fases o **cenário** muda: cemitério, pântano (lodo que deixa lento), cidade em ruínas
   (escombros caindo), inferno (meteoros) e Terra Gelada (granizo e neve).
 - Mortes emendadas fazem **combo** (até x5 nos pontos). Matar enche a **fúria élfica**.
 - **Eventos**: a **Horda** (fases 8, 13, 18...) manda uma enxurrada de zumbis e dá prêmio a quem
-  sobrevive; a **Lua de Sangue** deixa uma fase com zumbis mais rápidos e pontos em dobro.
+  sobrevive; a **Lua de Sangue** deixa uma fase com zumbis mais rápidos e pontos em dobro; o
+  **Eclipse** deixa a fase escura, só com luz em volta do elfo.
 - **Modo Chefões**: só as lutas contra chefões, com uma melhoria entre cada uma.
 - **Moedas**: cada partida rende moedas (pontos, chefões, elites, hordas, desafios e as que caem dos
   zumbis). Na **loja** elas compram vantagens para o começo de todas as partidas (bombas, corações,
-  triplo, fúria, ímã, melhoria, segunda chance).
+  triplo, fúria, ímã, melhoria, segunda chance) e chapéus para o elfo.
 - **Desafios do dia**: 3 missões que mudam todo dia; cada uma vale 25 moedas.
 - **2 jogadores** no mesmo computador: o segundo elfo anda com as setas (ou um controle), atira
   sozinho e usa as armas que pegar.

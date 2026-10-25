@@ -7,8 +7,8 @@ git (pasta `Jogo1`), então dá para ver o histórico com `git log` e voltar qua
 
 - **Inimigos novos:** corredor (rápido), brutamontes (grandão e resistente), cuspidor (para e cospe),
   bombado (explode quando morre), fantasma (fica transparente e os tiros passam), escavador (sai da
-  terra perto do elfo), coveiro (carrega uma lápide que segura os tiros de frente até quebrar) e
-  revoadas de corvos.
+  terra perto do elfo), coveiro (carrega uma lápide que segura os tiros de frente até quebrar),
+  gosma (se divide em duas quando morre) e revoadas de corvos.
 - **Zumbis de elite:** de vez em quando um vem dourado, maior e bem mais forte; vale mais pontos,
   sempre solta uma caixa e dá moedas.
 - **6 chefões a cada 5 fases**, cada um com ataques próprios: O Rei Zumbi (cuspe em leque e chama
@@ -17,7 +17,8 @@ git (pasta `Jogo1`), então dá para ver o histórico com `git log` e voltar qua
   de sangue) e O Demônio (chuva de meteoros e labareda). Com metade da vida eles **enfurecem**
   (do 2º em diante). Depois voltam com tudo junto. Entrada de cinema com o nome do chefão.
 - **Armas:** triplo, metralhadora, laser (atravessa), bazuca (explode), lança-chamas, raio (pula de
-  zumbi em zumbi) e bumerangue (vai, faz a curva e volta). A arma aparece na mão do elfo.
+  zumbi em zumbi), bumerangue (vai, faz a curva e volta) e espingarda (chumbos em leque, de perto).
+  A arma aparece na mão do elfo.
 - **Torreta:** caixa que monta uma torreta no chão; ela atira sozinha por 12 segundos.
 - **Poderes:** escudo, botas de velocidade e gelo (congela os zumbis).
 - **Melhorias** estilo "roguelite": a cada 2 fases escolha 1 de 3 (15 melhorias diferentes, entre
@@ -26,7 +27,8 @@ git (pasta `Jogo1`), então dá para ver o histórico com `git log` e voltar qua
 - **Combos**, DUPLO!/TRIPLO!/MASSACRE!, pontos flutuando.
 - **Eventos:** a **Horda** (na metade das fases 8, 13, 18...) manda uma enxurrada de zumbis e dá
   prêmio a quem sobrevive; a **Lua de Sangue** deixa uma fase vermelha, com zumbis mais rápidos e
-  pontos em dobro.
+  pontos em dobro; o **Eclipse** deixa a fase escura, com luz só em volta do elfo e das explosões.
+- **Fase perfeita:** passar uma fase sem apanhar dá pontos extras e uma moeda.
 - **Cenários** a cada 10 fases: cemitério, pântano (neblina e poças de lodo que deixam o elfo lento),
   cidade em ruínas (escombros caindo), inferno (meteoros) e, da fase 40 em diante, a **Terra Gelada**
   (neve e granizo). Cada um com sua música. O que cai do céu avisa antes com uma sombra no chão.
@@ -37,8 +39,11 @@ git (pasta `Jogo1`), então dá para ver o histórico com `git log` e voltar qua
 - **Loja do elfo:** cada partida rende moedas (pontos, chefões, elites, hordas e moedas que caem dos
   zumbis), que compram vantagens permanentes para o começo do jogo (bombas, corações, começar com o
   triplo, com meia fúria, com o ímã, com uma melhoria) e a **Segunda Chance** (volta uma vez ao morrer).
+- **Chapéus** para o elfo (gorro de Natal, cartola, chapéu de bruxa, elmo viking e coroa), numa aba
+  da loja; o chapéu aparece no jogo e na demonstração do título.
 - **Desafios do dia:** 3 missões que mudam todo dia (tecla D no título), cada uma vale 25 moedas.
-- **Dificuldade** fácil / normal / difícil e **cores do elfo** liberadas por conquistas.
+- **Dificuldade** fácil / normal / difícil (vale também para a vida dos chefões) e **cores do elfo**
+  liberadas por conquistas.
 - **22 conquistas** com aviso na tela, tela própria e estatísticas de todas as partidas.
 - Na primeira vez que aparece cada **inimigo** ou **caixa**, o jogo explica o que ele faz.
 - **Placar** com os 5 melhores e nome de 3 letras, estilo fliperama (com a marca do modo).
@@ -58,6 +63,8 @@ git (pasta `Jogo1`), então dá para ver o histórico com `git log` e voltar qua
 
 - Tela de título com demonstração rodando no fundo, placar e escolhas (dificuldade, cor do elfo,
   modo, jogadores), moedas e atalhos para loja, conquistas, bestiário e história.
+- Tela de **Opções** no título (tecla O): volumes, tremor, **tiro automático** no computador, tela
+  cheia e rever as dicas.
 - Pausa com opções de volume (música e efeitos) e tremor, guardadas no navegador, recomeçar e saída
   para o menu. O controle de videogame vibra quando o elfo apanha e nas explosões.
 - Confete quando bate o recorde.
