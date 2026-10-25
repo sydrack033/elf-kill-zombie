@@ -19,7 +19,24 @@ export const ELFOS = [
 	{ id: 'fogo', nome: 'ELFO DE FOGO', cor: 0xff9a6a, conquistas: 6 },
 	{ id: 'ouro', nome: 'ELFO DOURADO', cor: 0xffe070, conquistas: 10 },
 	{ id: 'sombrio', nome: 'ELFO SOMBRIO', cor: 0x7a6a8a, conquistas: 15 },
+	// só para quem venceu o chefão final; a cor vai mudando como um arco-íris
+	{ id: 'lendario', nome: 'ELFO LENDÁRIO', cor: 'arco', conquistas: 0, conquista: 'zerou' },
 ]
+
+// a cor está liberada? (pela quantidade de conquistas ou por uma conquista específica)
+export function elfo_liberado(elfo, feitas) {
+	return elfo.conquista ? feitas.has(elfo.conquista) : feitas.size >= elfo.conquistas
+}
+
+// cor do Elfo Lendário num instante (arco-íris devagar)
+export function cor_arco_iris(tempo) {
+	const h = (tempo / 4000) % 1
+	const f = (n) => {
+		const k = (n + h * 6) % 6
+		return Math.round(255 * (1 - 0.45 * Math.max(0, Math.min(k, 4 - k, 1))))
+	}
+	return (f(5) << 16) | (f(3) << 8) | f(1)
+}
 
 // ---------- elfo ----------
 export const VELOCIDADE_HEROI = 1.6

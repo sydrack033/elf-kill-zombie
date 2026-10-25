@@ -35,7 +35,7 @@ export default class Titulo extends Phaser.Scene {
 		this.subtitulo = texto(this, 0, 112, 'O CEMITÉRIO NÃO DORME', 8, '#9fbf8a').setOrigin(0.5).setDepth(6)
 
 		// escolhas: dificuldade e cor do elfo (setas na tela, teclado ou controle)
-		this.conquistas_feitas = ler_conquistas().size
+		this.feitas = ler_conquistas()
 		this.seletores = [
 			this.criar_seletor(134, 'DIFICULDADE', () => this.mudar_dificuldade(-1), () => this.mudar_dificuldade(1)),
 			this.criar_seletor(149, 'ELFO', () => this.mudar_elfo(-1), () => this.mudar_elfo(1)),
@@ -186,7 +186,7 @@ export default class Titulo extends Phaser.Scene {
 
 	// pula as cores que ainda estão bloqueadas
 	mudar_elfo(passo) {
-		const liberados = R.ELFOS.filter((e) => this.conquistas_feitas >= e.conquistas)
+		const liberados = R.ELFOS.filter((e) => R.elfo_liberado(e, this.feitas))
 		const i = Math.max(0, liberados.findIndex((e) => e.id == opcoes.elfo))
 		opcoes.elfo = liberados[(i + passo + liberados.length) % liberados.length].id
 		gravar_opcoes()
@@ -217,14 +217,15 @@ export default class Titulo extends Phaser.Scene {
 		this.seletores[0].valor.setText(dificuldade.nome).setColor(cores[opcoes.dificuldade] || '#ffffff')
 		const elfo = R.ELFOS.find((e) => e.id == opcoes.elfo) || R.ELFOS[0]
 		// mostra quantas cores já foram liberadas
-		const liberados = R.ELFOS.filter((e) => this.conquistas_feitas >= e.conquistas).length
+		const liberados = R.ELFOS.filter((e) => R.elfo_liberado(e, this.feitas)).length
 		this.seletores[1].valor.setText(elfo.nome + '  ' + liberados + '/' + R.ELFOS.length)
 		this.seletores[2].valor.setText(opcoes.modo == 'chefes' ? 'SÓ CHEFÕES' : 'AVENTURA').setColor(opcoes.modo == 'chefes' ? '#ff9a3c' : '#ffffff')
 		if (this.seletores[3]) {
 			const controle = this.input.gamepad && this.input.gamepad.total > 0
 			this.seletores[3].valor.setText(opcoes.jogadores == 2 ? '2  (P2: ' + (controle ? 'CONTROLE' : 'SETAS') + ')' : '1')
 		}
-		if (elfo.cor) {
+		this.demo_arco = elfo.cor == 'arco'
+		if (elfo.cor && !this.demo_arco) {
 			this.demo_heroi.setTint(elfo.cor)
 		}
 		else {
@@ -268,6 +269,7 @@ export default class Titulo extends Phaser.Scene {
 		this.chao.tilePositionY -= 0.4 * passo
 		this.comecar.setVisible(Math.floor(time / 500) % 2 == 0)
 		this.nome.y = 64 + Math.sin(time / 600) * 2
+		if (this.demo_arco) this.demo_heroi.setTint(R.cor_arco_iris(time))
 		this.rodar_demo(passo)
 	}
 

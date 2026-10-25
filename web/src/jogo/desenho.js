@@ -110,6 +110,9 @@ export default class Desenho {
 		if (this.vermelho_heroi > 0) {
 			this.heroi.setTint(0xff3030).setTintMode(Phaser.TintModes.FILL)
 		}
+		else if (this.cor_do_elfo == 'arco') {
+			this.heroi.setTint(R.cor_arco_iris(this.time.now)).setTintMode(Phaser.TintModes.MULTIPLY)
+		}
 		else if (this.cor_do_elfo) {
 			this.heroi.setTint(this.cor_do_elfo).setTintMode(Phaser.TintModes.MULTIPLY)
 		}

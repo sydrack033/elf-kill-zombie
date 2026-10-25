@@ -27,7 +27,7 @@ export default class ConquistasCena extends Phaser.Scene {
 		})
 		this.voltar = texto(this, 0, ALTURA - 14, 'ESC, ESPAÇO OU CLIQUE: VOLTAR', 8, '#cfcfcf').setOrigin(0.5)
 		// as conquistas liberam cores novas para o elfo
-		const proximo = R.ELFOS.find((e) => feitas.size < e.conquistas)
+		const proximo = R.ELFOS.find((e) => !e.conquista && feitas.size < e.conquistas)
 		this.premio = texto(
 			this, 0, ALTURA - 48,
 			proximo ? 'COM ' + proximo.conquistas + ' CONQUISTAS: ' + proximo.nome : 'TODAS AS CORES DO ELFO LIBERADAS!',
