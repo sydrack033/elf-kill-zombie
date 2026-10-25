@@ -10,6 +10,20 @@ import { corpo, corpo_chefe } from './comum.js'
 export default class Explosoes {
 	// ------------------------------------------------------------------ bombas e explosões
 
+	// zumbi que morre na explosão solta pedacinhos voando para longe do centro
+	voar_pedacos(zx, zy, ex, ey, cor) {
+		const angulo_base = Math.atan2(zy - ey, zx - ex)
+		for (let i = 0; i < 4; i++) {
+			const ang = angulo_base + (Math.random() - 0.5) * 1.6
+			const d = 20 + Math.random() * 25
+			const p = this.add.rectangle(zx, zy, 3, 3, i % 2 ? 0x8a1010 : cor || 0x6a8a4a).setDepth(4)
+			this.tweens.add({
+				targets: p, x: zx + Math.cos(ang) * d, y: zy + Math.sin(ang) * d + 8, angle: Math.random() * 360, alpha: 0,
+				duration: 450 + Math.random() * 200, ease: 'Quad.Out', onComplete: () => p.destroy(),
+			})
+		}
+	}
+
 	jogar_bomba() {
 		if (this.espera_bomba > 0) {
 			this.espera_bomba--
@@ -95,6 +109,9 @@ export default class Explosoes {
 			if (Phaser.Math.Distance.Between(x, y, c.x + c.l / 2, c.y + c.a / 2) <= raio + c.l / 4) {
 				this.espirrar_sangue(c.x + c.l / 2, c.y + c.a / 2)
 				this.ferir_zumbi(zumbi, dano, 6)
+				if (zumbi.morrendo && this.explosoes.length < 30) {
+					this.voar_pedacos(c.x + c.l / 2, c.y + c.a / 2, x, y, zumbi.cor)
+				}
 			}
 		}
 		if (this.stats.mortos - mortos_antes >= 3) {
