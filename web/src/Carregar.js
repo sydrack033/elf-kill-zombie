@@ -22,6 +22,12 @@ export default class Carregar extends Phaser.Scene {
 		// caixas para pegar: triplo, metralhadora e bomba (16x16)
 		this.load.spritesheet('itens', PASTA + 'itens.png', { frameWidth: 16, frameHeight: 16 })
 		this.load.image('bomba', PASTA + 'bomba.png')
+		this.load.image('laser', PASTA + 'laser.png')
+		this.load.spritesheet('foguete', PASTA + 'foguete.png', { frameWidth: 14, frameHeight: 8 })
+		this.load.spritesheet('cuspe', PASTA + 'cuspe.png', { frameWidth: 8, frameHeight: 8 })
+
+		// chefão: planilha de 7x8 quadros de 64x64 (linha 0 andando, linha 4 atacando, linhas 6 e 7 morrendo)
+		this.load.spritesheet('chefe', PASTA + 'Monster-zombie.png', { frameWidth: 64, frameHeight: 64 })
 		this.load.spritesheet('explosao', PASTA + 'explosao.png', { frameWidth: 48, frameHeight: 48 })
 
 		// zumbi descendo: 7 quadros de 44x44; morrendo: 5 quadros de 61x71

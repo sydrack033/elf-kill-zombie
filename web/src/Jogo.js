@@ -1,45 +1,43 @@
 import Phaser from 'phaser'
 import { ALTURA, ajustar_tela, texto, tecla_tela_cheia, tecla_som, ler_recorde, gravar_recorde } from './tela.js'
+import * as R from './regras.js'
 
 // Igual à versão do Portugol, o jogo anda em "ticks" de 10 ms e cada tick roda
-// entrada() -> processamento() -> saida(). Velocidades são em pixels por tick.
-const TICK_MS = 10
-
-const VELOCIDADE_HEROI = 1.6
-const VELOCIDADE_TIRO = 6
-const INVENCIVEL_DEPOIS_DE_APANHAR = 150 // ticks (1,5 s)
-const VIDAS_NO_COMECO = 3
-const VIDAS_NO_MAXIMO = 5
-const MORTES_POR_NIVEL = 12
-const CHANCE_DE_CORACAO = 0.08 // chance de um zumbi morto soltar um coração
-
-// armas: espera = ticks entre um disparo e outro; abertura = ângulo entre os tiros do triplo;
-// tremida = quanto a mira treme; municao = disparos até voltar para a pistola
-// som = como o som de tiro toca para cada arma (rate muda o tom: menor = mais grave)
-const ARMAS = {
-	pistola: { nome: 'PISTOLA', quadro: 0, espera: 22, tiros: 1, abertura: 0, tremida: 0, municao: Infinity, som: { volume: 0.5, rate: 1 } },
-	triplo: { nome: 'TRIPLO', quadro: 1, espera: 30, tiros: 3, abertura: 0.22, tremida: 0, municao: 40, som: { volume: 0.6, rate: 0.75 } },
-	metralhadora: { nome: 'METRALHADORA', quadro: 2, espera: 7, tiros: 1, abertura: 0, tremida: 0.08, municao: 150, som: { volume: 0.3, rate: 1.3 } },
-}
-
-// caixas que descem rolando com o chão; quadro = quadro da imagem itens.png
-const ITENS = [
-	{ tipo: 'triplo', quadro: 0, chance: 0.35 },
-	{ tipo: 'metralhadora', quadro: 1, chance: 0.25 },
-	{ tipo: 'bomba', quadro: 2, chance: 0.4 },
-]
-const BOMBAS_NO_COMECO = 2
-const BOMBAS_NO_MAXIMO = 9
-const BOMBAS_POR_CAIXA = 3
-const RAIO_DA_EXPLOSAO = 46
-const DANO_DA_EXPLOSAO = 3
-
-// a imagem do zumbi tem 44x44, mas o corpo dele ocupa só este pedaço
-const CORPO_ZUMBI = { x: 10, y: 4, l: 24, a: 36 }
+// entrada() -> processamento() -> saida(). Os números de dificuldade ficam em regras.js.
 
 // verdadeiro se o retângulo a (x, y, largura, altura) encosta no retângulo b
 function encostou(ax, ay, al, aa, bx, by, bl, ba) {
 	return ax < bx + bl && bx < ax + al && ay < by + ba && by < ay + aa
+}
+
+// sorteia um item de uma lista em que cada um tem um peso (chance relativa)
+function sortear(lista, peso) {
+	const total = lista.reduce((soma, item) => soma + peso(item), 0)
+	let sorteio = Math.random() * total
+	for (const item of lista) {
+		sorteio -= peso(item)
+		if (sorteio < 0) {
+			return item
+		}
+	}
+	return lista[lista.length - 1]
+}
+
+// o pedaço da tela que o corpo do zumbi ocupa (a imagem tem sobra transparente em volta)
+function corpo(zumbi) {
+	const e = zumbi.escala
+	return {
+		x: zumbi.x + R.CORPO_ZUMBI.x * e,
+		y: zumbi.y + R.CORPO_ZUMBI.y * e,
+		l: R.CORPO_ZUMBI.l * e,
+		a: R.CORPO_ZUMBI.a * e,
+	}
+}
+
+function corpo_chefe(chefe) {
+	const e = R.CHEFE.escala
+	const c = R.CHEFE.corpo
+	return { x: chefe.x + c.x * e, y: chefe.y + c.y * e, l: c.l * e, a: c.a * e }
 }
 
 export default class Jogo extends Phaser.Scene {
@@ -51,6 +49,9 @@ export default class Jogo extends Phaser.Scene {
 		this.chao = this.add.tileSprite(0, 0, 10, ALTURA, 'chao').setOrigin(0)
 		ajustar_tela(this)
 
+		// sombras de todo mundo, redesenhadas a cada tick
+		this.sombras = this.add.graphics().setDepth(1.5)
+
 		this.heroi_x = this.largura / 2 - 12
 		this.heroi_y = ALTURA - 50
 		this.heroi_xi = 0
@@ -58,37 +59,53 @@ export default class Jogo extends Phaser.Scene {
 		this.heroi = this.add.sprite(this.heroi_x, this.heroi_y, 'heroi_parado_cima').setOrigin(0).setDepth(5)
 		// a arma gira em volta da empunhadura, que fica no pixel (3, 4) da imagem
 		this.arma_na_mao = this.add.sprite(0, 0, 'armas', 0).setOrigin(3 / 16, 4 / 8).setDepth(6)
+		this.clarao = this.add.circle(0, 0, 4, 0xffe680).setDepth(7).setVisible(false)
+		this.clarao_ha = 0
+		this.bolha = this.add.circle(0, 0, 21).setStrokeStyle(2, 0x70c8ff, 0.9).setFillStyle(0x70c8ff, 0.15).setDepth(6.5).setVisible(false)
 
-		this.vidas = VIDAS_NO_COMECO
+		this.vidas = R.VIDAS_NO_COMECO
 		this.invencivel = 0
 		this.pontos = 0
 		this.nivel = 1
 		this.mortes_no_nivel = 0
 		this.recorde = ler_recorde()
+		this.combo = 0
+		this.combo_ha = 0
+		this.multiplicador = 1
+
+		// números para a tela de fim de jogo
+		this.stats = { mortos: 0, disparos: 0, acertos: 0, ticks: 0, melhor_combo: 0, chefes: 0 }
 
 		this.arma = 'pistola'
 		this.municao = Infinity
-		this.bombas = BOMBAS_NO_COMECO
+		this.bombas = R.BOMBAS_NO_COMECO
+		this.poderes = { escudo: 0, velocidade: 0, congelar: 0 } // ticks que faltam de cada poder
 		this.mouse_mexeu = false // até mexer o mouse, o elfo mira para cima
 
-		this.tiros = [] // { sprite, x, y, vx, vy }
+		this.tiros = [] // { sprite, x, y, vx, vy, arma, acertou: Set }
 		this.espera_tiro = 0
 		this.espera_bomba = 0
-		this.bombas_voando = [] // { sprite, x0, y0, x1, y1, ha, duracao }
+		this.bombas_voando = [] // { sprite, x0, y0, x1, y1, altura, ha, duracao }
 		this.explosoes = [] // { sprite, ha }
-		this.zumbis = [] // { sprite, x, y, vx, vy, vida, morrendo, morto_ha, xi }
+		this.zumbis = [] // ver criar_zumbi()
 		this.proximo_zumbi = 60
+		this.chefe = null
+		this.chefe_em = 0 // ticks até o chefão entrar (0 = não tem chefão vindo)
+		this.cuspes = [] // { sprite, x, y, vx, vy }
 		this.sangues = [] // { sprite, ha }
 		this.coracoes = [] // corações caindo para pegar: { sprite, x, y }
-		this.itens = [] // caixas de arma e de bomba: { sprite, tipo, x, y }
-		this.proximo_item = 600
+		this.itens = [] // caixas: { sprite, tipo, x, y }
+		this.proximo_item = 500
+		this.textos = [] // pontos e avisos que sobem e somem: { obj, ha }
+		this.dano_ha = 0 // tela vermelha quando o elfo apanha
 
 		this.quadro_atual = 0
 		this.estado = 'jogando' // 'jogando', 'pausado' ou 'fim'
 
 		this.criar_hud()
 		this.ao_redimensionar()
-		this.anunciar('NÍVEL 1')
+		this.anunciar('FASE 1')
+		this.pintar_noite()
 
 		this.teclas = this.input.keyboard.addKeys({
 			esquerda: 'LEFT',
@@ -111,23 +128,43 @@ export default class Jogo extends Phaser.Scene {
 		this.input.setDefaultCursor('crosshair')
 		this.input.on('pointermove', () => (this.mouse_mexeu = true))
 
+		// se a janela perder o foco (trocou de aba, alt+tab), pausa sozinho
+		const ao_perder_foco = () => {
+			if (this.estado == 'jogando') {
+				this.pausar()
+			}
+		}
+		this.game.events.on(Phaser.Core.Events.BLUR, ao_perder_foco)
+		this.events.once('shutdown', () => this.game.events.off(Phaser.Core.Events.BLUR, ao_perder_foco))
+
 		this.tempo_acumulado = 0
 	}
 
+	// ------------------------------------------------------------------ HUD
+
 	criar_hud() {
 		this.hud_coracoes = []
-		for (let i = 0; i < VIDAS_NO_MAXIMO; i++) {
+		for (let i = 0; i < R.VIDAS_NO_MAXIMO; i++) {
 			this.hud_coracoes.push(this.add.sprite(8 + i * 11, 8, 'coracao', 0).setOrigin(0).setDepth(10))
 		}
 		this.hud_pontos = texto(this, 0, 8, '', 8).setOrigin(1, 0).setDepth(10)
+		this.hud_combo = texto(this, 0, 22, '', 8, '#ff9a3c').setOrigin(1, 0).setDepth(10)
 		this.hud_nivel = texto(this, 8, 22, '', 8).setDepth(10)
 		this.hud_arma = texto(this, 8, ALTURA - 24, '', 8, '#ffd34d').setDepth(10)
 		this.hud_bombas = texto(this, 8, ALTURA - 12, '', 8).setDepth(10)
+		this.hud_poderes = texto(this, 0, ALTURA - 12, '', 8, '#9fd8ff').setOrigin(1, 0).setDepth(10)
+
+		// barra de vida do chefão
+		this.barra_fundo = this.add.rectangle(0, 40, 10, 6, 0x000000, 0.7).setOrigin(0.5, 0).setDepth(10).setVisible(false)
+		this.barra_vida = this.add.rectangle(0, 41, 10, 4, 0xd02828).setOrigin(0, 0).setDepth(10).setVisible(false)
+		this.barra_nome = texto(this, 0, 29, 'ZUMBI REI', 8, '#ff6a6a').setOrigin(0.5, 0).setDepth(10).setVisible(false)
+
+		this.vermelho = this.add.rectangle(0, 0, 10, ALTURA, 0xff0000, 0).setOrigin(0).setDepth(8)
 		// fundo escuro atrás das mensagens de pausa e fim de jogo
-		this.escurecer = this.add.rectangle(0, 0, 10, ALTURA, 0x000000, 0.55).setOrigin(0).setDepth(9).setVisible(false)
-		this.aviso = texto(this, 0, ALTURA / 2 - 50, '', 16, '#ffd34d').setOrigin(0.5).setDepth(10)
+		this.escurecer = this.add.rectangle(0, 0, 10, ALTURA, 0x000000, 0.6).setOrigin(0).setDepth(9).setVisible(false)
+		this.aviso = texto(this, 0, ALTURA / 2 - 60, '', 16, '#ffd34d').setOrigin(0.5).setDepth(10)
 		this.aviso_ha = 0
-		this.mensagem = texto(this, 0, ALTURA / 2 + 20, '', 8).setOrigin(0.5).setDepth(10).setLineSpacing(8)
+		this.mensagem = texto(this, 0, ALTURA / 2 + 30, '', 8).setOrigin(0.5).setDepth(10).setLineSpacing(8)
 		this.atualizar_hud()
 	}
 
@@ -136,31 +173,56 @@ export default class Jogo extends Phaser.Scene {
 		if (!this.hud_pontos) {
 			return
 		}
+		const meio = this.largura / 2
 		this.chao.setSize(this.largura, ALTURA)
 		this.hud_pontos.x = this.largura - 8
+		this.hud_combo.x = this.largura - 8
+		this.hud_poderes.x = this.largura - 8
+		this.vermelho.setSize(this.largura, ALTURA)
 		this.escurecer.setSize(this.largura, ALTURA)
-		this.aviso.x = this.largura / 2
-		this.mensagem.x = this.largura / 2
+		this.aviso.x = meio
+		this.mensagem.x = meio
+		this.barra_fundo.x = meio
+		this.barra_nome.x = meio
+		const largura_barra = Math.min(200, this.largura - 40)
+		this.barra_fundo.setSize(largura_barra + 2, 6)
+		this.barra_vida.x = meio - largura_barra / 2
+		this.largura_barra = largura_barra
 		this.heroi_x = Phaser.Math.Clamp(this.heroi_x, 0, this.largura - 25)
 	}
 
 	atualizar_hud() {
 		// mostra pelo menos 3 espaços de coração; o 4º e o 5º só aparecem quando você ganha vida extra
 		this.hud_coracoes.forEach((coracao, i) => {
-			coracao.setVisible(i < Math.max(VIDAS_NO_COMECO, this.vidas))
+			coracao.setVisible(i < Math.max(R.VIDAS_NO_COMECO, this.vidas))
 			coracao.setFrame(i < this.vidas ? 0 : 1)
 		})
 		this.hud_pontos.setText('PONTOS ' + String(this.pontos).padStart(6, '0'))
-		this.hud_nivel.setText('NÍVEL ' + this.nivel)
-		const arma = ARMAS[this.arma]
+		this.hud_nivel.setText('FASE ' + this.nivel)
+		const arma = R.ARMAS[this.arma]
 		this.hud_arma.setText(this.municao == Infinity ? arma.nome : arma.nome + ' ' + this.municao)
 		this.hud_bombas.setText('BOMBAS ' + this.bombas)
 	}
 
 	// mensagem grande que some sozinha
-	anunciar(mensagem, ticks = 200) {
-		this.aviso.setText(mensagem).setVisible(true)
+	anunciar(mensagem, ticks = 200, cor = '#ffd34d') {
+		this.aviso.setText(mensagem).setColor(cor).setVisible(true).setY(ALTURA / 2 - 60)
 		this.aviso_ha = ticks
+	}
+
+	// texto pequeno que sobe e some (pontos, avisos rápidos)
+	flutuar(x, y, mensagem, cor = '#ffffff') {
+		const obj = texto(this, x, y, mensagem, 8, cor).setOrigin(0.5).setDepth(9.5)
+		this.textos.push({ obj, ha: 0 })
+	}
+
+	// o chão vai escurecendo conforme o nível sobe, como se a noite chegasse
+	pintar_noite() {
+		const t = Math.min(1, (this.nivel - 1) / 9)
+		const dia = Phaser.Display.Color.ValueToColor(0xffffff)
+		const noite = Phaser.Display.Color.ValueToColor(0x6a72a8)
+		const c = Phaser.Display.Color.Interpolate.ColorWithColor(dia, noite, 100, t * 100)
+		this.chao.setTint(Phaser.Display.Color.GetColor(c.r, c.g, c.b))
 	}
 
 	pausar() {
@@ -176,16 +238,18 @@ export default class Jogo extends Phaser.Scene {
 		}
 	}
 
+	// ------------------------------------------------------------------ laço do jogo
+
 	update(time, delta) {
 		if (this.estado != 'jogando') {
 			return
 		}
 
 		// se a aba ficou em segundo plano, não tenta recuperar mais que 100 ms de jogo
-		this.tempo_acumulado = Math.min(this.tempo_acumulado + delta, 10 * TICK_MS)
+		this.tempo_acumulado = Math.min(this.tempo_acumulado + delta, 10 * R.TICK_MS)
 
-		while (this.tempo_acumulado >= TICK_MS && this.estado == 'jogando') {
-			this.tempo_acumulado -= TICK_MS
+		while (this.tempo_acumulado >= R.TICK_MS && this.estado == 'jogando') {
+			this.tempo_acumulado -= R.TICK_MS
 			this.entrada()
 			this.processamento()
 			this.saida()
@@ -215,22 +279,43 @@ export default class Jogo extends Phaser.Scene {
 	}
 
 	processamento() {
+		this.stats.ticks++
 		this.mover_heroi()
 		this.mirar()
 		this.atirar()
 		this.jogar_bomba()
 		this.criar_zumbis()
+		this.chamar_chefe()
 		this.criar_itens()
 		this.mover_tiros()
+		this.mover_cuspes()
 		this.mover_bombas()
 		this.mover_zumbis()
+		this.mover_chefe()
 		this.mover_coracoes()
 		this.mover_itens()
+		this.contar_tempos()
 
 		this.chao.tilePositionY -= 0.3 // o chão rola para dar a impressão de que o elfo avança
+	}
 
-		if (this.invencivel > 0) {
+	contar_tempos() {
+		if (this.invencivel > 0)
 			this.invencivel--
+		if (this.clarao_ha > 0)
+			this.clarao_ha--
+		if (this.dano_ha > 0)
+			this.dano_ha--
+		for (const poder in this.poderes) {
+			if (this.poderes[poder] > 0)
+				this.poderes[poder]--
+		}
+		if (this.combo_ha > 0) {
+			this.combo_ha--
+			if (this.combo_ha == 0) {
+				this.combo = 0
+				this.multiplicador = 1
+			}
 		}
 		if (this.aviso_ha > 0) {
 			this.aviso_ha--
@@ -238,18 +323,32 @@ export default class Jogo extends Phaser.Scene {
 				this.aviso.setVisible(false)
 			}
 		}
+		for (const t of this.textos) {
+			t.ha++
+			if (t.ha == 70) {
+				t.obj.destroy()
+			}
+		}
+		this.textos = this.textos.filter((t) => t.ha < 70)
 	}
+
+	get congelado() {
+		return this.poderes.congelar > 0
+	}
+
+	// ------------------------------------------------------------------ elfo
 
 	mover_heroi() {
 		// o elfo anda pela parte de baixo da tela
+		const v = this.poderes.velocidade > 0 ? R.VELOCIDADE_HEROI_RAPIDO : R.VELOCIDADE_HEROI
 		if (this.esq_on)
-			this.heroi_x -= VELOCIDADE_HEROI
+			this.heroi_x -= v
 		if (this.dir_on)
-			this.heroi_x += VELOCIDADE_HEROI
+			this.heroi_x += v
 		if (this.cima_on)
-			this.heroi_y -= VELOCIDADE_HEROI
+			this.heroi_y -= v
 		if (this.baixo_on)
-			this.heroi_y += VELOCIDADE_HEROI
+			this.heroi_y += v
 		this.heroi_x = Phaser.Math.Clamp(this.heroi_x, 0, this.largura - 25)
 		this.heroi_y = Phaser.Math.Clamp(this.heroi_y, ALTURA * 0.55, ALTURA - 27)
 	}
@@ -276,21 +375,25 @@ export default class Jogo extends Phaser.Scene {
 			return
 		}
 
-		const arma = ARMAS[this.arma]
+		const arma = R.ARMAS[this.arma]
 		for (let i = 0; i < arma.tiros; i++) {
 			// o triplo sai em leque: um no meio e um para cada lado
 			const desvio = (i - (arma.tiros - 1) / 2) * arma.abertura
 			const angulo = this.angulo + desvio + (Math.random() * 2 - 1) * arma.tremida
-			const vx = Math.cos(angulo) * VELOCIDADE_TIRO
-			const vy = Math.sin(angulo) * VELOCIDADE_TIRO
+			const vx = Math.cos(angulo) * arma.velocidade
+			const vy = Math.sin(angulo) * arma.velocidade
 			// sai da ponta da arma
 			const x = this.mao_x + Math.cos(angulo) * 14
 			const y = this.mao_y + Math.sin(angulo) * 14
-			const sprite = this.add.image(x, y, 'tiro').setRotation(angulo).setDepth(4)
-			this.tiros.push({ sprite, x, y, vx, vy })
+			const sprite = this.add.sprite(x, y, arma.projetil, 0).setRotation(angulo).setDepth(4)
+			this.tiros.push({ sprite, x, y, vx, vy, arma, acertou: new Set() })
 		}
+		this.stats.disparos++
 		this.espera_tiro = arma.espera
 		this.sound.play('tiro', arma.som)
+
+		this.clarao_ha = 4
+		this.clarao.setPosition(this.mao_x + Math.cos(this.angulo) * 15, this.mao_y + Math.sin(this.angulo) * 15)
 
 		if (this.municao != Infinity) {
 			this.municao--
@@ -303,10 +406,45 @@ export default class Jogo extends Phaser.Scene {
 
 	trocar_arma(arma) {
 		this.arma = arma
-		this.municao = ARMAS[arma].municao
-		this.arma_na_mao.setFrame(ARMAS[arma].quadro)
+		this.municao = R.ARMAS[arma].municao
+		this.arma_na_mao.setFrame(R.ARMAS[arma].quadro)
 		this.atualizar_hud()
 	}
+
+	// o elfo leva um golpe: o escudo segura, senão perde uma vida
+	levar_dano() {
+		if (this.invencivel > 0 || this.estado != 'jogando') {
+			return
+		}
+		if (this.poderes.escudo > 0) {
+			this.poderes.escudo = 0
+			this.invencivel = 60
+			this.flutuar(this.heroi_x + 12, this.heroi_y - 6, 'ESCUDO!', '#9fd8ff')
+			this.sound.play('acerto', { volume: 0.7, rate: 0.6 })
+			return
+		}
+		this.perder_vida()
+	}
+
+	perder_vida() {
+		if (this.estado != 'jogando') {
+			return
+		}
+		this.vidas--
+		this.invencivel = R.INVENCIVEL_DEPOIS_DE_APANHAR
+		this.dano_ha = 30
+		this.combo = 0
+		this.combo_ha = 0
+		this.multiplicador = 1
+		this.cameras.main.shake(200, 0.01)
+		this.sound.play('perder_vida', { volume: 0.7 })
+		this.atualizar_hud()
+		if (this.vidas == 0) {
+			this.fim_de_jogo()
+		}
+	}
+
+	// ------------------------------------------------------------------ bombas e explosões
 
 	jogar_bomba() {
 		if (this.espera_bomba > 0) {
@@ -342,7 +480,7 @@ export default class Jogo extends Phaser.Scene {
 			if (bomba.ha >= bomba.duracao) {
 				bomba.explodiu = true
 				bomba.sprite.destroy()
-				this.explodir(bomba.x1, bomba.y1)
+				this.explodir(bomba.x1, bomba.y1, R.RAIO_DA_EXPLOSAO, R.DANO_DA_EXPLOSAO)
 			}
 		}
 		this.bombas_voando = this.bombas_voando.filter((bomba) => !bomba.explodiu)
@@ -357,131 +495,173 @@ export default class Jogo extends Phaser.Scene {
 		this.explosoes = this.explosoes.filter((explosao) => explosao.ha < 7 * 5)
 	}
 
-	explodir(x, y) {
-		const sprite = this.add.sprite(x, y, 'explosao', 0).setDepth(7)
+	// explosão em (x, y): machuca todo zumbi dentro do raio e desfaz os cuspes
+	explodir(x, y, raio, dano, com_som = true) {
+		const sprite = this.add.sprite(x, y, 'explosao', 0).setDepth(7).setScale(raio / R.RAIO_DA_EXPLOSAO)
 		this.explosoes.push({ sprite, ha: 0 })
-		this.cameras.main.shake(150, 0.006)
-		this.sound.play('explosao', { volume: 0.8 })
+		this.cameras.main.shake(150, 0.004 + raio / 10000)
+		if (com_som) {
+			this.sound.play('explosao', { volume: 0.8, rate: raio < R.RAIO_DA_EXPLOSAO ? 1.25 : 1 })
+		}
 
 		for (const zumbi of this.zumbis) {
-			if (zumbi.morrendo) {
+			if (zumbi.morrendo || dano == 0) {
 				continue
 			}
-			const meio_x = zumbi.x + CORPO_ZUMBI.x + CORPO_ZUMBI.l / 2
-			const meio_y = zumbi.y + CORPO_ZUMBI.y + CORPO_ZUMBI.a / 2
-			if (Phaser.Math.Distance.Between(x, y, meio_x, meio_y) <= RAIO_DA_EXPLOSAO) {
-				this.espirrar_sangue(meio_x, meio_y)
-				this.ferir_zumbi(zumbi, DANO_DA_EXPLOSAO)
+			const c = corpo(zumbi)
+			if (Phaser.Math.Distance.Between(x, y, c.x + c.l / 2, c.y + c.a / 2) <= raio + c.l / 4) {
+				this.espirrar_sangue(c.x + c.l / 2, c.y + c.a / 2)
+				this.ferir_zumbi(zumbi, dano, 6)
 			}
 		}
-	}
-
-	criar_zumbis() {
-		this.proximo_zumbi--
-		if (this.proximo_zumbi > 0) {
-			return
-		}
-
-		// quanto maior o nível, mais zumbis, mais rápidos e mais resistentes
-		const n = this.nivel - 1
-		this.proximo_zumbi = Math.max(30, 130 - n * 12) + Phaser.Math.Between(0, 60)
-
-		const x = Phaser.Math.Between(0, Math.floor(this.largura) - 44)
-		const persegue = Math.random() < Math.min(0.7, 0.2 + n * 0.08)
-		const zumbi = {
-			x,
-			y: -44,
-			vx: persegue ? 0.12 + n * 0.02 : 0, // os que perseguem vão se ajeitando na direção do elfo
-			vy: 0.3 + n * 0.05 + Math.random() * 0.12,
-			vida: Math.min(5, 2 + Math.floor(n / 3)),
-			morrendo: false,
-			morto_ha: 0,
-			xi: Phaser.Math.Between(0, 6),
-		}
-		zumbi.sprite = this.add.sprite(x, zumbi.y, 'zumbi', zumbi.xi).setOrigin(0).setDepth(2)
-		this.zumbis.push(zumbi)
-	}
-
-	// de tempos em tempos desce uma caixa com arma ou bomba
-	criar_itens() {
-		this.proximo_item--
-		if (this.proximo_item > 0) {
-			return
-		}
-		this.proximo_item = Phaser.Math.Between(900, 1400)
-
-		let sorteio = Math.random()
-		let item = ITENS[0]
-		for (const possivel of ITENS) {
-			item = possivel
-			sorteio -= possivel.chance
-			if (sorteio < 0) {
-				break
+		if (this.chefe && this.chefe.fase != 'morrendo') {
+			const c = corpo_chefe(this.chefe)
+			if (Phaser.Math.Distance.Between(x, y, c.x + c.l / 2, c.y + c.a / 2) <= raio + c.l / 2) {
+				this.ferir_chefe(dano, x, y)
 			}
 		}
-		const x = Phaser.Math.Between(8, Math.floor(this.largura) - 24)
-		const sprite = this.add.sprite(x, -16, 'itens', item.quadro).setOrigin(0).setDepth(1)
-		this.itens.push({ sprite, tipo: item.tipo, x, y: -16 })
-	}
-
-	mover_itens() {
-		for (const item of this.itens) {
-			item.y += 0.5
-			if (encostou(item.x, item.y, 16, 16, this.heroi_x, this.heroi_y, 25, 25)) {
-				item.pegou = true
-				this.sound.play('item', { volume: 0.6 })
-				if (item.tipo == 'bomba') {
-					this.bombas = Math.min(BOMBAS_NO_MAXIMO, this.bombas + BOMBAS_POR_CAIXA)
-					this.anunciar('+' + BOMBAS_POR_CAIXA + ' BOMBAS', 100)
-				}
-				else {
-					this.trocar_arma(item.tipo)
-					this.anunciar(ARMAS[item.tipo].nome + '!', 100)
-				}
-				this.atualizar_hud()
-			}
-			if (item.pegou || item.y > ALTURA) {
-				item.sprite.destroy()
+		for (const cuspe of this.cuspes) {
+			if (Phaser.Math.Distance.Between(x, y, cuspe.x, cuspe.y) <= raio) {
+				cuspe.sumiu = true
+				cuspe.sprite.destroy()
 			}
 		}
-		this.itens = this.itens.filter((item) => !item.pegou && item.y <= ALTURA)
+		this.cuspes = this.cuspes.filter((cuspe) => !cuspe.sumiu)
 	}
+
+	// ------------------------------------------------------------------ tiros
 
 	mover_tiros() {
 		for (const tiro of this.tiros) {
 			tiro.x += tiro.vx
 			tiro.y += tiro.vy
+			// o foguete pisca a chama
+			if (tiro.arma.projetil == 'foguete') {
+				tiro.sprite.setFrame(Math.floor(this.quadro_atual / 4) % 2)
+			}
 
 			for (const zumbi of this.zumbis) {
-				if (zumbi.morrendo) {
+				if (zumbi.morrendo || tiro.acertou.has(zumbi)) {
 					continue
 				}
-				const zx = zumbi.x + CORPO_ZUMBI.x
-				const zy = zumbi.y + CORPO_ZUMBI.y
+				const c = corpo(zumbi)
 				// o tiro conta como um quadradinho de 8x8 em volta do centro dele
-				if (encostou(tiro.x - 4, tiro.y - 4, 8, 8, zx, zy, CORPO_ZUMBI.l, CORPO_ZUMBI.a)) {
-					this.espirrar_sangue(
-						Phaser.Math.Clamp(tiro.x, zx, zx + CORPO_ZUMBI.l),
-						Phaser.Math.Clamp(tiro.y, zy, zy + CORPO_ZUMBI.a),
-					)
-					tiro.acertou = true
-					this.sound.play('acerto', { volume: 0.5 })
-					this.ferir_zumbi(zumbi, 1)
-					break
+				if (encostou(tiro.x - 4, tiro.y - 4, 8, 8, c.x, c.y, c.l, c.a)) {
+					this.acertar(tiro, Phaser.Math.Clamp(tiro.x, c.x, c.x + c.l), Phaser.Math.Clamp(tiro.y, c.y, c.y + c.a))
+					this.ferir_zumbi(zumbi, tiro.arma.dano, tiro.arma.empurra)
+					tiro.acertou.add(zumbi)
+					if (!tiro.arma.atravessa) {
+						break
+					}
+				}
+			}
+
+			if (!tiro.sumiu && this.chefe && this.chefe.fase != 'morrendo' && !tiro.acertou.has(this.chefe)) {
+				const c = corpo_chefe(this.chefe)
+				if (encostou(tiro.x - 4, tiro.y - 4, 8, 8, c.x, c.y, c.l, c.a)) {
+					this.acertar(tiro, tiro.x, tiro.y)
+					this.ferir_chefe(tiro.arma.dano, tiro.x, tiro.y)
+					tiro.acertou.add(this.chefe)
 				}
 			}
 
 			const saiu = tiro.x < -20 || tiro.x > this.largura + 20 || tiro.y < -20 || tiro.y > ALTURA + 20
-			if (tiro.acertou || saiu) {
+			if (saiu) {
 				tiro.sumiu = true
+			}
+			if (tiro.sumiu) {
 				tiro.sprite.destroy()
 			}
 		}
 		this.tiros = this.tiros.filter((tiro) => !tiro.sumiu)
 	}
 
-	ferir_zumbi(zumbi, dano) {
+	// o tiro bateu em alguém em (x, y): sangue, som e, conforme a arma, some ou explode
+	acertar(tiro, x, y) {
+		if (tiro.acertou.size == 0) {
+			this.stats.acertos++
+		}
+		this.espirrar_sangue(x, y)
+		this.sound.play('acerto', { volume: 0.5 })
+		if (tiro.arma.explode) {
+			tiro.sumiu = true
+			this.explodir(x, y, tiro.arma.explode, tiro.arma.dano)
+		}
+		else if (!tiro.arma.atravessa) {
+			tiro.sumiu = true
+		}
+	}
+
+	// ------------------------------------------------------------------ zumbis
+
+	criar_zumbis() {
+		// enquanto o chefão está na tela (ou chegando), só ele manda zumbis
+		if (this.chefe || this.chefe_em > 0) {
+			return
+		}
+		this.proximo_zumbi--
+		if (this.proximo_zumbi > 0) {
+			return
+		}
+
+		// quanto maior o nível, mais zumbis e mais rápidos
+		const n = this.nivel - 1
+		this.proximo_zumbi = Math.max(30, 130 - n * 12) + Phaser.Math.Between(0, 60)
+
+		// às vezes vem uma fileira de zumbis juntos
+		if (this.nivel >= 3 && Math.random() < 0.12) {
+			const quantos = Phaser.Math.Between(3, 5)
+			const espaco = Math.min(50, (this.largura - 44) / quantos)
+			const inicio = Phaser.Math.Between(0, Math.max(0, Math.floor(this.largura - 44 - espaco * (quantos - 1))))
+			for (let i = 0; i < quantos; i++) {
+				this.criar_zumbi('comum', inicio + i * espaco, -44 - (i % 2) * 20)
+			}
+			this.proximo_zumbi += 80
+			return
+		}
+
+		const tipos = Object.keys(R.ZUMBIS)
+		const tipo = sortear(tipos, (t) => R.ZUMBIS[t].peso(this.nivel))
+		const tamanho = 44 * R.ZUMBIS[tipo].escala
+		this.criar_zumbi(tipo, Phaser.Math.Between(0, Math.max(0, Math.floor(this.largura - tamanho))), -tamanho)
+	}
+
+	criar_zumbi(tipo, x, y) {
+		const regra = R.ZUMBIS[tipo]
+		const n = this.nivel - 1
+		const persegue = Math.random() < Math.min(0.7, 0.2 + n * 0.08)
+		const zumbi = {
+			tipo,
+			regra,
+			escala: regra.escala,
+			x,
+			y,
+			vx: persegue ? 0.12 + n * 0.02 : 0, // os que perseguem vão se ajeitando na direção do elfo
+			vy: regra.vy * (1 + n * 0.12) * (0.9 + Math.random() * 0.25),
+			vida: regra.vida + Math.floor(n / 3),
+			morrendo: false,
+			morto_ha: 0,
+			flash: 0,
+			xi: Phaser.Math.Between(0, 6),
+			// o cuspidor para numa altura da parte de cima e fica cuspindo
+			parar_em: regra.cospe ? Phaser.Math.Between(40, 130) : null,
+			espera_cuspe: Phaser.Math.Between(80, 160),
+		}
+		zumbi.vida_max = zumbi.vida
+		zumbi.sprite = this.add.sprite(x, y, 'zumbi', zumbi.xi).setOrigin(0).setScale(regra.escala).setDepth(2)
+		if (regra.cor) {
+			zumbi.sprite.setTint(regra.cor)
+		}
+		this.zumbis.push(zumbi)
+		return zumbi
+	}
+
+	ferir_zumbi(zumbi, dano, empurra = 0) {
 		zumbi.vida -= dano
+		zumbi.flash = 5
+		if (zumbi.regra.empurravel) {
+			zumbi.y -= empurra
+		}
 		if (zumbi.vida <= 0) {
 			this.matar_zumbi(zumbi)
 		}
@@ -490,22 +670,48 @@ export default class Jogo extends Phaser.Scene {
 	matar_zumbi(zumbi) {
 		zumbi.morrendo = true
 		zumbi.morto_ha = 0
-		// cada zumbi geme num tom um pouco diferente
-		this.sound.play('zumbi_morre', { volume: 0.6, rate: 0.85 + Math.random() * 0.3 })
-		this.pontos += 10 * this.nivel
-		this.mortes_no_nivel++
+		this.stats.mortos++
+		// cada zumbi geme num tom um pouco diferente (os grandes mais grave)
+		this.sound.play('zumbi_morre', { volume: 0.6, rate: (0.85 + Math.random() * 0.3) / zumbi.escala })
 
-		if (Math.random() < CHANCE_DE_CORACAO) {
-			const x = zumbi.x + 17
-			const y = zumbi.y + 18
-			const sprite = this.add.sprite(x, y, 'coracao', 0).setOrigin(0).setScale(1.5).setDepth(1)
-			this.coracoes.push({ sprite, x, y })
+		// combo: mortes emendadas multiplicam os pontos
+		this.combo = this.combo_ha > 0 ? this.combo + 1 : 1
+		this.combo_ha = R.COMBO_TEMPO
+		this.multiplicador = Math.min(R.COMBO_MAXIMO, 1 + Math.floor((this.combo - 1) / 4))
+		this.stats.melhor_combo = Math.max(this.stats.melhor_combo, this.combo)
+
+		const ganho = zumbi.regra.pontos * this.nivel * this.multiplicador
+		this.pontos += ganho
+		const c = corpo(zumbi)
+		this.flutuar(c.x + c.l / 2, c.y, '+' + ganho, this.multiplicador > 1 ? '#ff9a3c' : '#ffffff')
+
+		if (Math.random() < R.CHANCE_DE_CORACAO) {
+			this.soltar_coracao(c.x + c.l / 2 - 7, c.y + c.a / 2)
+		}
+		else if (Math.random() < R.CHANCE_DE_ITEM) {
+			this.soltar_item(c.x + c.l / 2 - 8, c.y + c.a / 2)
 		}
 
-		if (this.mortes_no_nivel == MORTES_POR_NIVEL) {
-			this.nivel++
-			this.mortes_no_nivel = 0
-			this.anunciar('NÍVEL ' + this.nivel)
+		// em nível de chefão as mortes não contam para subir de nível
+		if (this.chefe == null && this.chefe_em == 0) {
+			this.mortes_no_nivel++
+			if (this.mortes_no_nivel >= R.MORTES_POR_NIVEL) {
+				this.subir_nivel()
+			}
+		}
+		this.atualizar_hud()
+	}
+
+	subir_nivel() {
+		this.nivel++
+		this.mortes_no_nivel = 0
+		this.pintar_noite()
+		if (this.nivel % R.NIVEIS_ENTRE_CHEFOES == 0) {
+			this.chefe_em = 300
+			this.anunciar('ZUMBI REI!', 300, '#ff5a5a')
+		}
+		else {
+			this.anunciar('FASE ' + this.nivel)
 		}
 		this.atualizar_hud()
 	}
@@ -514,27 +720,48 @@ export default class Jogo extends Phaser.Scene {
 		const meio_heroi = this.heroi_x + 12
 
 		for (const zumbi of this.zumbis) {
+			if (zumbi.flash > 0)
+				zumbi.flash--
 			if (zumbi.morrendo) {
 				zumbi.morto_ha++
 				continue
 			}
+			if (this.congelado) {
+				continue
+			}
 
-			zumbi.y += zumbi.vy
-			const meio_zumbi = zumbi.x + 22
+			if (zumbi.parar_em == null || zumbi.y < zumbi.parar_em) {
+				zumbi.y += zumbi.vy
+			}
+			else {
+				// cuspidor parado: cospe no elfo de tempos em tempos e depois volta a descer
+				zumbi.espera_cuspe--
+				if (zumbi.espera_cuspe <= 0) {
+					const c = corpo(zumbi)
+					this.cuspir(c.x + c.l / 2, c.y + c.a / 2, 1, 0)
+					zumbi.cuspidas = (zumbi.cuspidas || 0) + 1
+					zumbi.espera_cuspe = Phaser.Math.Between(120, 180)
+					if (zumbi.cuspidas >= 3) {
+						zumbi.parar_em = null
+					}
+				}
+			}
+
+			const meio_zumbi = zumbi.x + 22 * zumbi.escala
 			if (meio_zumbi < meio_heroi - 2)
 				zumbi.x += zumbi.vx
 			else if (meio_zumbi > meio_heroi + 2)
 				zumbi.x -= zumbi.vx
 
-			const mordeu = encostou(
-				zumbi.x + CORPO_ZUMBI.x, zumbi.y + CORPO_ZUMBI.y, CORPO_ZUMBI.l, CORPO_ZUMBI.a,
-				this.heroi_x + 4, this.heroi_y + 2, 17, 22,
-			)
+			const c = corpo(zumbi)
+			const mordeu = encostou(c.x, c.y, c.l, c.a, this.heroi_x + 4, this.heroi_y + 2, 17, 22)
 			if (mordeu && this.invencivel == 0) {
-				// o zumbi que mordeu se desfaz e o elfo perde uma vida
-				zumbi.morrendo = true
-				zumbi.morto_ha = 0
-				this.perder_vida()
+				// o zumbi que mordeu se desfaz (o brutamontes aguenta e continua)
+				if (zumbi.tipo != 'brutamontes') {
+					zumbi.morrendo = true
+					zumbi.morto_ha = 0
+				}
+				this.levar_dano()
 			}
 			else if (zumbi.y > ALTURA) {
 				// passou pelo elfo e fugiu pela parte de baixo: também custa uma vida
@@ -552,17 +779,227 @@ export default class Jogo extends Phaser.Scene {
 		this.zumbis = this.zumbis.filter((zumbi) => !zumbi.fugiu && !(zumbi.morrendo && zumbi.morto_ha >= 75))
 	}
 
+	// cospe "quantos" cuspes em leque na direção do elfo
+	cuspir(x, y, quantos, abertura) {
+		const angulo = Math.atan2(this.heroi_y + 12 - y, this.heroi_x + 12 - x)
+		for (let i = 0; i < quantos; i++) {
+			const a = angulo + (i - (quantos - 1) / 2) * abertura
+			const sprite = this.add.sprite(x, y, 'cuspe', 0).setDepth(4.5)
+			this.cuspes.push({ sprite, x, y, vx: Math.cos(a) * R.VELOCIDADE_CUSPE, vy: Math.sin(a) * R.VELOCIDADE_CUSPE })
+		}
+		this.sound.play('acerto', { volume: 0.4, rate: 1.6 })
+	}
+
+	mover_cuspes() {
+		for (const cuspe of this.cuspes) {
+			if (!this.congelado) {
+				cuspe.x += cuspe.vx
+				cuspe.y += cuspe.vy
+			}
+			if (encostou(cuspe.x - 3, cuspe.y - 3, 6, 6, this.heroi_x + 5, this.heroi_y + 3, 15, 20) && this.invencivel == 0) {
+				cuspe.sumiu = true
+				this.levar_dano()
+			}
+			if (cuspe.x < -10 || cuspe.x > this.largura + 10 || cuspe.y < -10 || cuspe.y > ALTURA + 10) {
+				cuspe.sumiu = true
+			}
+			if (cuspe.sumiu) {
+				cuspe.sprite.destroy()
+			}
+		}
+		this.cuspes = this.cuspes.filter((cuspe) => !cuspe.sumiu)
+	}
+
+	// ------------------------------------------------------------------ chefão
+
+	chamar_chefe() {
+		if (this.chefe_em == 0) {
+			return
+		}
+		this.chefe_em--
+		if (this.chefe_em > 0) {
+			return
+		}
+		const numero = this.nivel / R.NIVEIS_ENTRE_CHEFOES
+		const vida = R.CHEFE.vida_base + R.CHEFE.vida_por_chefe * (numero - 1)
+		const tamanho = 64 * R.CHEFE.escala
+		this.chefe = {
+			numero,
+			x: this.largura / 2 - tamanho / 2,
+			y: -tamanho,
+			vida,
+			vida_max: vida,
+			fase: 'entrando',
+			ha: 0,
+			flash: 0,
+			atacando: 0,
+			espera_cuspe: 120,
+			espera_chamar: 400,
+			morto_ha: 0,
+		}
+		this.chefe.sprite = this.add.sprite(this.chefe.x, this.chefe.y, 'chefe', 0).setOrigin(0).setScale(R.CHEFE.escala).setDepth(3)
+		this.sound.play('zumbi_morre', { volume: 1, rate: 0.4 })
+		this.cameras.main.shake(400, 0.008)
+	}
+
+	ferir_chefe(dano, x, y) {
+		const chefe = this.chefe
+		chefe.vida -= dano
+		chefe.flash = 5
+		this.espirrar_sangue(x, y)
+		if (chefe.vida <= 0) {
+			chefe.fase = 'morrendo'
+			chefe.morto_ha = 0
+			this.stats.chefes++
+			const ganho = R.CHEFE.pontos * chefe.numero
+			this.pontos += ganho
+			this.flutuar(chefe.x + 64, chefe.y + 20, '+' + ganho, '#ff9a3c')
+			this.sound.play('zumbi_morre', { volume: 1, rate: 0.35 })
+			this.atualizar_hud()
+		}
+	}
+
+	mover_chefe() {
+		const chefe = this.chefe
+		if (!chefe) {
+			return
+		}
+		if (chefe.flash > 0)
+			chefe.flash--
+
+		if (chefe.fase == 'morrendo') {
+			chefe.morto_ha++
+			// pipoca de explosões em cima dele
+			if (chefe.morto_ha % 12 == 0 && chefe.morto_ha <= 96) {
+				const c = corpo_chefe(chefe)
+				this.explodir(c.x + Math.random() * c.l, c.y + Math.random() * c.a, 30, 0, chefe.morto_ha % 24 == 0)
+			}
+			if (chefe.morto_ha == 120) {
+				// deixa presentes e o jogo segue para o próximo nível
+				const c = corpo_chefe(chefe)
+				this.soltar_coracao(c.x + c.l / 2 - 20, c.y + c.a / 2)
+				this.soltar_item(c.x + c.l / 2, c.y + c.a / 2)
+				this.soltar_item(c.x + c.l / 2 + 22, c.y + c.a / 2 - 10)
+				chefe.sprite.destroy()
+				this.chefe = null
+				this.subir_nivel()
+			}
+			return
+		}
+		if (this.congelado) {
+			return
+		}
+
+		chefe.ha++
+		const tamanho = 64 * R.CHEFE.escala
+		if (chefe.fase == 'entrando') {
+			chefe.y += 0.5
+			if (chefe.y >= 48) {
+				chefe.fase = 'lutando'
+				chefe.ha = 0
+				chefe.base_x = chefe.x
+			}
+		}
+		else {
+			// anda de um lado para o outro na parte de cima, balançando
+			const amplitude = Math.max(0, this.largura / 2 - tamanho / 2 - 10)
+			chefe.x = this.largura / 2 - tamanho / 2 + Math.sin(chefe.ha / (140 - chefe.numero * 10)) * amplitude
+			chefe.y = 48 + Math.sin(chefe.ha / 37) * 8
+
+			chefe.espera_cuspe--
+			if (chefe.espera_cuspe <= 0) {
+				const c = corpo_chefe(chefe)
+				const quantos = Math.min(9, 3 + chefe.numero * 2)
+				this.cuspir(c.x + c.l / 2, c.y + c.a * 0.4, quantos, 0.18)
+				chefe.atacando = 40
+				chefe.espera_cuspe = Math.max(70, 150 - chefe.numero * 15)
+			}
+			chefe.espera_chamar--
+			if (chefe.espera_chamar <= 0) {
+				// chama ajudantes
+				const c = corpo_chefe(chefe)
+				for (let i = 0; i < 1 + chefe.numero; i++) {
+					this.criar_zumbi('corredor', Phaser.Math.Clamp(c.x + Math.random() * c.l - 18, 0, this.largura - 36), c.y + c.a - 20)
+				}
+				chefe.atacando = 40
+				chefe.espera_chamar = 500
+			}
+			if (chefe.atacando > 0)
+				chefe.atacando--
+		}
+
+		const c = corpo_chefe(chefe)
+		if (encostou(c.x, c.y, c.l, c.a, this.heroi_x + 4, this.heroi_y + 2, 17, 22)) {
+			this.levar_dano()
+		}
+	}
+
+	// ------------------------------------------------------------------ itens, corações e poderes
+
+	criar_itens() {
+		this.proximo_item--
+		if (this.proximo_item > 0) {
+			return
+		}
+		this.proximo_item = Phaser.Math.Between(R.ITEM_A_CADA[0], R.ITEM_A_CADA[1])
+		this.soltar_item(Phaser.Math.Between(8, Math.floor(this.largura) - 24), -16)
+	}
+
+	soltar_item(x, y) {
+		const possiveis = R.ITENS.filter((item) => item.nivel <= this.nivel)
+		const item = sortear(possiveis, (i) => i.peso)
+		const sprite = this.add.sprite(x, y, 'itens', item.quadro).setOrigin(0).setDepth(1.8)
+		this.itens.push({ sprite, tipo: item.tipo, x, y })
+	}
+
+	soltar_coracao(x, y) {
+		const sprite = this.add.sprite(x, y, 'coracao', 0).setOrigin(0).setScale(1.5).setDepth(1.8)
+		this.coracoes.push({ sprite, x, y })
+	}
+
+	mover_itens() {
+		for (const item of this.itens) {
+			item.y += 0.5
+			if (encostou(item.x, item.y, 16, 16, this.heroi_x, this.heroi_y, 25, 25)) {
+				item.pegou = true
+				this.pegar(item.tipo)
+			}
+			if (item.pegou || item.y > ALTURA) {
+				item.sprite.destroy()
+			}
+		}
+		this.itens = this.itens.filter((item) => !item.pegou && item.y <= ALTURA)
+	}
+
+	pegar(tipo) {
+		this.sound.play('item', { volume: 0.6 })
+		if (tipo == 'bomba') {
+			this.bombas = Math.min(R.BOMBAS_NO_MAXIMO, this.bombas + R.BOMBAS_POR_CAIXA)
+			this.anunciar('+' + R.BOMBAS_POR_CAIXA + ' BOMBAS', 100)
+		}
+		else if (R.PODERES[tipo]) {
+			this.poderes[tipo] = R.PODERES[tipo].duracao
+			this.anunciar(R.PODERES[tipo].nome + '!', 100, '#9fd8ff')
+		}
+		else {
+			this.trocar_arma(tipo)
+			this.anunciar(R.ARMAS[tipo].nome + '!', 100)
+		}
+		this.atualizar_hud()
+	}
+
 	mover_coracoes() {
 		for (const coracao of this.coracoes) {
 			coracao.y += 0.6
 			if (encostou(coracao.x, coracao.y, 14, 12, this.heroi_x, this.heroi_y, 25, 25)) {
 				coracao.pegou = true
 				this.sound.play('item', { volume: 0.6, rate: 1.25 })
-				if (this.vidas < VIDAS_NO_MAXIMO) {
+				if (this.vidas < R.VIDAS_NO_MAXIMO) {
 					this.vidas++
 				}
 				else {
 					this.pontos += 50 // com as vidas cheias, o coração vale pontos
+					this.flutuar(coracao.x + 7, coracao.y, '+50')
 				}
 				this.atualizar_hud()
 			}
@@ -573,19 +1010,12 @@ export default class Jogo extends Phaser.Scene {
 		this.coracoes = this.coracoes.filter((coracao) => !coracao.pegou && coracao.y <= ALTURA)
 	}
 
-	perder_vida() {
-		if (this.estado != 'jogando') {
-			return
-		}
-		this.vidas--
-		this.invencivel = INVENCIVEL_DEPOIS_DE_APANHAR
-		this.cameras.main.shake(200, 0.01)
-		this.sound.play('perder_vida', { volume: 0.7 })
-		this.atualizar_hud()
-		if (this.vidas == 0) {
-			this.fim_de_jogo()
-		}
+	espirrar_sangue(x, y) {
+		const sprite = this.add.sprite(x, y, 'sangue', 0).setDepth(3.5)
+		this.sangues.push({ sprite, ha: 0 })
 	}
+
+	// ------------------------------------------------------------------ fim de jogo
 
 	fim_de_jogo() {
 		this.estado = 'fim'
@@ -594,33 +1024,51 @@ export default class Jogo extends Phaser.Scene {
 			this.recorde = this.pontos
 			gravar_recorde(this.pontos)
 		}
+		const segundos = Math.floor(this.stats.ticks / 100)
+		const tempo = Math.floor(segundos / 60) + ':' + String(segundos % 60).padStart(2, '0')
+		const pontaria = this.stats.disparos ? Math.round((100 * this.stats.acertos) / this.stats.disparos) : 0
+
 		this.escurecer.setVisible(true)
-		this.aviso.setText('FIM DE\nJOGO').setVisible(true)
+		this.vermelho.setFillStyle(0xff0000, 0)
+		this.aviso.setText('FIM DE\nJOGO').setColor('#ffd34d').setVisible(true).setY(ALTURA / 2 - 105)
 		this.aviso_ha = 0
+		this.mensagem.setY(ALTURA / 2 + 25)
 		this.mensagem.setText(
 			'PONTOS: ' + this.pontos + '\n' +
-			(novo_recorde ? 'NOVO RECORDE!' : 'RECORDE: ' + this.recorde) +
-			'\n\nCLIQUE OU ESPAÇO\nPARA JOGAR DE NOVO',
+			(novo_recorde ? 'NOVO RECORDE!' : 'RECORDE: ' + this.recorde) + '\n\n' +
+			'FASE ' + this.nivel + '   TEMPO ' + tempo + '\n' +
+			'ZUMBIS ' + this.stats.mortos + '   CHEFES ' + this.stats.chefes + '\n' +
+			'PONTARIA ' + pontaria + '%   COMBO ' + this.stats.melhor_combo + '\n\n' +
+			'CLIQUE OU ESPAÇO\nPARA JOGAR DE NOVO',
 		)
 		// espera um pouco para quem está atirando não reiniciar sem querer
-		this.time.delayedCall(800, () => {
+		this.time.delayedCall(1000, () => {
 			const reiniciar = () => this.scene.restart()
 			this.input.keyboard.once('keydown-SPACE', reiniciar)
 			this.input.once('pointerdown', reiniciar)
 		})
 	}
 
-	espirrar_sangue(x, y) {
-		const sprite = this.add.sprite(x, y, 'sangue', 0).setDepth(3)
-		this.sangues.push({ sprite, ha: 0 })
-	}
+	// ------------------------------------------------------------------ desenho
 
 	saida() {
+		this.desenhar_heroi()
+		this.desenhar_zumbis()
+		this.desenhar_chefe()
+		this.desenhar_resto()
+		this.desenhar_sombras()
+		this.desenhar_hud_do_tick()
+		this.quadro_atual++
+	}
+
+	desenhar_heroi() {
 		// elfo: olha para a mira; andando usa o sprite de andar, parado o de parado
 		const andando = this.esq_on || this.dir_on || this.cima_on || this.baixo_on
 		if (andando) {
 			this.heroi.setTexture('heroi_' + this.heroi_direcao, this.heroi_xi)
-			if (this.quadro_atual % 5 == 0)
+			// com as botas as pernas também andam mais rápido
+			const passo = this.poderes.velocidade > 0 ? 3 : 5
+			if (this.quadro_atual % passo == 0)
 				this.heroi_xi = (this.heroi_xi + 1) % 10
 		}
 		else {
@@ -636,9 +1084,85 @@ export default class Jogo extends Phaser.Scene {
 		this.arma_na_mao.setRotation(this.angulo)
 		this.arma_na_mao.setFlipY(Math.abs(this.angulo) > Math.PI / 2)
 		this.arma_na_mao.setVisible(visivel)
+		this.clarao.setVisible(this.clarao_ha > 0)
 
+		// bolha do escudo: pisca quando está acabando
+		const escudo = this.poderes.escudo
+		this.bolha.setPosition(this.heroi_x + 12, this.heroi_y + 13)
+		this.bolha.setVisible(escudo > 0 && (escudo > 150 || Math.floor(escudo / 10) % 2 == 0))
+	}
+
+	desenhar_zumbis() {
+		for (const zumbi of this.zumbis) {
+			const s = zumbi.sprite
+			if (!zumbi.morrendo) {
+				s.setFrame(zumbi.xi)
+				s.setPosition(Math.round(zumbi.x), Math.round(zumbi.y))
+				if (this.quadro_atual % 12 == 0 && !this.congelado)
+					zumbi.xi = (zumbi.xi + 1) % 7
+			}
+			else {
+				// morrendo: um quadro a cada 15 ticks, com os pés no mesmo lugar
+				s.setTexture('zumbi_morre', Math.min(4, Math.floor(zumbi.morto_ha / 15)))
+				const e = zumbi.escala
+				s.setPosition(Math.round(zumbi.x + (22 - 30) * e), Math.round(zumbi.y + (44 - 71) * e))
+			}
+			this.pintar(s, zumbi.flash, zumbi.regra.cor)
+		}
+	}
+
+	// branco quando acabou de levar um tiro, azulado quando congelado, senão a cor do tipo
+	pintar(sprite, flash, cor) {
+		if (flash > 0) {
+			sprite.setTint(0xffffff).setTintMode(Phaser.TintModes.FILL)
+		}
+		else if (this.congelado) {
+			sprite.setTint(0x8cc8ff).setTintMode(Phaser.TintModes.MULTIPLY)
+		}
+		else if (cor) {
+			sprite.setTint(cor).setTintMode(Phaser.TintModes.MULTIPLY)
+		}
+		else {
+			sprite.clearTint().setTintMode(Phaser.TintModes.MULTIPLY)
+		}
+	}
+
+	desenhar_chefe() {
+		const chefe = this.chefe
+		const mostrar_barra = chefe != null && chefe.fase != 'morrendo'
+		this.barra_fundo.setVisible(mostrar_barra)
+		this.barra_vida.setVisible(mostrar_barra)
+		this.barra_nome.setVisible(mostrar_barra)
+		if (!chefe) {
+			return
+		}
+
+		let quadro
+		if (chefe.fase == 'morrendo') {
+			// linha 6 a partir da 3ª coluna e linha 7: pegando fogo e virando fumaça
+			quadro = Math.min(55, 44 + Math.floor(chefe.morto_ha / 10))
+		}
+		else if (chefe.atacando > 0) {
+			quadro = 28 + (Math.floor(chefe.ha / 8) % 4) // linha 4: braços para cima
+		}
+		else {
+			quadro = Math.floor(chefe.ha / 10) % 7 // linha 0: andando para baixo
+		}
+		chefe.sprite.setFrame(quadro)
+		chefe.sprite.setPosition(Math.round(chefe.x), Math.round(chefe.y))
+		this.pintar(chefe.sprite, chefe.flash, null)
+
+		this.barra_vida.setSize(Math.max(0, (this.largura_barra * chefe.vida) / chefe.vida_max), 4)
+		this.barra_nome.setText('ZUMBI REI ' + chefe.numero)
+	}
+
+	desenhar_resto() {
 		for (const tiro of this.tiros) {
 			tiro.sprite.setPosition(Math.round(tiro.x), Math.round(tiro.y))
+		}
+		for (const cuspe of this.cuspes) {
+			cuspe.sprite.setPosition(Math.round(cuspe.x), Math.round(cuspe.y))
+			cuspe.sprite.setFrame(Math.floor(this.quadro_atual / 10) % 2)
 		}
 
 		// a bomba faz um arco: sobe e desce enquanto vai até o alvo, girando
@@ -651,20 +1175,6 @@ export default class Jogo extends Phaser.Scene {
 		}
 		for (const explosao of this.explosoes) {
 			explosao.sprite.setFrame(Math.min(6, Math.floor(explosao.ha / 5)))
-		}
-
-		for (const zumbi of this.zumbis) {
-			if (!zumbi.morrendo) {
-				zumbi.sprite.setFrame(zumbi.xi)
-				zumbi.sprite.setPosition(Math.round(zumbi.x), Math.round(zumbi.y))
-				if (this.quadro_atual % 12 == 0)
-					zumbi.xi = (zumbi.xi + 1) % 7
-			}
-			else {
-				// morrendo: um quadro a cada 15 ticks, com os pés no mesmo lugar
-				zumbi.sprite.setTexture('zumbi_morre', Math.min(4, Math.floor(zumbi.morto_ha / 15)))
-				zumbi.sprite.setPosition(Math.round(zumbi.x) + 22 - 30, Math.round(zumbi.y) + 44 - 71)
-			}
 		}
 
 		for (const coracao of this.coracoes) {
@@ -686,6 +1196,44 @@ export default class Jogo extends Phaser.Scene {
 		}
 		this.sangues = this.sangues.filter((sangue) => sangue.ha < 6 * 6)
 
-		this.quadro_atual++
+		// textos flutuantes sobem e vão sumindo
+		for (const t of this.textos) {
+			t.obj.y -= 0.3
+			t.obj.setAlpha(t.ha < 40 ? 1 : 1 - (t.ha - 40) / 30)
+		}
+	}
+
+	desenhar_sombras() {
+		const g = this.sombras
+		g.clear()
+		g.fillStyle(0x000000, 0.28)
+		g.fillEllipse(this.heroi_x + 12.5, this.heroi_y + 25, 18, 6)
+		for (const zumbi of this.zumbis) {
+			if (!zumbi.morrendo) {
+				const c = corpo(zumbi)
+				g.fillEllipse(c.x + c.l / 2, c.y + c.a + 2 * zumbi.escala, c.l * 0.9, 6 * zumbi.escala)
+			}
+		}
+		if (this.chefe && this.chefe.fase != 'morrendo') {
+			const c = corpo_chefe(this.chefe)
+			g.fillEllipse(c.x + c.l / 2, c.y + c.a + 2, c.l, 12)
+		}
+		for (const item of this.itens) {
+			g.fillEllipse(item.x + 8, item.y + 18, 14, 4)
+		}
+	}
+
+	desenhar_hud_do_tick() {
+		this.vermelho.setFillStyle(0xff0000, this.dano_ha > 0 ? (this.dano_ha / 30) * 0.35 : 0)
+		this.hud_combo.setText(this.multiplicador > 1 ? 'COMBO x' + this.multiplicador : '')
+
+		// poderes ativos com os segundos que faltam
+		const ativos = []
+		for (const poder in this.poderes) {
+			if (this.poderes[poder] > 0) {
+				ativos.push(R.PODERES[poder].nome + ' ' + Math.ceil(this.poderes[poder] / 100))
+			}
+		}
+		this.hud_poderes.setText(ativos.join('  '))
 	}
 }

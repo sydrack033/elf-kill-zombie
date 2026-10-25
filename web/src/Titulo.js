@@ -16,13 +16,13 @@ export default class Titulo extends Phaser.Scene {
 		this.comecar = texto(this, 0, 225, 'CLIQUE OU\nAPERTE ESPAÇO', 10, '#ffd34d').setOrigin(0.5)
 		this.controles = texto(
 			this, 0, 348,
-			'WASD OU SETAS: ANDAR\nMOUSE: MIRAR E ATIRAR\nBOTÃO DIREITO: BOMBA\nP: PAUSA  F: TELA CHEIA\nM: SOM',
+			'WASD OU SETAS: ANDAR\nMOUSE: MIRAR E ATIRAR\nCLIQUE DIREITO: BOMBA\nP: PAUSA  F: TELA CHEIA\nM: SOM',
 			8, '#cfcfcf',
 		).setOrigin(0.5)
 		this.controles.setLineSpacing(6)
 
 		const recorde = ler_recorde()
-		this.recorde = texto(this, 0, 300,recorde > 0 ? 'RECORDE: ' + recorde : '', 8, '#ffffff').setOrigin(0.5)
+		this.recorde = texto(this, 0, 300, recorde > 0 ? 'RECORDE: ' + recorde : '', 8, '#ffffff').setOrigin(0.5)
 
 		this.quadro = 0
 		ajustar_tela(this)

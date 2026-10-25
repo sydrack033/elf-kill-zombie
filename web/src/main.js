@@ -6,7 +6,7 @@ import Jogo from './Jogo.js'
 
 // espera a fonte carregar antes de criar o jogo, senão os textos saem com a fonte padrão
 document.fonts.load('8px "Press Start 2P"').finally(() => {
-	new Phaser.Game({
+	const jogo = new Phaser.Game({
 		type: Phaser.AUTO,
 		parent: 'jogo',
 		pixelArt: true,
@@ -20,4 +20,10 @@ document.fonts.load('8px "Press Start 2P"').finally(() => {
 		},
 		scene: [Carregar, Titulo, Jogo],
 	})
+
+	// só no modo de desenvolvimento (npm run dev): deixa o jogo acessível no console do navegador
+	if (import.meta.env.DEV) {
+		window.jogo = jogo
+		import('./teste.js').then((modulo) => modulo.instalar_teste(jogo))
+	}
 })
