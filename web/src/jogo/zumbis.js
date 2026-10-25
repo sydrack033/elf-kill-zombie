@@ -447,12 +447,14 @@ export default class Zumbis {
 		if (this.combo >= 20) desbloquear(this, 'combo20')
 		// marcos do combo: aviso grande que pula na tela
 		const marcos = { 10: 'EMBALADO!  +1 BOMBA', 25: 'IMPARÁVEL!  ESCUDO', 50: 'LENDÁRIO!  FÚRIA CHEIA', 100: 'DEUS DOS ELFOS!  +1 VIDA' }
-		if (marcos[this.combo] && this.estado == 'jogando') {
-			// cada marco dá um presente
+		// cada marco dá um presente (mesmo se a escolha de melhoria abrir junto; só o aviso fica de fora)
+		if (marcos[this.combo] && this.estado != 'fim') {
 			if (this.combo == 10) this.bombas = Math.min(this.bombas_max(), this.bombas + 1)
 			if (this.combo == 25) this.poderes.escudo = Math.max(this.poderes.escudo, R.PODERES.escudo.duracao)
 			if (this.combo == 50) this.furia = 1
 			if (this.combo == 100 && !this.mod.vidro) this.vidas = Math.min(this.vidas_max, this.vidas + 1)
+		}
+		if (marcos[this.combo] && this.estado == 'jogando') {
 			const aviso = texto(this, this.largura / 2, 96, 'COMBO ' + this.combo + '\n' + marcos[this.combo], 16, '#ff9a3c').setOrigin(0.5).setDepth(12).setScale(0.4)
 			this.tweens.add({ targets: aviso, scale: 1, duration: 260, ease: 'Back.Out' })
 			this.tweens.add({ targets: aviso, alpha: 0, y: 80, delay: 1100, duration: 400, onComplete: () => aviso.destroy() })
