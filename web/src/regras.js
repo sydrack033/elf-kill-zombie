@@ -40,6 +40,7 @@ export const ROLAGEM_DO_CHAO = 0.3 // o chão desce esta quantidade por tick
 export const PERIGOS = {
 	escombros: { cor: 0x8a8070, raio: 26, a_cada: [520, 820], aviso: 100 },
 	meteoros: { cor: 0xff7a2a, raio: 34, a_cada: [420, 700], aviso: 90 },
+	granizo: { cor: 0xc8ecff, raio: 24, a_cada: [260, 460], aviso: 80 },
 }
 
 // lodo (pântano): poças que descem com o chão e deixam o elfo lento enquanto ele pisa nelas
@@ -56,6 +57,7 @@ export const CENARIOS = [
 	{ a_partir_da_fase: 10, textura: 'chao_pantano', nome: 'PÂNTANO', clima: 'chuva', musica: 'musica_pantano', neblina: 0.4, perigo: 'lodo' },
 	{ a_partir_da_fase: 20, textura: 'chao_ruinas', nome: 'CIDADE EM RUÍNAS', clima: 'chuva', musica: 'musica_ruinas', neblina: 0.2, perigo: 'escombros' },
 	{ a_partir_da_fase: 30, textura: 'chao_inferno', nome: 'INFERNO', clima: 'brasas', musica: 'musica_inferno', perigo: 'meteoros' },
+	{ a_partir_da_fase: 40, textura: 'chao_gelo', nome: 'TERRA GELADA', clima: 'neve', musica: 'musica_gelo', perigo: 'granizo' },
 ]
 export const COMBO_MAXIMO = 5 // multiplicador máximo de pontos
 

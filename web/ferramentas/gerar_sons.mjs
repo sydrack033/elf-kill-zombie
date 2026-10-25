@@ -435,3 +435,31 @@ salvar('torreta', gerar(0.3, (t, p, osc) => {
 
 // moeda: dois plins agudos (si, mi)
 salvar('moeda', gerar(0.22, (t, p, osc) => quadrada(osc(p < 0.35 ? 988 : 1319)) * 0.18 * (p < 0.35 ? 1 : 1 - (p - 0.35) / 0.65)))
+
+// ---------------------------------------------------------------- música da terra gelada (si menor, 100 bpm, sinos frios)
+// fica no fim do arquivo para não mudar o ruído (com semente) dos efeitos que vêm antes
+
+{
+	const bpm = 100
+	const melodia = [
+		'F#5 . . . B5 . . . A5 . F#5 . E5 . . .',
+		'D5 . . . . . E5 . F#5 . . . - - - -',
+		'F#5 . . . B5 . . . C#6 . D6 . C#6 . . .',
+		'B5 . . . . . . . - - - - - - - -',
+		'G5 . . . F#5 . . . E5 . . . D5 . . .',
+		'E5 . . . F#5 . G5 . A5 . . . - - - -',
+		'F#5 . E5 . D5 . . . C#5 . . . E5 . . .',
+		'B4 . . . . . . . - - - - - - - -',
+	]
+	const acordes = [['B3', 'D4', 'F#4'], ['G3', 'B3', 'D4'], ['B3', 'D4', 'F#4'], ['F#3', 'A#3', 'C#4'],
+		['E3', 'G3', 'B3'], ['A3', 'C#4', 'E4'], ['D3', 'F#3', 'A3'], ['F#3', 'A#3', 'C#4']]
+	const raizes = ['B1', 'G1', 'B1', 'F#1', 'E1', 'A1', 'D2', 'F#1']
+	const baixo_lento = (n) => [n, '.', '.', '.', '.', '.', '.', '.', n, '.', '.', '.', '-', '-', '-', '-'].join(' ')
+	const silencio = rep('- - - - - - - - - - - - - - - -', 8)
+	salvar('musica_gelo', misturar(
+		canal_melodico([...silencio, ...melodia, ...melodia], { onda: 'fina', volume: 0.22, bpm, queda: 0.9, sustento: 0.3, vibrato: 0.006 }),
+		canal_melodico([...acordes, ...acordes, ...acordes].map((a) => arpejo(a, [0, 1, 2, 1])), { onda: 'triangulo', volume: 0.12, bpm, queda: 0.2, sustento: 0.3 }),
+		canal_melodico([...raizes, ...raizes, ...raizes].map(baixo_lento), { onda: 'triangulo', volume: 0.3, bpm, queda: 0.6, sustento: 0.6 }),
+		canal_bateria(rep('k - - - h - - - s - - - h - h -', 24), { volume: 0.22, bpm }),
+	))
+}

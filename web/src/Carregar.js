@@ -46,6 +46,7 @@ export default class Carregar extends Phaser.Scene {
 		this.load.image('chao_pantano', PASTA + 'chao_pantano.png')
 		this.load.image('chao_ruinas', PASTA + 'chao_ruinas.png')
 		this.load.image('chao_inferno', PASTA + 'chao_inferno.png')
+		this.load.image('chao_gelo', PASTA + 'chao_gelo.png')
 		this.load.spritesheet('melhorias', PASTA + 'melhorias.png', { frameWidth: 16, frameHeight: 16 })
 		// sombra escura nas bordas da tela (fica mais forte à noite)
 		this.load.image('vinheta', PASTA + 'vinheta.png')
@@ -72,7 +73,7 @@ export default class Carregar extends Phaser.Scene {
 		}
 		// músicas comprimidas (ferramentas/comprimir_musicas.mjs): o navegador fica com o OGG ou, se não
 		// souber tocar (Safari antigo), com o MP3
-		const musicas = ['titulo', 'jogo', 'chefe', 'pantano', 'ruinas', 'inferno']
+		const musicas = ['titulo', 'jogo', 'chefe', 'pantano', 'ruinas', 'inferno', 'gelo']
 		for (const musica of musicas) {
 			this.load.audio('musica_' + musica, ['assets/sons/musica_' + musica + '.ogg', 'assets/sons/musica_' + musica + '.mp3'])
 		}

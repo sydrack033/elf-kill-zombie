@@ -1094,9 +1094,14 @@ export default class Jogo extends Phaser.Scene {
 		const cenario = this.cenario()
 		const fase_no_cenario = this.nivel - cenario.a_partir_da_fase + 1
 		const brasas = cenario.clima == 'brasas'
+		const neve = cenario.clima == 'neve'
 		let quantas = 0
 		if (brasas) {
 			quantas = 50
+		}
+		else if (neve) {
+			// a neve cai sempre, mais forte com as fases
+			quantas = Math.min(160, 60 + fase_no_cenario * 10)
 		}
 		else if (fase_no_cenario >= R.FASE_DA_CHUVA) {
 			quantas = Math.min(140, 40 + (fase_no_cenario - R.FASE_DA_CHUVA) * 15)
@@ -1105,7 +1110,7 @@ export default class Jogo extends Phaser.Scene {
 			this.gotas.push({ x: Math.random() * (this.largura + 60), y: Math.random() * ALTURA, v: 5 + Math.random() * 3 })
 		}
 		this.gotas.length = Math.min(this.gotas.length, quantas)
-		this.clima = brasas ? 'brasas' : 'chuva'
+		this.clima = brasas ? 'brasas' : neve ? 'neve' : 'chuva'
 		for (const gota of this.gotas) {
 			if (brasas) {
 				// brasa: sobe devagar balançando
@@ -1114,6 +1119,16 @@ export default class Jogo extends Phaser.Scene {
 				if (gota.y < -5) {
 					gota.y = ALTURA + 5
 					gota.x = Math.random() * this.largura
+				}
+				continue
+			}
+			if (neve) {
+				// floco: cai devagar balançando de um lado para o outro
+				gota.y += gota.v * 0.18
+				gota.x += Math.sin((gota.y + gota.v * 40) / 25) * 0.4 - 0.1
+				if (gota.y > ALTURA) {
+					gota.y = -5
+					gota.x = Math.random() * (this.largura + 60)
 				}
 				continue
 			}
@@ -1128,7 +1143,7 @@ export default class Jogo extends Phaser.Scene {
 		if (this.relampago_ha > 0) {
 			this.relampago_ha--
 		}
-		if (quantas > 0 && !brasas) {
+		if (quantas > 0 && !brasas && !neve) {
 			this.proximo_trovao--
 			if (this.proximo_trovao <= 0) {
 				this.proximo_trovao = Phaser.Math.Between(1200, 2600)
@@ -1902,6 +1917,10 @@ export default class Jogo extends Phaser.Scene {
 				q.sombra.destroy()
 				q.pedra.destroy()
 				this.explodir(q.x, q.y, q.regra.raio, 3, true, true)
+				// escombros levantam poeira e granizo estoura em gelo, em vez de fogo
+				if (q.regra.cor != 0xff7a2a) {
+					this.explosoes[this.explosoes.length - 1].sprite.setTint(q.regra.cor)
+				}
 			}
 		}
 		this.quedas = this.quedas.filter((q) => q.ha < q.regra.aviso)
@@ -3176,6 +3195,13 @@ export default class Jogo extends Phaser.Scene {
 				// pisca entre laranja e amarelo
 				g.fillStyle(gota.v > 6.5 ? 0xffe080 : 0xff8a30, 0.5 + 0.4 * Math.sin((this.quadro_atual + gota.v * 40) / 10))
 				g.fillRect(Math.round(gota.x), Math.round(gota.y), 1, 1)
+			}
+		}
+		else if (this.gotas.length && this.clima == 'neve') {
+			for (const gota of this.gotas) {
+				// flocos grandes (mais perto) e pequenos (mais longe)
+				g.fillStyle(0xffffff, gota.v > 6.5 ? 0.9 : 0.6)
+				g.fillRect(Math.round(gota.x), Math.round(gota.y), gota.v > 6.5 ? 2 : 1, gota.v > 6.5 ? 2 : 1)
 			}
 		}
 		else if (this.gotas.length) {
