@@ -1,13 +1,15 @@
 import Phaser from 'phaser'
-import { PASTA } from './tela.js'
+import { PASTA, FONTE } from './tela.js'
 
-// carrega todas as imagens uma vez só e vai para a tela de título
+// carrega todas as imagens e sons uma vez só (mostrando uma barra) e vai para a tela de título
 export default class Carregar extends Phaser.Scene {
 	constructor() {
 		super('Carregar')
 	}
 
 	preload() {
+		this.mostrar_barra()
+
 		// elfo: andar tem 10 quadros de 25x25, parado é uma imagem só
 		for (const direcao of ['direita', 'esquerda', 'cima', 'baixo']) {
 			this.load.spritesheet('heroi_' + direcao, PASTA + direcao + '.png', { frameWidth: 25, frameHeight: 25 })
@@ -17,9 +19,9 @@ export default class Carregar extends Phaser.Scene {
 		// o tiro de fogo aponta para a direita; no jogo ele é girado para onde o elfo mira
 		this.load.image('tiro', PASTA + 'dfogo.png')
 
-		// armas na mão: pistola, triplo e metralhadora (16x8, apontando para a direita)
+		// armas na mão: pistola, triplo, metralhadora, laser e bazuca (16x8, apontando para a direita)
 		this.load.spritesheet('armas', PASTA + 'armas.png', { frameWidth: 16, frameHeight: 8 })
-		// caixas para pegar: triplo, metralhadora e bomba (16x16)
+		// caixas para pegar (16x16): triplo, metralhadora, bomba, laser, bazuca, escudo, botas e gelo
 		this.load.spritesheet('itens', PASTA + 'itens.png', { frameWidth: 16, frameHeight: 16 })
 		this.load.image('bomba', PASTA + 'bomba.png')
 		this.load.image('laser', PASTA + 'laser.png')
@@ -41,10 +43,27 @@ export default class Carregar extends Phaser.Scene {
 
 		this.load.image('chao', PASTA + 'chao.png')
 
-		// efeitos sonoros
-		for (const som of ['tiro', 'acerto', 'explosao', 'zumbi_morre', 'item', 'perder_vida']) {
+		// efeitos e músicas são gerados por ferramentas/gerar_sons.mjs
+		const sons = [
+			'tiro', 'laser', 'foguete', 'acerto', 'explosao', 'zumbi_morre', 'rugido', 'cuspe', 'item', 'poder',
+			'escudo_quebra', 'perder_vida', 'arremesso', 'combo', 'fase', 'fim',
+			'musica_titulo', 'musica_jogo', 'musica_chefe',
+		]
+		for (const som of sons) {
 			this.load.audio(som, 'assets/sons/' + som + '.wav')
 		}
+	}
+
+	// barra simples no meio da tela (aqui ainda não tem zoom, então é em pixels da janela)
+	mostrar_barra() {
+		const { width, height } = this.scale
+		const largura = Math.min(300, width * 0.6)
+		const x = (width - largura) / 2
+		const y = height / 2
+		this.add.text(width / 2, y - 24, 'CARREGANDO', { fontFamily: FONTE, fontSize: '16px', color: '#e8f5c8' }).setOrigin(0.5)
+		this.add.rectangle(x - 2, y - 2, largura + 4, 14, 0x3a4a2c).setOrigin(0)
+		const barra = this.add.rectangle(x, y, 0, 10, 0x9ff07a).setOrigin(0)
+		this.load.on('progress', (fracao) => barra.setSize(largura * fracao, 10))
 	}
 
 	create() {

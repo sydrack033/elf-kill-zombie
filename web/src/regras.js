@@ -20,27 +20,27 @@ export const COMBO_MAXIMO = 5 // multiplicador máximo de pontos
 // espera = ticks entre disparos; tiros = projéteis por disparo; abertura = ângulo entre eles;
 // tremida = quanto a mira treme; municao = disparos até voltar para a pistola; dano = vida tirada;
 // empurra = quanto o zumbi recua ao levar o tiro; atravessa = o tiro passa por dentro dos zumbis;
-// explode = raio da explosão quando o tiro bate; som = como o som do tiro toca (rate: menor = mais grave)
+// explode = raio da explosão quando o tiro bate; som = qual som toca e como (rate: menor = mais grave)
 export const ARMAS = {
 	pistola: {
 		nome: 'PISTOLA', quadro: 0, espera: 22, tiros: 1, abertura: 0, tremida: 0, municao: Infinity,
-		projetil: 'tiro', velocidade: 6, dano: 1, empurra: 2, som: { volume: 0.5, rate: 1 },
+		projetil: 'tiro', velocidade: 6, dano: 1, empurra: 2, som: { chave: 'tiro', volume: 0.5, rate: 1 },
 	},
 	triplo: {
 		nome: 'TRIPLO', quadro: 1, espera: 30, tiros: 3, abertura: 0.22, tremida: 0, municao: 40,
-		projetil: 'tiro', velocidade: 6, dano: 1, empurra: 2, som: { volume: 0.6, rate: 0.75 },
+		projetil: 'tiro', velocidade: 6, dano: 1, empurra: 2, som: { chave: 'tiro', volume: 0.6, rate: 0.75 },
 	},
 	metralhadora: {
 		nome: 'METRALHADORA', quadro: 2, espera: 7, tiros: 1, abertura: 0, tremida: 0.08, municao: 150,
-		projetil: 'tiro', velocidade: 7, dano: 1, empurra: 1, som: { volume: 0.3, rate: 1.3 },
+		projetil: 'tiro', velocidade: 7, dano: 1, empurra: 1, som: { chave: 'tiro', volume: 0.3, rate: 1.3 },
 	},
 	laser: {
 		nome: 'LASER', quadro: 3, espera: 20, tiros: 1, abertura: 0, tremida: 0, municao: 45,
-		projetil: 'laser', velocidade: 10, dano: 2, empurra: 1, atravessa: true, som: { volume: 0.4, rate: 1.9 },
+		projetil: 'laser', velocidade: 10, dano: 2, empurra: 1, atravessa: true, som: { chave: 'laser', volume: 0.5, rate: 1 },
 	},
 	bazuca: {
 		nome: 'BAZUCA', quadro: 4, espera: 60, tiros: 1, abertura: 0, tremida: 0, municao: 15,
-		projetil: 'foguete', velocidade: 4, dano: 2, empurra: 0, explode: 38, som: { volume: 0.7, rate: 0.5 },
+		projetil: 'foguete', velocidade: 4, dano: 2, empurra: 0, explode: 38, som: { chave: 'foguete', volume: 0.7, rate: 1 },
 	},
 }
 

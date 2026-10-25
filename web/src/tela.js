@@ -3,7 +3,7 @@
 export const ALTURA = 400
 
 export const PASTA = 'assets/imagens/'
-export const FONTE = '"Press Start 2P", monospace'
+export const FONTE = 'Silkscreen, monospace'
 
 // liga o ajuste da tela numa cena; chama scene.ao_redimensionar() sempre que a janela muda
 export function ajustar_tela(scene) {
@@ -39,6 +39,7 @@ export function texto(scene, x, y, mensagem, tamanho = 8, cor = '#ffffff') {
 		.text(x, y, mensagem, {
 			fontFamily: FONTE,
 			fontSize: tamanho + 'px',
+			fontStyle: tamanho >= 16 ? 'bold' : '',
 			color: cor,
 			stroke: '#000000',
 			strokeThickness: Math.max(2, tamanho / 4),
@@ -77,4 +78,31 @@ export function gravar_recorde(pontos) {
 	} catch {
 		// sem localStorage (aba anônima, por exemplo): o recorde só vale até fechar a página
 	}
+}
+
+// placar com as 5 melhores partidas: [{ pontos, fase }]
+export function ler_placar() {
+	try {
+		const placar = JSON.parse(localStorage.getItem('elf-kill-zombie-placar') || '[]')
+		return Array.isArray(placar) ? placar.slice(0, 5) : []
+	} catch {
+		return []
+	}
+}
+
+// coloca a partida no placar e devolve a posição dela (1 a 5), ou 0 se não entrou
+export function gravar_placar(pontos, fase) {
+	if (pontos <= 0) {
+		return 0
+	}
+	const placar = ler_placar()
+	placar.push({ pontos, fase })
+	placar.sort((a, b) => b.pontos - a.pontos)
+	const posicao = placar.findIndex((p) => p.pontos == pontos && p.fase == fase) + 1
+	try {
+		localStorage.setItem('elf-kill-zombie-placar', JSON.stringify(placar.slice(0, 5)))
+	} catch {
+		// sem localStorage: o placar só vale até fechar a página
+	}
+	return posicao <= 5 ? posicao : 0
 }

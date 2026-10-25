@@ -1,11 +1,12 @@
 import Phaser from 'phaser'
-import '@fontsource/press-start-2p'
+import '@fontsource/silkscreen/400.css'
+import '@fontsource/silkscreen/700.css'
 import Carregar from './Carregar.js'
 import Titulo from './Titulo.js'
 import Jogo from './Jogo.js'
 
 // espera a fonte carregar antes de criar o jogo, senão os textos saem com a fonte padrão
-document.fonts.load('8px "Press Start 2P"').finally(() => {
+Promise.all([document.fonts.load('8px Silkscreen'), document.fonts.load('bold 8px Silkscreen')]).finally(() => {
 	const jogo = new Phaser.Game({
 		type: Phaser.AUTO,
 		parent: 'jogo',

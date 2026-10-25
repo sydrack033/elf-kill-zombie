@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
-import { ALTURA, ajustar_tela, texto, tecla_tela_cheia, tecla_som, ler_recorde, gravar_recorde } from './tela.js'
+import { ALTURA, ajustar_tela, texto, tecla_tela_cheia, tecla_som, ler_recorde, gravar_recorde, gravar_placar } from './tela.js'
 import * as R from './regras.js'
+import { tocar_musica, parar_musica, tecla_musica } from './musica.js'
 
 // Igual à versão do Portugol, o jogo anda em "ticks" de 10 ms e cada tick roda
 // entrada() -> processamento() -> saida(). Os números de dificuldade ficam em regras.js.
@@ -121,8 +122,16 @@ export default class Jogo extends Phaser.Scene {
 		})
 		tecla_tela_cheia(this)
 		tecla_som(this)
+		tecla_musica(this)
+		tocar_musica(this, 'musica_jogo')
 		this.input.keyboard.on('keydown-P', () => this.pausar())
 		this.input.keyboard.on('keydown-ESC', () => this.pausar())
+		this.input.keyboard.on('keydown-T', () => {
+			if (this.estado == 'pausado') {
+				this.sound.resumeAll()
+				this.scene.start('Titulo')
+			}
+		})
 
 		this.input.mouse.disableContextMenu() // o botão direito joga bomba em vez de abrir o menu
 		this.input.setDefaultCursor('crosshair')
@@ -229,12 +238,14 @@ export default class Jogo extends Phaser.Scene {
 		if (this.estado == 'jogando') {
 			this.estado = 'pausado'
 			this.escurecer.setVisible(true)
-			this.mensagem.setText('PAUSADO\n\nP PARA\nCONTINUAR')
+			this.mensagem.setText('PAUSADO\n\nP OU ESC: CONTINUAR\nT: SAIR PARA O MENU')
+			this.sound.pauseAll()
 		}
 		else if (this.estado == 'pausado') {
 			this.estado = 'jogando'
 			this.escurecer.setVisible(false)
 			this.mensagem.setText('')
+			this.sound.resumeAll()
 		}
 	}
 
@@ -388,9 +399,9 @@ export default class Jogo extends Phaser.Scene {
 			const sprite = this.add.sprite(x, y, arma.projetil, 0).setRotation(angulo).setDepth(4)
 			this.tiros.push({ sprite, x, y, vx, vy, arma, acertou: new Set() })
 		}
-		this.stats.disparos++
+		this.stats.disparos += arma.tiros
 		this.espera_tiro = arma.espera
-		this.sound.play('tiro', arma.som)
+		this.sound.play(arma.som.chave, arma.som)
 
 		this.clarao_ha = 4
 		this.clarao.setPosition(this.mao_x + Math.cos(this.angulo) * 15, this.mao_y + Math.sin(this.angulo) * 15)
@@ -420,7 +431,7 @@ export default class Jogo extends Phaser.Scene {
 			this.poderes.escudo = 0
 			this.invencivel = 60
 			this.flutuar(this.heroi_x + 12, this.heroi_y - 6, 'ESCUDO!', '#9fd8ff')
-			this.sound.play('acerto', { volume: 0.7, rate: 0.6 })
+			this.sound.play('escudo_quebra', { volume: 0.7 })
 			return
 		}
 		this.perder_vida()
@@ -471,6 +482,7 @@ export default class Jogo extends Phaser.Scene {
 		})
 		this.bombas--
 		this.espera_bomba = 40
+		this.sound.play('arremesso', { volume: 0.5 })
 		this.atualizar_hud()
 	}
 
@@ -677,7 +689,11 @@ export default class Jogo extends Phaser.Scene {
 		// combo: mortes emendadas multiplicam os pontos
 		this.combo = this.combo_ha > 0 ? this.combo + 1 : 1
 		this.combo_ha = R.COMBO_TEMPO
+		const antes = this.multiplicador
 		this.multiplicador = Math.min(R.COMBO_MAXIMO, 1 + Math.floor((this.combo - 1) / 4))
+		if (this.multiplicador > antes) {
+			this.sound.play('combo', { volume: 0.5, rate: 0.8 + this.multiplicador * 0.15 })
+		}
 		this.stats.melhor_combo = Math.max(this.stats.melhor_combo, this.combo)
 
 		const ganho = zumbi.regra.pontos * this.nivel * this.multiplicador
@@ -712,6 +728,7 @@ export default class Jogo extends Phaser.Scene {
 		}
 		else {
 			this.anunciar('FASE ' + this.nivel)
+			this.sound.play('fase', { volume: 0.6 })
 		}
 		this.atualizar_hud()
 	}
@@ -787,7 +804,7 @@ export default class Jogo extends Phaser.Scene {
 			const sprite = this.add.sprite(x, y, 'cuspe', 0).setDepth(4.5)
 			this.cuspes.push({ sprite, x, y, vx: Math.cos(a) * R.VELOCIDADE_CUSPE, vy: Math.sin(a) * R.VELOCIDADE_CUSPE })
 		}
-		this.sound.play('acerto', { volume: 0.4, rate: 1.6 })
+		this.sound.play('cuspe', { volume: 0.5, rate: 0.9 + Math.random() * 0.2 })
 	}
 
 	mover_cuspes() {
@@ -838,7 +855,8 @@ export default class Jogo extends Phaser.Scene {
 			morto_ha: 0,
 		}
 		this.chefe.sprite = this.add.sprite(this.chefe.x, this.chefe.y, 'chefe', 0).setOrigin(0).setScale(R.CHEFE.escala).setDepth(3)
-		this.sound.play('zumbi_morre', { volume: 1, rate: 0.4 })
+		this.sound.play('rugido', { volume: 0.9 })
+		tocar_musica(this, 'musica_chefe')
 		this.cameras.main.shake(400, 0.008)
 	}
 
@@ -854,7 +872,7 @@ export default class Jogo extends Phaser.Scene {
 			const ganho = R.CHEFE.pontos * chefe.numero
 			this.pontos += ganho
 			this.flutuar(chefe.x + 64, chefe.y + 20, '+' + ganho, '#ff9a3c')
-			this.sound.play('zumbi_morre', { volume: 1, rate: 0.35 })
+			this.sound.play('rugido', { volume: 1, rate: 0.75 })
 			this.atualizar_hud()
 		}
 	}
@@ -882,6 +900,7 @@ export default class Jogo extends Phaser.Scene {
 				this.soltar_item(c.x + c.l / 2 + 22, c.y + c.a / 2 - 10)
 				chefe.sprite.destroy()
 				this.chefe = null
+				tocar_musica(this, 'musica_jogo')
 				this.subir_nivel()
 			}
 			return
@@ -972,7 +991,7 @@ export default class Jogo extends Phaser.Scene {
 	}
 
 	pegar(tipo) {
-		this.sound.play('item', { volume: 0.6 })
+		this.sound.play(R.PODERES[tipo] ? 'poder' : 'item', { volume: 0.6 })
 		if (tipo == 'bomba') {
 			this.bombas = Math.min(R.BOMBAS_NO_MAXIMO, this.bombas + R.BOMBAS_POR_CAIXA)
 			this.anunciar('+' + R.BOMBAS_POR_CAIXA + ' BOMBAS', 100)
@@ -1019,11 +1038,14 @@ export default class Jogo extends Phaser.Scene {
 
 	fim_de_jogo() {
 		this.estado = 'fim'
+		parar_musica(300)
+		this.sound.play('fim', { volume: 0.7 })
 		const novo_recorde = this.pontos > this.recorde
 		if (novo_recorde) {
 			this.recorde = this.pontos
 			gravar_recorde(this.pontos)
 		}
+		const posicao = gravar_placar(this.pontos, this.nivel)
 		const segundos = Math.floor(this.stats.ticks / 100)
 		const tempo = Math.floor(segundos / 60) + ':' + String(segundos % 60).padStart(2, '0')
 		const pontaria = this.stats.disparos ? Math.round((100 * this.stats.acertos) / this.stats.disparos) : 0
@@ -1035,17 +1057,18 @@ export default class Jogo extends Phaser.Scene {
 		this.mensagem.setY(ALTURA / 2 + 25)
 		this.mensagem.setText(
 			'PONTOS: ' + this.pontos + '\n' +
-			(novo_recorde ? 'NOVO RECORDE!' : 'RECORDE: ' + this.recorde) + '\n\n' +
+			(novo_recorde ? 'NOVO RECORDE!' : posicao ? posicao + 'º LUGAR NO PLACAR' : 'RECORDE: ' + this.recorde) + '\n\n' +
 			'FASE ' + this.nivel + '   TEMPO ' + tempo + '\n' +
-			'ZUMBIS ' + this.stats.mortos + '   CHEFES ' + this.stats.chefes + '\n' +
-			'PONTARIA ' + pontaria + '%   COMBO ' + this.stats.melhor_combo + '\n\n' +
-			'CLIQUE OU ESPAÇO\nPARA JOGAR DE NOVO',
+			'ZUMBIS ' + this.stats.mortos + '   CHEFÕES ' + this.stats.chefes + '\n' +
+			'PONTARIA ' + pontaria + '%   MAIOR COMBO ' + this.stats.melhor_combo + '\n\n' +
+			'CLIQUE OU ESPAÇO: JOGAR DE NOVO\nESC: MENU',
 		)
 		// espera um pouco para quem está atirando não reiniciar sem querer
 		this.time.delayedCall(1000, () => {
 			const reiniciar = () => this.scene.restart()
 			this.input.keyboard.once('keydown-SPACE', reiniciar)
 			this.input.once('pointerdown', reiniciar)
+			this.input.keyboard.once('keydown-ESC', () => this.scene.start('Titulo'))
 		})
 	}
 
