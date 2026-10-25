@@ -204,6 +204,11 @@ export const ZUMBIS = {
 		escala: 1.1, cor: 0x7aff9a, vida: 3, vy: 0.28, pontos: 30, empurravel: true, divide: true,
 		peso: (nivel) => (nivel >= 11 ? 1 + nivel * 0.25 : 0),
 	},
+	// tamborzeiro: enquanto vivo, os zumbis em volta dele (raio da aura) andam mais rápido
+	tamborzeiro: {
+		escala: 1.1, cor: 0xff8a8a, vida: 4, vy: 0.2, pontos: 50, empurravel: true, aura: 80, acelera: 1.45,
+		peso: (nivel) => (nivel >= 14 ? 0.8 + nivel * 0.15 : 0),
+	},
 	// corvo: não aparece sozinho, vem em revoadas (ver CORVOS); voa em diagonal e não custa vida se passar
 	corvo: {
 		escala: 1, cor: null, vida: 1, vy: 0, pontos: 15, empurravel: false, voa: true,

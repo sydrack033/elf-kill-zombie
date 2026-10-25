@@ -214,6 +214,16 @@ export default class Zumbis {
 		})
 	}
 
+	// perto de um tamborzeiro vivo, o zumbi anda mais rápido
+	batida_do_tambor(zumbi) {
+		for (const t of this.zumbis) {
+			if (t != zumbi && t.regra.aura && !t.morrendo && Math.abs(t.x - zumbi.x) < t.regra.aura && Math.abs(t.y - zumbi.y) < t.regra.aura) {
+				return t.regra.acelera
+			}
+		}
+		return 1
+	}
+
 	tornar_elite(zumbi) {
 		zumbi.elite = true
 		zumbi.vida = zumbi.vida_max = zumbi.vida * R.ELITE.vida
@@ -266,6 +276,10 @@ export default class Zumbis {
 		zumbi.cor = regra.cor || this.cenario().cor_zumbi || null
 		if (zumbi.cor) {
 			zumbi.sprite.setTint(zumbi.cor)
+		}
+		if (regra.aura) {
+			// círculo vermelho mostrando até onde vai o efeito do tambor
+			zumbi.aura = this.add.circle(x, y, regra.aura, 0xff4a4a, 0.07).setStrokeStyle(1, 0xff6a6a, 0.35).setDepth(1.6)
 		}
 		if (regra.escudo) {
 			zumbi.escudo = zumbi.escudo_max = regra.escudo + Math.floor(n / 4)
@@ -577,7 +591,7 @@ export default class Zumbis {
 			}
 
 			if (zumbi.parar_em == null || zumbi.y < zumbi.parar_em) {
-				zumbi.y += zumbi.vy
+				zumbi.y += zumbi.vy * this.batida_do_tambor(zumbi)
 			}
 			else {
 				// cuspidor parado: cospe no elfo de tempos em tempos e depois volta a descer
@@ -622,6 +636,7 @@ export default class Zumbis {
 			if (zumbi.fugiu || (zumbi.morrendo && zumbi.morto_ha >= 75)) {
 				zumbi.sprite.destroy()
 				if (zumbi.lapide) zumbi.lapide.destroy()
+				if (zumbi.aura) zumbi.aura.destroy()
 			}
 		}
 		this.zumbis = this.zumbis.filter((zumbi) => !zumbi.fugiu && !(zumbi.morrendo && zumbi.morto_ha >= 75))

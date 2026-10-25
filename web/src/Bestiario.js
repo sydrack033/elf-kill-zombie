@@ -15,6 +15,7 @@ const FICHAS = [
 	{ tipo: 'escavador', nome: 'ESCAVADOR', texto: 'SAI DA TERRA PERTO DE\nVOCÊ. A TERRA TREME ANTES.' },
 	{ tipo: 'coveiro', nome: 'COVEIRO', texto: 'A LÁPIDE SEGURA O TIRO.\nACERTE DE LADO OU EXPLODA.' },
 	{ tipo: 'gosma', nome: 'GOSMA', texto: 'QUANDO MORRE, VIRA\nDUAS GOSMINHAS.' },
+	{ tipo: 'tamborzeiro', nome: 'TAMBORZEIRO', texto: 'OS ZUMBIS PERTO DELE\nANDAM MAIS RÁPIDO.' },
 	{ tipo: 'corvo', nome: 'CORVO', texto: 'VEM EM BANDO,\nVOANDO EM DIAGONAL.' },
 	...CHEFES.map((c, i) => ({ tipo: 'chefe' + (i + 1), nome: c.nome, texto: 'CHEFÃO DA FASE ' + (i + 1) * 5 + '.', chefe: c })),
 	{ tipo: 'chefe_final', nome: CHEFE_FINAL.nome, texto: 'O CHEFÃO FINAL,\nNA FASE ' + CHEFE_FINAL.fase + '.', chefe: CHEFE_FINAL },

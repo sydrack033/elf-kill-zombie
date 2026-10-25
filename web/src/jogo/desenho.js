@@ -176,6 +176,18 @@ export default class Desenho {
 				}
 			}
 
+			// tamborzeiro: a aura pulsa no ritmo do tambor (e some quando ele morre)
+			if (zumbi.aura) {
+				if (zumbi.morrendo) {
+					zumbi.aura.destroy()
+					zumbi.aura = null
+				}
+				else {
+					const c = corpo(zumbi)
+					zumbi.aura.setPosition(c.x + c.l / 2, c.y + c.a / 2).setScale(0.95 + 0.05 * Math.sin(this.quadro_atual / 6))
+				}
+			}
+
 			// coveiro: a lápide vai na frente, nas mãos dele
 			if (zumbi.lapide) {
 				if (zumbi.morrendo) {
