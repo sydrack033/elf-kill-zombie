@@ -277,8 +277,12 @@ export default class Titulo extends Phaser.Scene {
 		if (this.demo_proximo <= 0) {
 			this.demo_proximo = Phaser.Math.Between(90, 160)
 			const x = Phaser.Math.Between(30, Math.max(31, Math.floor(this.largura - 30)))
-			const sprite = this.add.sprite(x, -44, 'zumbi', 0).setOrigin(0.5, 0).setDepth(1)
-			this.demo_zumbis.push({ sprite, x, y: -44, vida: 2, morto_ha: -1, xi: 0 })
+			// um tipo de zumbi sorteado entre os mais comuns, com a cor e o tamanho dele
+			const tipo = Phaser.Utils.Array.GetRandom(['comum', 'comum', 'corredor', 'brutamontes', 'gosma', 'bombado'])
+			const regra = R.ZUMBIS[tipo]
+			const sprite = this.add.sprite(x, -44, 'zumbi', 0).setOrigin(0.5, 0).setDepth(1).setScale(regra.escala)
+			if (regra.cor) sprite.setTint(regra.cor)
+			this.demo_zumbis.push({ sprite, x, y: -44, vida: Math.min(4, regra.vida), morto_ha: -1, xi: 0, vy: regra.vy * 1.5 })
 		}
 
 		// o elfo vai atrás do zumbi mais baixo e atira para cima
@@ -318,7 +322,7 @@ export default class Titulo extends Phaser.Scene {
 
 		for (const z of this.demo_zumbis) {
 			if (z.morto_ha < 0) {
-				z.y += 0.45 * passo
+				z.y += z.vy * passo
 				z.sprite.setTexture('zumbi', Math.floor(this.quadro / 12) % 7)
 			}
 			else {
