@@ -18,6 +18,8 @@ git (pasta `Jogo1`), então dá para ver o histórico com `git log` e voltar qua
   (do 2º em diante). Depois voltam com tudo junto. Entrada de cinema com o nome do chefão.
 - **Modificadores** (nas Opções): Elfo de Vidro (só 1 vida, pontos x2), Turbo (tudo mais rápido,
   pontos x1,5) e Só Pistola (sem caixas de arma, pontos x1,5). Dá para combinar.
+- **Classes** (no título): Guerreiro, Arqueiro (começa com o arco nível II, liberado com 5 conquistas)
+  e Bombardeiro (+4 bombas e explosões maiores, um coração a menos; liberado na fase 15).
 - **Começar adiantado:** depois de chegar à fase 11, 21, 31 ou 41, dá para começar a partida lá
   (escolha "COMEÇAR NA" no título), já com as melhorias que teria pego no caminho. O título mostra
   a melhor fase alcançada rumo ao final.

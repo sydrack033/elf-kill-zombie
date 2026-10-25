@@ -309,6 +309,19 @@ export const CHEFES = [
 ]
 // chefão final, na fase 50: tem todos os ataques, é maior e bem mais forte; vencer mostra o final do jogo
 export const CHEFE_FINAL = { fase: 50, nome: 'O SENHOR DOS MORTOS', cor: 0xb08aff, vida: 1.6, escala: 2.4 }
+// classes do elfo (escolhidas no título); libera = o que precisa para aparecer
+export const CLASSES = [
+	{ id: 'guerreiro', nome: 'GUERREIRO', texto: 'O ELFO DE SEMPRE' },
+	{ id: 'arqueiro', nome: 'ARQUEIRO', texto: 'COMEÇA COM O ARCO NÍVEL II', libera: { conquistas: 5 } },
+	{ id: 'bombardeiro', nome: 'BOMBARDEIRO', texto: '+4 BOMBAS E EXPLOSÕES MAIORES, 1 CORAÇÃO A MENOS', libera: { fase: 15 } },
+]
+
+// a classe está liberada? (pelas conquistas feitas ou pela melhor fase)
+export function classe_liberada(classe, feitas, melhor_fase) {
+	const l = classe.libera
+	return !l || (l.conquistas && feitas.size >= l.conquistas) || (l.fase && melhor_fase >= l.fase)
+}
+
 // modificadores (ligados nas Opções): deixam o jogo mais difícil e multiplicam os pontos
 export const MODIFICADORES = {
 	vidro: { nome: 'ELFO DE VIDRO', pontos: 2 }, // só 1 vida

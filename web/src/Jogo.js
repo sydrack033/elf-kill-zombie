@@ -5,6 +5,7 @@ import { tocar_musica, tecla_musica } from './musica.js'
 import { opcoes, efeito } from './opcoes.js'
 import { ler_loja } from './moedas.js'
 import { dia_de_hoje } from './desafios.js'
+import { ler_conquistas } from './conquistas.js'
 import { memoria } from './jogo/comum.js'
 import Hud from './jogo/hud.js'
 import Melhorias from './jogo/melhorias.js'
@@ -326,6 +327,20 @@ export default class Jogo extends Phaser.Scene {
 		if (this.fada) {
 			this.fada.sprite = this.add.circle(0, 0, 3, 0xfff0a0).setDepth(6.2)
 			this.fada.brilho = this.add.circle(0, 0, 7, 0xffe080, 0.3).setDepth(6.1)
+		}
+		// classe do elfo
+		const classe = opcoes.classe
+		const feitas_classe = ler_conquistas()
+		const liberada = R.CLASSES.find((c) => c.id == classe && R.classe_liberada(c, feitas_classe, ler_estatisticas().melhor_fase))
+		if (liberada && classe == 'arqueiro' && !this.mod.pistola) {
+			this.trocar_arma('arco')
+			this.trocar_arma('arco') // nível II
+		}
+		if (liberada && classe == 'bombardeiro') {
+			this.melhorias.polvora = this.m('polvora') + 1
+			this.bombas = Math.min(this.bombas_max() + 4, this.bombas + 4)
+			this.vidas = Math.max(1, this.vidas - 1)
+			this.atualizar_hud_melhorias()
 		}
 		if (this.mod.vidro) {
 			this.vidas = this.vidas_max = 1 // Elfo de Vidro: um golpe e acabou

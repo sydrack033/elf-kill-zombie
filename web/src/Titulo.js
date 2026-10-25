@@ -56,6 +56,14 @@ export default class Titulo extends Phaser.Scene {
 			this.seletor_jogadores = this.criar_seletor(179, 'JOGADORES', () => this.mudar_jogadores(), () => this.mudar_jogadores())
 			this.seletores.push(this.seletor_jogadores)
 		}
+		// classe do elfo (só aparece quando tem mais de uma liberada)
+		const melhor = ler_estatisticas().melhor_fase
+		this.classes = R.CLASSES.filter((c) => R.classe_liberada(c, this.feitas, melhor))
+		if (!this.classes.some((c) => c.id == opcoes.classe)) opcoes.classe = 'guerreiro'
+		if (this.classes.length > 1) {
+			this.seletor_classe = this.criar_seletor(134 + 15 * this.seletores.length, 'CLASSE', () => this.mudar_classe(-1), () => this.mudar_classe(1))
+			this.seletores.push(this.seletor_classe)
+		}
 		// começar num capítulo mais adiante (só aparece depois de chegar na fase 11)
 		this.capitulos = R.CAPITULOS.filter((f) => ler_estatisticas().melhor_fase >= f)
 		if (!this.capitulos.includes(opcoes.inicio)) opcoes.inicio = 1
@@ -76,7 +84,8 @@ export default class Titulo extends Phaser.Scene {
 			: ['RECORDE: ' + ler_recorde()]
 		// o placar fica logo embaixo do começar, com as linhas mais juntas (cabe com 5 escolhas)
 		// com a escolha de capítulo na tela, o placar mostra só os 3 primeiros (para não encostar nos controles)
-		const mostradas = this.seletor_inicio ? linhas.slice(0, 4) : linhas
+		// com mais escolhas na tela, o placar mostra menos linhas (para não encostar nos controles)
+		const mostradas = linhas.slice(0, this.seletores.length >= 6 ? 3 : this.seletores.length >= 5 ? 4 : 6)
 		this.placar = texto(this, 0, y_comecar + 16, placar.length || ler_recorde() ? mostradas.join('\n') : '', 8, '#ffffff').setOrigin(0.5, 0).setDepth(6).setLineSpacing(3)
 
 		// no celular/tablet as instruções são de toque
@@ -134,6 +143,7 @@ export default class Titulo extends Phaser.Scene {
 		this.input.keyboard.on('keydown-ONE', () => this.mudar_jogadores())
 		this.input.keyboard.on('keydown-X', () => this.mudar_modo())
 		this.input.keyboard.on('keydown-I', () => this.mudar_inicio(1))
+		this.input.keyboard.on('keydown-K', () => this.mudar_classe(1))
 		// controle: direcional escolhe, X troca o modo, Y abre as conquistas, os outros botões começam
 		if (this.input.gamepad) {
 			this.input.gamepad.on('down', (pad, botao) => {
@@ -142,6 +152,7 @@ export default class Titulo extends Phaser.Scene {
 					14: () => this.mudar_dificuldade(-1), 15: () => this.mudar_dificuldade(1),
 					3: () => ir('Conquistas'), 2: () => this.mudar_modo(), 8: () => ir('Loja'),
 					4: () => this.mudar_inicio(-1), 5: () => this.mudar_inicio(1), // LB / RB: capítulo
+					6: () => this.mudar_classe(-1), 7: () => this.mudar_classe(1), // LT / RT: classe
 				}
 				;(acoes[botao.index] || comecar)()
 			})
@@ -285,6 +296,17 @@ export default class Titulo extends Phaser.Scene {
 		this.atualizar_seletores()
 	}
 
+	mudar_classe(passo) {
+		if (!this.seletor_classe) {
+			return
+		}
+		const i = Math.max(0, this.classes.findIndex((c) => c.id == opcoes.classe))
+		opcoes.classe = this.classes[(i + passo + this.classes.length) % this.classes.length].id
+		gravar_opcoes()
+		efeito(this, 'combo', { volume: 0.4, rate: 1.3 })
+		this.atualizar_seletores()
+	}
+
 	mudar_inicio(passo) {
 		if (!this.seletor_inicio) {
 			return
@@ -314,6 +336,10 @@ export default class Titulo extends Phaser.Scene {
 		// mostra quantas cores já foram liberadas
 		const liberados = R.ELFOS.filter((e) => R.elfo_liberado(e, this.feitas)).length
 		this.seletores[1].valor.setText(elfo.nome + '  ' + liberados + '/' + R.ELFOS.length)
+		if (this.seletor_classe) {
+			const classe = R.CLASSES.find((c) => c.id == opcoes.classe)
+			this.seletor_classe.valor.setText(classe.nome).setColor(classe.id == 'guerreiro' ? '#ffffff' : '#9fd8ff')
+		}
 		if (this.seletor_inicio) {
 			// no modo chefões o começo adiantado não vale
 			for (const o of Object.values(this.seletor_inicio)) o.setAlpha(opcoes.modo == 'chefes' ? 0.35 : 1)
