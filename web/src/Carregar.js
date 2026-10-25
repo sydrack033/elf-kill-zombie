@@ -56,6 +56,8 @@ export default class Carregar extends Phaser.Scene {
 		// manchas de sangue que ficam no chão: 3 quadros de 24x14
 		// lápide do coveiro: quadro 0 inteira, quadro 1 rachada (20x22)
 		this.load.spritesheet('lapide', PASTA + 'lapide.png', { frameWidth: 20, frameHeight: 22 })
+		// torreta montada no chão (o cano é desenhado por cima e gira)
+		this.load.image('torreta', PASTA + 'torreta.png')
 		this.load.spritesheet('mancha', PASTA + 'mancha.png', { frameWidth: 24, frameHeight: 14 })
 
 		// efeitos e músicas são gerados por ferramentas/gerar_sons.mjs

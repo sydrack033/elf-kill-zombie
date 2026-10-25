@@ -117,7 +117,11 @@ export const ITENS = [
 	{ tipo: 'congelar', quadro: 7, peso: 1, nivel: 2 },
 	{ tipo: 'lancachamas', quadro: 8, peso: 1.5, nivel: 4 },
 	{ tipo: 'raio', quadro: 9, peso: 1.5, nivel: 5 },
+	{ tipo: 'torreta', quadro: 10, peso: 1.2, nivel: 3 },
 ]
+
+// torreta: fica onde o elfo pegou a caixa e atira sozinha no zumbi mais perto
+export const TORRETA = { duracao: 1200, espera: 26, alcance: 270, velocidade: 6, dano: 1, maximo: 2 }
 export const ITEM_A_CADA = [700, 1100] // ticks entre uma caixa e outra (sorteado entre os dois)
 export const CHANCE_DE_CORACAO = 0.08 // chance de um zumbi morto soltar um coração
 export const CHANCE_DE_ITEM = 0.03 // chance de um zumbi morto soltar uma caixa
