@@ -46,6 +46,9 @@ export const PERIGOS = {
 // lodo (pântano): poças que descem com o chão e deixam o elfo lento enquanto ele pisa nelas
 export const LODO = { a_cada: [300, 520], lenta: 0.55, largura: 60, altura: 24 }
 
+// eclipse: de vez em quando uma fase escura, em que só se enxerga em volta do elfo (e das explosões)
+export const ECLIPSE = { a_partir_da_fase: 12, chance: 0.12, escuridao: 0.88 }
+
 // lua de sangue: de vez em quando uma fase inteira com zumbis mais rápidos que valem o dobro
 export const LUA_DE_SANGUE = { a_partir_da_fase: 6, chance: 0.15, velocidade: 1.25, pontos: 2 }
 

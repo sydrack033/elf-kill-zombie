@@ -169,6 +169,10 @@ export default class Jogo extends Phaser.Scene {
 		this.neblina = this.add.tileSprite(0, 0, 10, ALTURA, 'neblina').setOrigin(0).setDepth(8.3).setAlpha(0).setTileScale(2)
 		// lua de sangue: a tela fica avermelhada e uma lua vermelha aparece no canto
 		this.lua_de_sangue = false
+		this.eclipse = false
+		this.escuro = this.add.renderTexture(0, 0, 10, ALTURA).setOrigin(0).setDepth(8.37).setVisible(false)
+		this.escuro_forca = 0
+		this.luz = this.make.image({ key: 'luz', add: false })
 		this.tom_vermelho = this.add.rectangle(0, 0, 10, ALTURA, 0xb01818, 0).setOrigin(0).setDepth(8.35)
 		this.lua = this.add.circle(0, 36, 11, 0xff4a3a).setDepth(8.36).setAlpha(0)
 		this.lua_brilho = this.add.circle(0, 36, 20, 0xff4a3a).setDepth(8.35).setAlpha(0)
@@ -346,6 +350,7 @@ export default class Jogo extends Phaser.Scene {
 		this.relampago.setSize(this.largura, ALTURA)
 		this.vinheta.setDisplaySize(this.largura, ALTURA)
 		this.neblina.setSize(this.largura, ALTURA)
+		this.escuro.resize(Math.ceil(this.largura), ALTURA)
 		this.tom_vermelho.setSize(this.largura, ALTURA)
 		this.lua.x = this.lua_brilho.x = Math.round(this.largura * 0.72)
 		this.aviso.x = meio
@@ -563,6 +568,33 @@ export default class Jogo extends Phaser.Scene {
 	flutuar(x, y, mensagem, cor = '#ffffff') {
 		const obj = texto(this, x, y, mensagem, 8, cor).setOrigin(0.5).setDepth(9.5)
 		this.textos.push({ obj, ha: 0 })
+	}
+
+	// eclipse: tela escura com um buraco de luz em volta de cada elfo e das explosões
+	desenhar_eclipse() {
+		const alvo = this.eclipse ? R.ECLIPSE.escuridao : 0
+		this.escuro_forca += (alvo - this.escuro_forca) * 0.02
+		if (this.escuro_forca < 0.01) {
+			this.escuro.setVisible(false)
+			return
+		}
+		const rt = this.escuro.setVisible(true)
+		rt.clear()
+		rt.fill(0x000000, this.escuro_forca)
+		const tremula = 1 + Math.sin(this.quadro_atual / 7) * 0.03
+		for (const h of this.herois()) {
+			this.luz.setScale(2.2 * tremula)
+			rt.erase(this.luz, h.x + 12, h.y + 12)
+		}
+		for (const e of this.explosoes) {
+			this.luz.setScale(1.4)
+			rt.erase(this.luz, e.sprite.x, e.sprite.y)
+		}
+		for (const t of this.torretas) {
+			this.luz.setScale(0.9)
+			rt.erase(this.luz, t.x, t.y)
+		}
+		if (rt.render) rt.render()
 	}
 
 	// em cada cenário o chão vai escurecendo conforme as fases passam, como se a noite chegasse
@@ -2385,6 +2417,10 @@ export default class Jogo extends Phaser.Scene {
 		const lua = R.LUA_DE_SANGUE
 		this.lua_de_sangue = !fase_de_chefao && !this.lua_de_sangue && !this.modo_chefes &&
 			this.nivel >= lua.a_partir_da_fase && Math.random() < lua.chance
+		// e o eclipse (nunca junto com a lua, nem dois seguidos)
+		const eclipse = R.ECLIPSE
+		this.eclipse = !fase_de_chefao && !this.lua_de_sangue && !this.eclipse && !this.modo_chefes &&
+			this.nivel >= eclipse.a_partir_da_fase && Math.random() < eclipse.chance
 		if (fase_de_chefao) {
 			this.anunciar((cenario != cenario_antes ? cenario.nome + '\n' : '') + 'CHEFÃO A CAMINHO!', 300, '#ff5a5a')
 			// no modo chefões, cada vitória dá uma melhoria antes do próximo
@@ -2395,6 +2431,9 @@ export default class Jogo extends Phaser.Scene {
 		}
 		else {
 			this.texto_da_fase = cenario != cenario_antes ? cenario.nome + '\nFASE ' + this.nivel : 'FASE ' + this.nivel
+			if (this.eclipse) {
+				this.texto_da_fase = 'FASE ' + this.nivel + '\nECLIPSE!'
+			}
 			if (this.lua_de_sangue) {
 				this.texto_da_fase = 'FASE ' + this.nivel + '\nLUA DE SANGUE!'
 				efeito(this, 'rugido', { volume: 0.6, rate: 0.6 })
@@ -3408,6 +3447,7 @@ export default class Jogo extends Phaser.Scene {
 		this.neblina.alpha += (alvo - this.neblina.alpha) * 0.01
 		this.neblina.tilePositionX += 0.12
 		this.neblina.tilePositionY -= R.ROLAGEM_DO_CHAO * 0.4
+		this.desenhar_eclipse()
 		const vermelho = this.lua_de_sangue ? 1 : 0
 		this.tom_vermelho.fillAlpha += (vermelho * 0.13 - this.tom_vermelho.fillAlpha) * 0.02
 		this.lua.alpha += (vermelho * 0.9 - this.lua.alpha) * 0.02

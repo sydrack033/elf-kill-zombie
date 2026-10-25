@@ -145,6 +145,17 @@ export default class Carregar extends Phaser.Scene {
 			}
 		}
 		neblina.refresh()
+
+		// luz em volta do elfo no eclipse: branco no meio sumindo para as bordas
+		const luz = this.textures.createCanvas('luz', 128, 128)
+		const ctx_luz = luz.getContext()
+		const grad_luz = ctx_luz.createRadialGradient(64, 64, 8, 64, 64, 64)
+		grad_luz.addColorStop(0, 'rgba(255,255,255,1)')
+		grad_luz.addColorStop(0.5, 'rgba(255,255,255,0.8)')
+		grad_luz.addColorStop(1, 'rgba(255,255,255,0)')
+		ctx_luz.fillStyle = grad_luz
+		ctx_luz.fillRect(0, 0, 128, 128)
+		luz.refresh()
 		neblina.setFilter(Phaser.Textures.FilterMode.LINEAR)
 		this.scene.start('Titulo')
 	}
