@@ -130,6 +130,8 @@ export default class Jogo extends Phaser.Scene {
 		this.vermelho_heroi = 0 // elfo pintado de vermelho logo depois de apanhar
 		this.parada = 0 // ticks de parada de impacto
 		this.mortes_recentes = [] // ticks das últimas mortes, para o DUPLO! TRIPLO!
+		this.raios = [] // raios na tela: { pontos: [[x, y]...], ha }
+		this.desenho_raios = this.add.graphics().setDepth(7.5)
 		this.manchas = [] // sangue que fica no chão: { sprite, y, ha }
 
 		// chuva e relâmpagos quando a noite chega
@@ -1091,7 +1093,11 @@ export default class Jogo extends Phaser.Scene {
 		const arma = R.ARMAS[this.arma]
 		// com a Mão Dupla a pistola dá dois tiros lado a lado
 		const lado_a_lado = this.arma == 'pistola' && this.m('mao_dupla') ? [-4, 4] : [0]
-		for (let i = 0; i < arma.tiros; i++) {
+		const tiros = arma.especial == 'raio' ? 0 : arma.tiros
+		if (arma.especial == 'raio') {
+			this.disparar_raio(arma)
+		}
+		for (let i = 0; i < tiros; i++) {
 			// o triplo sai em leque: um no meio e um para cada lado
 			const desvio = (i - (arma.tiros - 1) / 2) * arma.abertura
 			const angulo = this.angulo + desvio + (Math.random() * 2 - 1) * arma.tremida
@@ -1102,8 +1108,11 @@ export default class Jogo extends Phaser.Scene {
 				const x = this.mao_x + Math.cos(angulo) * 14 - Math.sin(angulo) * afasta
 				const y = this.mao_y + Math.sin(angulo) * 14 + Math.cos(angulo) * afasta
 				const sprite = this.add.sprite(x, y, arma.projetil, 0).setRotation(angulo).setDepth(4)
+				if (arma.chama) {
+					sprite.setScale(0.5).setTint(Math.random() < 0.5 ? 0xffd060 : 0xff8a30)
+				}
 				this.tiros.push({
-					sprite, x, y, vx, vy, arma,
+					sprite, x, y, vx, vy, arma, ha: 0,
 					dano: arma.dano + this.m('dano'),
 					// quantos zumbis ainda pode atravessar
 					perfura: arma.atravessa ? Infinity : this.m('perfura'),
@@ -1125,6 +1134,58 @@ export default class Jogo extends Phaser.Scene {
 			}
 			this.atualizar_hud()
 		}
+	}
+
+	// raio: acerta o inimigo mais perto da mira e vai pulando para os vizinhos
+	disparar_raio(arma) {
+		this.stats.disparos++
+		const dano = arma.dano + this.m('dano')
+		const alvos = []
+		const vivos = () => {
+			const lista = this.zumbis.filter((z) => !z.morrendo && !z.intangivel && !alvos.includes(z)).map((z) => {
+				const c = corpo(z)
+				return { alvo: z, x: c.x + c.l / 2, y: c.y + c.a / 2 }
+			})
+			if (this.chefe && this.chefe.fase != 'morrendo' && !alvos.includes(this.chefe)) {
+				const c = corpo_chefe(this.chefe)
+				lista.push({ alvo: this.chefe, x: c.x + c.l / 2, y: c.y + c.a / 2 })
+			}
+			return lista
+		}
+		const mais_perto = (x, y, limite) => {
+			let melhor = null
+			for (const v of vivos()) {
+				const d = Phaser.Math.Distance.Between(x, y, v.x, v.y)
+				if (d < limite && (!melhor || d < melhor.d)) melhor = { ...v, d }
+			}
+			return melhor
+		}
+		// o primeiro alvo: o inimigo mais perto do ponto da mira, sem passar do alcance do elfo
+		const pontos = [[this.mao_x, this.mao_y]]
+		let atual = mais_perto(this.mira_x, this.mira_y, 90)
+		if (atual && Phaser.Math.Distance.Between(this.mao_x, this.mao_y, atual.x, atual.y) > arma.alcance) {
+			atual = null
+		}
+		for (let salto = 0; atual && salto <= arma.saltos; salto++) {
+			alvos.push(atual.alvo)
+			pontos.push([atual.x, atual.y])
+			this.espirrar_sangue(atual.x, atual.y)
+			if (atual.alvo == this.chefe) {
+				this.ferir_chefe(dano, atual.x, atual.y)
+			}
+			else {
+				this.ferir_zumbi(atual.alvo, dano, arma.empurra)
+			}
+			atual = mais_perto(atual.x, atual.y, 75)
+		}
+		if (alvos.length) {
+			this.stats.acertos++
+		}
+		else {
+			// errou: o raio sai na direção da mira e se perde
+			pontos.push([this.mao_x + Math.cos(this.angulo) * 70, this.mao_y + Math.sin(this.angulo) * 70])
+		}
+		this.raios.push({ pontos, ha: 0 })
 	}
 
 	trocar_arma(arma) {
@@ -1310,8 +1371,9 @@ export default class Jogo extends Phaser.Scene {
 				}
 			}
 
+			tiro.ha++
 			const saiu = tiro.x < -20 || tiro.x > this.largura + 20 || tiro.y < -20 || tiro.y > ALTURA + 20
-			if (saiu) {
+			if (saiu || (tiro.arma.alcance && tiro.ha >= tiro.arma.alcance)) {
 				tiro.sumiu = true
 			}
 			if (tiro.sumiu) {
@@ -1326,8 +1388,10 @@ export default class Jogo extends Phaser.Scene {
 		if (tiro.acertou.size == 0) {
 			this.stats.acertos++
 		}
-		this.espirrar_sangue(x, y)
-		efeito(this, 'acerto', { volume: 0.5 })
+		if (!tiro.arma.chama || Math.random() < 0.15) {
+			this.espirrar_sangue(x, y)
+			efeito(this, 'acerto', { volume: tiro.arma.chama ? 0.25 : 0.5 })
+		}
 		if (tiro.arma.explode) {
 			tiro.sumiu = true
 			this.explodir(x, y, tiro.arma.explode * this.tamanho_explosao(), tiro.dano)
@@ -2129,6 +2193,33 @@ export default class Jogo extends Phaser.Scene {
 		this.quadro_atual++
 	}
 
+	// raios: linhas em zigue-zague (sorteado de novo a cada tick, para "tremer") que somem em 12 ticks
+	desenhar_raios() {
+		const g = this.desenho_raios
+		g.clear()
+		for (const raio of this.raios) {
+			raio.ha++
+			const forca = 1 - raio.ha / 12
+			for (const [largura, cor, alfa] of [[3, 0x60a8ff, 0.5], [1, 0xe8f4ff, 1]]) {
+				g.lineStyle(largura, cor, alfa * forca)
+				g.beginPath()
+				g.moveTo(raio.pontos[0][0], raio.pontos[0][1])
+				for (let i = 1; i < raio.pontos.length; i++) {
+					const [x0, y0] = raio.pontos[i - 1]
+					const [x1, y1] = raio.pontos[i]
+					// 4 pedacinhos tortos entre um alvo e o próximo
+					for (let k = 1; k <= 4; k++) {
+						const t = k / 4
+						const torto = k < 4 ? (Math.random() * 2 - 1) * 6 : 0
+						g.lineTo(x0 + (x1 - x0) * t + torto, y0 + (y1 - y0) * t + torto)
+					}
+				}
+				g.strokePath()
+			}
+		}
+		this.raios = this.raios.filter((raio) => raio.ha < 12)
+	}
+
 	desenhar_clima() {
 		const g = this.chuva
 		g.clear()
@@ -2290,7 +2381,12 @@ export default class Jogo extends Phaser.Scene {
 	desenhar_resto() {
 		for (const tiro of this.tiros) {
 			tiro.sprite.setPosition(Math.round(tiro.x), Math.round(tiro.y))
+			if (tiro.arma.chama) {
+				const t = tiro.ha / tiro.arma.alcance
+				tiro.sprite.setScale(0.5 + t * 1.1).setAlpha(1 - t * 0.85)
+			}
 		}
+		this.desenhar_raios()
 		for (const cuspe of this.cuspes) {
 			cuspe.sprite.setPosition(Math.round(cuspe.x), Math.round(cuspe.y))
 			cuspe.sprite.setFrame(Math.floor(this.quadro_atual / 10) % 2)

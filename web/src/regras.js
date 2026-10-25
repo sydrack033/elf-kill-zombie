@@ -73,6 +73,18 @@ export const ARMAS = {
 		nome: 'BAZUCA', quadro: 4, espera: 60, tiros: 1, abertura: 0, tremida: 0, municao: 15,
 		projetil: 'foguete', velocidade: 4, dano: 2, empurra: 0, explode: 38, som: { chave: 'foguete', volume: 0.7, rate: 1 },
 	},
+	// chama = cada tiro é uma labareda que cresce e some depois de "alcance" ticks
+	lancachamas: {
+		nome: 'LANÇA-CHAMAS', quadro: 5, espera: 4, tiros: 1, abertura: 0, tremida: 0.22, municao: 250,
+		projetil: 'tiro', velocidade: 3.4, dano: 1, empurra: 0, atravessa: true, alcance: 30, chama: true,
+		som: { chave: 'chama', volume: 0.3, rate: 1 },
+	},
+	// raio = acerta o inimigo mais perto da mira e pula para os vizinhos ("saltos")
+	raio: {
+		nome: 'RAIO', quadro: 6, espera: 32, tiros: 1, abertura: 0, tremida: 0, municao: 30,
+		projetil: null, velocidade: 0, dano: 3, empurra: 3, especial: 'raio', saltos: 3, alcance: 260,
+		som: { chave: 'raio', volume: 0.55, rate: 1 },
+	},
 }
 
 // ---------- bombas ----------
@@ -100,6 +112,8 @@ export const ITENS = [
 	{ tipo: 'escudo', quadro: 5, peso: 1.5, nivel: 1 },
 	{ tipo: 'velocidade', quadro: 6, peso: 1.5, nivel: 1 },
 	{ tipo: 'congelar', quadro: 7, peso: 1, nivel: 2 },
+	{ tipo: 'lancachamas', quadro: 8, peso: 1.5, nivel: 4 },
+	{ tipo: 'raio', quadro: 9, peso: 1.5, nivel: 5 },
 ]
 export const ITEM_A_CADA = [700, 1100] // ticks entre uma caixa e outra (sorteado entre os dois)
 export const CHANCE_DE_CORACAO = 0.08 // chance de um zumbi morto soltar um coração

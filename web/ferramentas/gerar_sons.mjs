@@ -327,5 +327,18 @@ salvar('trovao', gerar(2.6, (t, p) => {
 // fantasma: uivo que sobe e desce
 salvar('fantasma', gerar(0.6, (t, p, osc) => Math.sin(osc(380 + Math.sin(p * Math.PI * 2) * 120) * 2 * Math.PI) * 0.25 * Math.sin(p * Math.PI)))
 
+// lança-chamas: sopro curto de ruído
+anterior = 0
+salvar('chama', gerar(0.14, (t, p) => {
+	anterior = anterior * 0.6 + ruido() * 0.4
+	return anterior * 0.9 * Math.sin(p * Math.PI)
+}))
+
+// raio: estalos elétricos rápidos
+salvar('raio', gerar(0.35, (t, p, osc) => {
+	const estalo = Math.random() < 0.08 ? 1 : 0
+	return (ONDAS.quadrada(osc(90 + Math.random() * 1800)) * 0.25 + ruido() * 0.35 * estalo) * Math.pow(1 - p, 1.5)
+}))
+
 // combo: plim curto (toca mais agudo conforme o multiplicador)
 salvar('combo', gerar(0.12, (t, p, osc) => ONDAS.fina(osc(1320)) * 0.2 * (1 - p)))

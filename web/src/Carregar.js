@@ -59,7 +59,7 @@ export default class Carregar extends Phaser.Scene {
 		// efeitos e músicas são gerados por ferramentas/gerar_sons.mjs
 		const sons = [
 			'tiro', 'laser', 'foguete', 'acerto', 'explosao', 'zumbi_morre', 'rugido', 'cuspe', 'item', 'poder',
-			'escudo_quebra', 'perder_vida', 'arremesso', 'combo', 'fase', 'fim', 'trovao', 'fantasma',
+			'escudo_quebra', 'perder_vida', 'arremesso', 'combo', 'fase', 'fim', 'trovao', 'fantasma', 'chama', 'raio',
 			'musica_titulo', 'musica_jogo', 'musica_chefe',
 		]
 		for (const som of sons) {

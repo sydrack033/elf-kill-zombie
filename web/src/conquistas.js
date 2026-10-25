@@ -15,7 +15,7 @@ export const CONQUISTAS = [
 	{ id: 'bomba5', nome: 'BOMBARDEIO', texto: 'MATE 5 ZUMBIS COM UMA EXPLOSÃO' },
 	{ id: 'intocavel', nome: 'INTOCÁVEL', texto: 'PASSE UMA FASE SEM APANHAR (DA 3 EM DIANTE)' },
 	{ id: 'colecao', nome: 'COLECIONADOR', texto: 'TENHA 6 MELHORIAS NUMA PARTIDA' },
-	{ id: 'arsenal', nome: 'ARSENAL', texto: 'USE AS 5 ARMAS NUMA PARTIDA' },
+	{ id: 'arsenal', nome: 'ARSENAL', texto: 'USE TODAS AS 7 ARMAS NUMA PARTIDA' },
 	{ id: 'mira', nome: 'OLHO DE ÁGUIA', texto: 'TERMINE COM 70% DE PONTARIA (200+ TIROS)' },
 	{ id: 'rico', nome: 'MILIONÁRIO', texto: 'FAÇA 50.000 PONTOS' },
 ]

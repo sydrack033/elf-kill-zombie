@@ -32,6 +32,7 @@ export function instalar_teste(jogo) {
 			const s = this.jogo
 			for (let i = 0; i < 50 && !s.sys.isActive(); i++) await espera(100)
 			s.scene.pause()
+			s.cameras.main.resetFX() // com a cena pausada o "fade" de entrada ficaria parado no meio
 			for (const k in s.teclas) s.teclas[k].isDown = false
 			return s
 		},
