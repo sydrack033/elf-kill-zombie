@@ -1727,7 +1727,22 @@ export default class Jogo extends Phaser.Scene {
 			}
 
 			tiro.ha++
-			// o bumerangue pode sair um pouco da tela, porque volta
+			// Ricochete: o tiro comum quica uma vez nas bordas dos lados e de cima
+		if (this.m('ricochete') && !tiro.quicou && !tiro.arma.volta && !tiro.arma.chama && !tiro.arma.furia && !tiro.arma.alcance) {
+			if ((tiro.x < 0 && tiro.vx < 0) || (tiro.x > this.largura && tiro.vx > 0)) {
+				tiro.vx = -tiro.vx
+				tiro.quicou = true
+			}
+			else if (tiro.y < 0 && tiro.vy < 0) {
+				tiro.vy = -tiro.vy
+				tiro.quicou = true
+			}
+			if (tiro.quicou) {
+				tiro.sprite.setRotation(Math.atan2(tiro.vy, tiro.vx))
+				tiro.acertou.clear()
+			}
+		}
+		// o bumerangue pode sair um pouco da tela, porque volta
 		const margem = tiro.arma.volta ? 80 : 20
 		const saiu = tiro.x < -margem || tiro.x > this.largura + margem || tiro.y < -margem || tiro.y > ALTURA + margem
 			if (saiu || (tiro.arma.alcance && tiro.ha >= tiro.arma.alcance)) {
@@ -1872,6 +1887,20 @@ export default class Jogo extends Phaser.Scene {
 		}
 	}
 
+	soltar_estilhacos(x, y, quantos) {
+		const arma = { projetil: 'tiro', dano: 1, empurra: 0, alcance: 22, sem_pontaria: true }
+		const giro = Math.random() * Math.PI * 2
+		for (let i = 0; i < quantos; i++) {
+			const angulo = giro + (i / quantos) * Math.PI * 2
+			const sprite = this.add.sprite(x, y, 'tiro', 0).setRotation(angulo).setScale(0.5).setTint(0xff9a3c).setDepth(4)
+			this.tiros.push({
+				sprite, x, y, arma, ha: 0,
+				vx: Math.cos(angulo) * 4, vy: Math.sin(angulo) * 4,
+				dano: 1, perfura: 0, acertou: new Set(),
+			})
+		}
+	}
+
 	tornar_elite(zumbi) {
 		zumbi.elite = true
 		zumbi.vida = zumbi.vida_max = zumbi.vida * R.ELITE.vida
@@ -2010,6 +2039,20 @@ export default class Jogo extends Phaser.Scene {
 			const c0 = corpo(zumbi)
 			this.flutuar(c0.x + c0.l / 2, c0.y - 10, nomes[juntas] || 'MASSACRE!', '#ff5a5a')
 			this.pontos += 25 * juntas * this.nivel
+		}
+		// Vampiro: a cada 30 mortes cura um coração
+		if (this.m('vampiro')) {
+			this.mortes_vampiro = (this.mortes_vampiro || 0) + 1
+			if (this.mortes_vampiro % 30 == 0 && this.vidas < this.vidas_max) {
+				this.vidas++
+				this.flutuar(this.heroi_x + 12, this.heroi_y - 10, '+1 VIDA', '#ff6a6a')
+				efeito(this, 'item', { volume: 0.5, rate: 0.8 })
+			}
+		}
+		// Estilhaços: o zumbi estoura em pedaços que acertam quem está perto
+		if (this.m('estilhacos') && this.tiros.length < 200) {
+			const ce = corpo(zumbi)
+			this.soltar_estilhacos(ce.x + ce.l / 2, ce.y + ce.a / 2, 1 + 2 * this.m('estilhacos'))
 		}
 		const lua = this.lua_de_sangue ? R.LUA_DE_SANGUE.pontos : 1
 		const elite = zumbi.elite ? R.ELITE.pontos : 1

@@ -213,6 +213,9 @@ export const MELHORIAS = [
 	{ id: 'mao_dupla', quadro: 9, nome: 'MÃO DUPLA', texto: 'A PISTOLA DÁ DOIS TIROS', maximo: 1 },
 	{ id: 'sorte', quadro: 10, nome: 'TREVO', texto: 'CAEM MAIS CORAÇÕES E CAIXAS', maximo: 2 },
 	{ id: 'polvora', quadro: 11, nome: 'PÓLVORA', texto: 'EXPLOSÕES 25% MAIORES', maximo: 2 },
+	{ id: 'vampiro', quadro: 12, nome: 'VAMPIRO', texto: 'A CADA 30 ZUMBIS, CURA 1 CORAÇÃO', maximo: 1 },
+	{ id: 'ricochete', quadro: 13, nome: 'RICOCHETE', texto: 'O TIRO QUICA NAS BORDAS DA TELA', maximo: 1 },
+	{ id: 'estilhacos', quadro: 14, nome: 'ESTILHAÇOS', texto: 'ZUMBI MORTO SOLTA ESTILHAÇOS', maximo: 2 },
 ]
 export const VIDAS_EXTRAS_MAXIMO = 2 // com o Coração Extra, o máximo de vidas sobe até 5 + 2
 
