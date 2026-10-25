@@ -67,6 +67,7 @@ export default class Loja extends Phaser.Scene {
 		this.ajuda.setText(this.sys.game.device.os.desktop
 			? 'SETAS: ESCOLHER E TROCAR DE ABA   ENTER: COMPRAR / USAR   ESC: VOLTAR'
 			: 'TOQUE PARA COMPRAR OU USAR   TOQUE FORA PARA VOLTAR')
+		this.ao_redimensionar() // a ajuda mudou de tamanho
 	}
 
 	// (re)cria as linhas da aba atual
@@ -81,8 +82,8 @@ export default class Loja extends Phaser.Scene {
 		}
 		const lista = ABAS[this.aba].lista
 		this.linhas = lista.map((produto, i) => {
-			const y = 68 + i * 44
-			const fundo = this.add.rectangle(0, y, 10, 38, 0x101018, 0.75).setOrigin(0.5, 0).setStrokeStyle(1, 0x3a3a44)
+			const y = 68 + i * 38
+			const fundo = this.add.rectangle(0, y, 10, 34, 0x101018, 0.75).setOrigin(0.5, 0).setStrokeStyle(1, 0x3a3a44)
 				.setInteractive({ useHandCursor: true })
 			fundo.on('pointerover', () => this.escolher(i))
 			fundo.on('pointerdown', () => {
@@ -183,8 +184,8 @@ export default class Loja extends Phaser.Scene {
 		this.carteira.x = this.icone.x + 7
 		this.abas.forEach((rotulo, i) => (rotulo.x = meio + (i - 0.5) * 110))
 		for (const l of this.linhas) {
-			l.fundo.setSize(largura, 38).setPosition(meio, l.fundo.y)
-			l.fundo.input.hitArea.setSize(largura, 38)
+			l.fundo.setSize(largura, 34).setPosition(meio, l.fundo.y)
+			l.fundo.input.hitArea.setSize(largura, 34)
 			const recuo = l.figura ? 40 : 8
 			if (l.figura) l.figura.x = esquerda + 20
 			l.nome.x = esquerda + recuo

@@ -185,6 +185,7 @@ export default class Controles {
 		this.mover_moedas()
 		this.mover_itens()
 		this.mover_torretas()
+		this.mover_fada()
 		this.mover_manchas()
 		this.mover_chuva()
 		this.mostrar_dicas()

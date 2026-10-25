@@ -320,6 +320,12 @@ export default class Jogo extends Phaser.Scene {
 			this.trocar_arma('triplo')
 		}
 		this.pode_reviver = !!compras.reviver
+		// fada da loja: nível 1 atira devagar, nível 2 mais rápido e mais forte
+		this.fada = compras.fada ? { nivel: compras.fada, angulo: 0, espera: 60, x: 0, y: 0 } : null
+		if (this.fada) {
+			this.fada.sprite = this.add.circle(0, 0, 3, 0xfff0a0).setDepth(6.2)
+			this.fada.brilho = this.add.circle(0, 0, 7, 0xffe080, 0.3).setDepth(6.1)
+		}
 		if (this.mod.vidro) {
 			this.vidas = this.vidas_max = 1 // Elfo de Vidro: um golpe e acabou
 		}

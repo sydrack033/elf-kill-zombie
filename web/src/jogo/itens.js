@@ -136,6 +136,28 @@ export default class Itens {
 		efeito(this, 'torreta', { volume: 0.6 })
 	}
 
+	// fada companheira: gira em volta do elfo e atira no zumbi mais perto
+	mover_fada() {
+		const f = this.fada
+		if (!f) {
+			return
+		}
+		f.angulo += 0.04
+		f.x = this.heroi_x + 12 + Math.cos(f.angulo) * 20
+		f.y = this.heroi_y + 6 + Math.sin(f.angulo) * 10
+		f.sprite.setPosition(Math.round(f.x), Math.round(f.y))
+		f.brilho.setPosition(Math.round(f.x), Math.round(f.y)).setAlpha(0.2 + 0.15 * Math.sin(this.quadro_atual / 5))
+		f.espera--
+		const alvo = this.inimigo_mais_perto(f.x, f.y)
+		if (f.espera <= 0 && alvo && alvo.distancia < 220) {
+			f.espera = f.nivel >= 2 ? 35 : 60
+			const ang = Math.atan2(alvo.y - f.y, alvo.x - f.x)
+			const arma = { projetil: 'tiro', dano: f.nivel, empurra: 1, sem_pontaria: true }
+			const sprite = this.add.sprite(f.x, f.y, 'tiro', 0).setRotation(ang).setScale(0.6).setTint(0xfff0a0).setDepth(4)
+			this.tiros.push({ sprite, x: f.x, y: f.y, arma, ha: 0, vx: Math.cos(ang) * 6, vy: Math.sin(ang) * 6, dano: arma.dano, perfura: 0, acertou: new Set() })
+		}
+	}
+
 	mover_torretas() {
 		for (const t of this.torretas) {
 			t.ha++
