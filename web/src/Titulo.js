@@ -135,6 +135,12 @@ export default class Titulo extends Phaser.Scene {
 			else if (this.botao_opcoes && this.botao_opcoes.getBounds().contains(p.worldX, p.worldY)) {
 				ir('Opcoes')
 			}
+			else if (this.botao_bestiario && this.botao_bestiario.getBounds().contains(p.worldX, p.worldY)) {
+				ir('Bestiario')
+			}
+			else if (this.botao_historia && this.botao_historia.getBounds().contains(p.worldX, p.worldY)) {
+				ir('Historia', { depois: 'Titulo' })
+			}
 			else {
 				comecar()
 			}
@@ -142,6 +148,9 @@ export default class Titulo extends Phaser.Scene {
 		// troféu no canto (para quem joga no celular e não tem a tecla C)
 		this.botao_trofeu = this.add.sprite(0, 14, 'trofeu', 0).setScale(1.5).setDepth(6)
 		this.botao_opcoes = texto(this, 0, 30, 'OPÇÕES', 8, '#cfcfcf').setOrigin(1, 0.5).setDepth(6)
+		// no celular não tem as teclas B e H: botões nos cantos
+		this.botao_bestiario = texto(this, 0, 46, 'BESTIÁRIO', 8, '#cfcfcf').setOrigin(1, 0.5).setDepth(6)
+		this.botao_historia = texto(this, 6, 46, 'HISTÓRIA', 8, '#cfcfcf').setOrigin(0, 0.5).setDepth(6)
 		// moedas no canto esquerdo: tocar (ou L) abre a loja
 		this.moeda = this.add.sprite(12, 14, 'moeda').setScale(1.5).setDepth(6)
 		this.botao_loja = texto(this, 21, 14, ler_loja().moedas + '  LOJA', 8, '#ffd34d').setOrigin(0, 0.5).setDepth(6)
@@ -243,6 +252,7 @@ export default class Titulo extends Phaser.Scene {
 		if (this.botao_trofeu) {
 			this.botao_trofeu.x = this.largura - 14
 			this.botao_opcoes.x = this.largura - 6
+			this.botao_bestiario.x = this.largura - 6
 		}
 		// em tela estreita os controles ficam grandes demais: diminui para caber
 		const escala = Math.min(1, (this.largura - 10) / this.controles.width)
