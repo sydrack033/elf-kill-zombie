@@ -2965,6 +2965,7 @@ export default class Jogo extends Phaser.Scene {
 				// arma pega pelo jogador 2 fica com ele
 				if (quem == 1 && R.ARMAS[item.tipo] && item.tipo != 'raio') {
 					this.trocar_arma_p2(item.tipo)
+					this.explicar_item(item.tipo)
 					this.armas_usadas.add(item.tipo)
 					efeito(this, 'item', { volume: 0.6 })
 					this.anunciar('P2: ' + R.ARMAS[item.tipo].nome + '!', 100, '#d0a0ff')
@@ -2995,7 +2996,32 @@ export default class Jogo extends Phaser.Scene {
 		}
 	}
 
+	// na primeira vez que pega cada tipo de caixa, explica o que ela faz
+	explicar_item(tipo) {
+		const item = R.ITENS.find((i) => i.tipo == tipo)
+		if (!item || !item.texto) {
+			return
+		}
+		let vistos = []
+		try {
+			vistos = JSON.parse(localStorage.getItem('elf-kill-zombie-itens') || '[]')
+		} catch {
+			// sem localStorage: explica toda vez
+		}
+		if (vistos.includes(tipo)) {
+			return
+		}
+		try {
+			localStorage.setItem('elf-kill-zombie-itens', JSON.stringify(vistos.concat(tipo)))
+		} catch {
+			// sem localStorage: não guarda
+		}
+		const explicacao = texto(this, this.largura / 2, ALTURA / 2 - 28, item.texto, 8, '#ffffff').setOrigin(0.5).setDepth(10)
+		this.tweens.add({ targets: explicacao, alpha: 0, delay: 2600, duration: 500, onComplete: () => explicacao.destroy() })
+	}
+
 	pegar(tipo) {
+		this.explicar_item(tipo)
 		efeito(this, R.PODERES[tipo] ? 'poder' : 'item', { volume: 0.6 })
 		if (tipo == 'torreta') {
 			this.montar_torreta()

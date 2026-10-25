@@ -127,18 +127,18 @@ export const PODERES = {
 // ---------- caixas que descem rolando com o chão ----------
 // quadro = quadro da imagem itens.png; peso = chance relativa; nivel = a partir de que nível aparece
 export const ITENS = [
-	{ tipo: 'triplo', quadro: 0, peso: 3, nivel: 1 },
-	{ tipo: 'metralhadora', quadro: 1, peso: 2, nivel: 1 },
-	{ tipo: 'bomba', quadro: 2, peso: 3, nivel: 1 },
-	{ tipo: 'laser', quadro: 3, peso: 2, nivel: 2 },
-	{ tipo: 'bazuca', quadro: 4, peso: 1.5, nivel: 3 },
-	{ tipo: 'escudo', quadro: 5, peso: 1.5, nivel: 1 },
-	{ tipo: 'velocidade', quadro: 6, peso: 1.5, nivel: 1 },
-	{ tipo: 'congelar', quadro: 7, peso: 1, nivel: 2 },
-	{ tipo: 'lancachamas', quadro: 8, peso: 1.5, nivel: 4 },
-	{ tipo: 'raio', quadro: 9, peso: 1.5, nivel: 5 },
-	{ tipo: 'torreta', quadro: 10, peso: 1.2, nivel: 3 },
-	{ tipo: 'bumerangue', quadro: 11, peso: 1.5, nivel: 2 },
+	{ tipo: 'triplo', quadro: 0, peso: 3, nivel: 1, texto: 'TRÊS TIROS EM LEQUE' },
+	{ tipo: 'metralhadora', quadro: 1, peso: 2, nivel: 1, texto: 'SEGURE PARA ATIRAR SEM PARAR' },
+	{ tipo: 'bomba', quadro: 2, peso: 3, nivel: 1, texto: 'MAIS BOMBAS PARA JOGAR' },
+	{ tipo: 'laser', quadro: 3, peso: 2, nivel: 2, texto: 'ATRAVESSA TODOS OS ZUMBIS DA LINHA' },
+	{ tipo: 'bazuca', quadro: 4, peso: 1.5, nivel: 3, texto: 'FOGUETE QUE EXPLODE' },
+	{ tipo: 'escudo', quadro: 5, peso: 1.5, nivel: 1, texto: 'SEGURA UMA MORDIDA' },
+	{ tipo: 'velocidade', quadro: 6, peso: 1.5, nivel: 1, texto: 'ANDA MAIS RÁPIDO POR UM TEMPO' },
+	{ tipo: 'congelar', quadro: 7, peso: 1, nivel: 2, texto: 'CONGELA OS ZUMBIS POR UM TEMPO' },
+	{ tipo: 'lancachamas', quadro: 8, peso: 1.5, nivel: 4, texto: 'FOGO DE PERTO, ATRAVESSA TUDO' },
+	{ tipo: 'raio', quadro: 9, peso: 1.5, nivel: 5, texto: 'PULA DE ZUMBI EM ZUMBI' },
+	{ tipo: 'torreta', quadro: 10, peso: 1.2, nivel: 3, texto: 'ATIRA SOZINHA POR 12 SEGUNDOS' },
+	{ tipo: 'bumerangue', quadro: 11, peso: 1.5, nivel: 2, texto: 'VAI E VOLTA, ACERTANDO DUAS VEZES' },
 ]
 
 // torreta: fica onde o elfo pegou a caixa e atira sozinha no zumbi mais perto
