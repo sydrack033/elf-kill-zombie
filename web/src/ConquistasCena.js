@@ -19,10 +19,10 @@ export default class ConquistasCena extends Phaser.Scene {
 
 		CONQUISTAS.forEach((c, i) => {
 			const tem = feitas.has(c.id)
-			const y = 42 + i * 19
-			const trofeu = this.add.sprite(0, y + 6, 'trofeu', tem ? 0 : 1)
-			const nome = texto(this, 0, y, c.nome, 8, tem ? '#ffd34d' : '#8a8a90')
-			const desc = texto(this, 0, y + 10, c.texto, 8, tem ? '#ffffff' : '#6a6a70')
+			// a posição de verdade é calculada em ao_redimensionar (1 ou 2 colunas)
+			const trofeu = this.add.sprite(0, 0, 'trofeu', tem ? 0 : 1)
+			const nome = texto(this, 0, 0, c.nome, 8, tem ? '#ffd34d' : '#8a8a90')
+			const desc = texto(this, 0, 0, c.texto, 8, tem ? '#ffffff' : '#6a6a70')
 			this.objetos.push({ trofeu, nome, desc })
 		})
 		this.voltar = texto(this, 0, ALTURA - 14, 'ESC, ESPAÇO OU CLIQUE: VOLTAR', 8, '#cfcfcf').setOrigin(0.5)
@@ -63,14 +63,23 @@ export default class ConquistasCena extends Phaser.Scene {
 		this.premio.x = this.largura / 2
 		this.estatisticas.x = this.largura / 2
 		this.estatisticas.setScale(Math.min(1, (this.largura - 10) / this.estatisticas.width))
-		// lista alinhada à esquerda, com a coluna centralizada na tela
-		const largura_lista = Math.max(...this.objetos.map((o) => Math.max(o.nome.width, o.desc.width))) + 18
-		const x = Math.max(6, (this.largura - largura_lista) / 2)
-		for (const o of this.objetos) {
-			o.trofeu.x = x + 6
-			o.nome.x = x + 16
-			o.desc.x = x + 16
-		}
+		// lista alinhada à esquerda; em tela larga vira duas colunas
+		const largura_item = Math.max(...this.objetos.map((o) => Math.max(o.nome.width, o.desc.width))) + 18
+		const colunas = this.largura >= largura_item * 2 + 24 ? 2 : 1
+		const linhas = Math.ceil(this.objetos.length / colunas)
+		const espaco = Math.min(24, (ALTURA - 42 - 56) / linhas)
+		// numa coluna só, num celular, a letra encolhe um pouco para caber tudo
+		const escala = Math.min(1, espaco / 19, (this.largura - 8) / largura_item)
+		const largura_total = (largura_item * escala) * colunas + 16 * (colunas - 1)
+		const x0 = Math.max(4, (this.largura - largura_total) / 2)
+		this.objetos.forEach((o, i) => {
+			const coluna = Math.floor(i / linhas)
+			const y = 40 + (i % linhas) * espaco
+			const x = x0 + coluna * (largura_item * escala + 16)
+			o.trofeu.setPosition(x + 6 * escala, y + 6 * escala).setScale(escala)
+			o.nome.setPosition(x + 16 * escala, y).setScale(escala)
+			o.desc.setPosition(x + 16 * escala, y + 10 * escala).setScale(escala)
+		})
 	}
 
 	update() {

@@ -204,7 +204,7 @@ export const VIDAS_EXTRAS_MAXIMO = 2 // com o Coração Extra, o máximo de vida
 // a imagem tem quadros de 64x64; o corpo ocupa este pedaço (sem contar a escala)
 export const CHEFE = { escala: 2, vida_base: 45, vida_por_chefe: 25, pontos: 1000, corpo: { x: 18, y: 6, l: 28, a: 54 } }
 
-// cada chefão tem nome, cor e ataques próprios; do 4º em diante eles voltam do começo, mais fortes e com tudo
+// cada chefão tem nome, cor e ataques próprios; depois do último eles voltam do começo, mais fortes e com tudo
 //   cuspe = leque de cuspe no elfo, chamar = chama zumbis corredores,
 //   investida = avisa (fica vermelho e treme) e desce correndo em cima do elfo, chuva = cuspe caindo do céu
 export const CHEFES = [
@@ -213,4 +213,8 @@ export const CHEFES = [
 	{ nome: 'O PODRE', cor: 0xa8ff8a, ataques: ['cuspe', 'chuva', 'chamar'] },
 	// teleporte = some e aparece em outro lugar; fantasmas = chama zumbis fantasmas
 	{ nome: 'A BRUXA', cor: 0xd08aff, ataques: ['cuspe', 'teleporte', 'fantasmas'] },
+	// ossos = ossos girando em volta dele seguram os tiros (voltam depois de um tempo);
+	// levantar = zumbis saem das manchas de sangue do chão
+	{ nome: 'O NECROMANTE', cor: 0x7af0d8, ataques: ['cuspe', 'ossos', 'levantar'] },
 ]
+export const OSSOS = { quantos: 6, raio: 58, giro: 0.025, volta_em: 700 }

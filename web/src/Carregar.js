@@ -91,6 +91,14 @@ export default class Carregar extends Phaser.Scene {
 	create() {
 		// o jogo amplia tudo "em pixels"; só a vinheta é um degradê e precisa ser suavizada
 		this.textures.get('vinheta').setFilter(Phaser.Textures.FilterMode.LINEAR)
+
+		// osso do escudo do Necromante (12x6), desenhado aqui mesmo
+		const g = this.make.graphics({ x: 0, y: 0 }, false)
+		g.fillStyle(0x2a2420).fillRect(2, 1, 8, 4).fillRect(0, 0, 3, 6).fillRect(9, 0, 3, 6)
+		g.fillStyle(0xe8e0c8).fillRect(3, 2, 6, 2).fillRect(1, 1, 1, 4).fillRect(10, 1, 1, 4)
+		g.fillStyle(0xffffff).fillRect(3, 2, 6, 1)
+		g.generateTexture('osso', 12, 6)
+		g.destroy()
 		this.scene.start('Titulo')
 	}
 }

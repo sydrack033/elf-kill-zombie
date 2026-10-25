@@ -132,6 +132,7 @@ export default class Jogo extends Phaser.Scene {
 		this.sangues = [] // { sprite, ha }
 		this.coracoes = [] // corações caindo para pegar: { sprite, x, y }
 		this.itens = [] // caixas: { sprite, tipo, x, y }
+		this.lapides_quebradas = 0
 		this.torretas = [] // torretas montadas: { x, y, base, cano, barra, ha, espera }
 		this.proximo_item = 500
 		this.textos = [] // pontos e avisos que sobem e somem: { obj, ha }
@@ -1562,6 +1563,13 @@ export default class Jogo extends Phaser.Scene {
 			this.levar_dano()
 		}
 		const mortos_antes = this.stats.mortos
+		if (this.chefe && dano > 0) {
+			for (const osso of this.chefe.ossos.slice()) {
+				if (Phaser.Math.Distance.Between(x, y, osso.x, osso.y) < raio) {
+					this.quebrar_osso(osso)
+				}
+			}
+		}
 
 		for (const zumbi of this.zumbis) {
 			if (zumbi.morrendo || zumbi.intangivel || dano == 0) {
@@ -1622,6 +1630,19 @@ export default class Jogo extends Phaser.Scene {
 					this.ferir_zumbi(zumbi, tiro.dano, tiro.arma.empurra)
 					tiro.acertou.add(zumbi)
 					if (tiro.sumiu) {
+						break
+					}
+				}
+			}
+
+			// ossos do Necromante: o tiro quebra o osso (o que atravessa segue em frente)
+			if (!tiro.sumiu && this.chefe && this.chefe.ossos.length) {
+				for (const osso of this.chefe.ossos) {
+					if (encostou(tiro.x - 4, tiro.y - 4, 8, 8, osso.x - 7, osso.y - 7, 14, 14)) {
+						this.quebrar_osso(osso)
+						if (!tiro.arma.atravessa) {
+							tiro.sumiu = true
+						}
 						break
 					}
 				}
@@ -1779,6 +1800,8 @@ export default class Jogo extends Phaser.Scene {
 			this.soltar_lapide(zumbi)
 			efeito(this, 'escudo_quebra', { volume: 0.6, rate: 0.7 })
 			this.flutuar(l.x, l.y - 6, 'QUEBROU!', '#cfcfd8')
+			this.lapides_quebradas = (this.lapides_quebradas || 0) + 1
+			if (this.lapides_quebradas >= 10) desbloquear(this, 'pedreiro')
 		}
 	}
 
@@ -2119,7 +2142,7 @@ export default class Jogo extends Phaser.Scene {
 			nome: tipo.nome + (romanos[volta] ?? ' ' + volta),
 			cor: tipo.cor,
 			// do 4º chefão em diante ele usa todos os ataques
-			ataques: numero > R.CHEFES.length ? ['cuspe', 'chamar', 'investida', 'chuva', 'teleporte', 'fantasmas'] : tipo.ataques,
+			ataques: numero > R.CHEFES.length ? ['cuspe', 'chamar', 'investida', 'chuva', 'teleporte', 'fantasmas', 'ossos', 'levantar'] : tipo.ataques,
 			x: this.largura / 2 - tamanho / 2,
 			y: -tamanho,
 			vida,
@@ -2134,6 +2157,9 @@ export default class Jogo extends Phaser.Scene {
 			espera_chuva: 250,
 			espera_teleporte: 250,
 			espera_fantasmas: 400,
+			espera_levantar: 300,
+			espera_ossos: 60,
+			ossos: [], // ossos girando em volta: { angulo, sprite, x, y }
 			teleporte: null, // { ha } enquanto some e aparece em outro lugar
 			investida: null, // { etapa: 'aviso' | 'descendo' | 'voltando', ha, alvo_x, alvo_y }
 			morto_ha: 0,
@@ -2154,6 +2180,9 @@ export default class Jogo extends Phaser.Scene {
 		this.encher_furia(R.FURIA.por_acerto_no_chefe)
 		this.espirrar_sangue(x, y)
 		if (chefe.vida <= 0) {
+			for (const osso of chefe.ossos.slice()) {
+				this.quebrar_osso(osso)
+			}
 			chefe.fase = 'morrendo'
 			chefe.morto_ha = 0
 			this.parada = 18
@@ -2232,6 +2261,7 @@ export default class Jogo extends Phaser.Scene {
 		}
 		if (chefe.atacando > 0)
 			chefe.atacando--
+		this.girar_ossos(chefe)
 
 		const c = corpo_chefe(chefe)
 		if (!chefe.intangivel && this.encosta_em_heroi(c.x, c.y, c.l, c.a)) {
@@ -2313,6 +2343,22 @@ export default class Jogo extends Phaser.Scene {
 			efeito(this, 'fantasma', { volume: 0.6, rate: 0.6 })
 		}
 
+		chefe.espera_levantar--
+		if (tem('levantar') && chefe.espera_levantar <= 0) {
+			this.levantar_mortos(chefe)
+			chefe.atacando = 40
+			chefe.espera_levantar = Math.max(320, 540 - chefe.numero * 20)
+		}
+
+		// os ossos voltam um tempo depois de quebrar todos
+		if (tem('ossos') && chefe.ossos.length == 0) {
+			chefe.espera_ossos--
+			if (chefe.espera_ossos <= 0) {
+				this.criar_ossos(chefe)
+				chefe.espera_ossos = R.OSSOS.volta_em
+			}
+		}
+
 		chefe.espera_fantasmas--
 		if (tem('fantasmas') && chefe.espera_fantasmas <= 0) {
 			for (let i = 0; i < 2; i++) {
@@ -2321,6 +2367,65 @@ export default class Jogo extends Phaser.Scene {
 			chefe.atacando = 40
 			chefe.espera_fantasmas = 520
 		}
+	}
+
+	// escudo de ossos: giram em volta do chefão e seguram os tiros
+	criar_ossos(chefe) {
+		const quantos = R.OSSOS.quantos + Math.floor(chefe.numero / 5)
+		for (let i = 0; i < quantos; i++) {
+			const sprite = this.add.sprite(0, 0, 'osso').setDepth(3.5).setScale(1.4).setAlpha(0)
+			this.tweens.add({ targets: sprite, alpha: 1, duration: 400 })
+			chefe.ossos.push({ angulo: (i / quantos) * Math.PI * 2, sprite, x: -100, y: -100 })
+		}
+		efeito(this, 'fantasma', { volume: 0.5, rate: 1.4 })
+	}
+
+	girar_ossos(chefe) {
+		const c = corpo_chefe(chefe)
+		const cx = c.x + c.l / 2
+		const cy = c.y + c.a / 2
+		for (const osso of chefe.ossos) {
+			osso.angulo += R.OSSOS.giro
+			osso.x = cx + Math.cos(osso.angulo) * R.OSSOS.raio
+			osso.y = cy + Math.sin(osso.angulo) * R.OSSOS.raio * 0.8
+			osso.sprite.setPosition(Math.round(osso.x), Math.round(osso.y)).setRotation(osso.angulo + Math.PI / 2)
+		}
+	}
+
+	quebrar_osso(osso) {
+		const chefe = this.chefe
+		if (chefe) {
+			chefe.ossos = chefe.ossos.filter((o) => o != osso)
+		}
+		efeito(this, 'acerto', { volume: 0.4, rate: 1.7 })
+		this.tweens.add({
+			targets: osso.sprite, y: osso.y + 20, angle: osso.sprite.angle + 200, alpha: 0,
+			duration: 450, onComplete: () => osso.sprite.destroy(),
+		})
+	}
+
+	// levanta zumbis das manchas de sangue mais perto do elfo (ou da terra perto dele, se não tiver mancha)
+	levantar_mortos(chefe) {
+		const quantos = 2 + Math.floor(chefe.numero / 5)
+		const h = this.heroi_mais_perto(this.heroi_x, this.heroi_y)
+		const manchas = this.manchas
+			.filter((m) => m.sprite.y > ALTURA * 0.35 && m.sprite.y < ALTURA - 30)
+			.sort((a, b) => Math.abs(a.sprite.x - h.x) + Math.abs(a.sprite.y - h.y) - Math.abs(b.sprite.x - h.x) - Math.abs(b.sprite.y - h.y))
+		for (let i = 0; i < quantos; i++) {
+			const m = manchas[i + 1] || manchas[i] // a mais perto de todas fica de fora: dá um respiro
+			const x = m ? m.sprite.x : Phaser.Math.Clamp(h.x + Phaser.Math.Between(-120, 120), 20, this.largura - 20)
+			const y = m ? m.sprite.y : Phaser.Math.Between(Math.round(ALTURA * 0.4), Math.round(ALTURA * 0.6))
+			if (m) {
+				m.sprite.setTint(0x7af0d8)
+			}
+			const zumbi = this.criar_zumbi('comum', Phaser.Math.Clamp(x - 22, 0, this.largura - 44), y - 40)
+			zumbi.cavando = 90
+			zumbi.intangivel = true
+			zumbi.vx = 0.3
+			zumbi.sprite.setVisible(false)
+			if (m) manchas.splice(manchas.indexOf(m), 1)
+		}
+		efeito(this, 'fantasma', { volume: 0.6, rate: 0.5 })
 	}
 
 	// investida: treme vermelho por um tempo (dá para fugir), desce correndo e volta para o lugar

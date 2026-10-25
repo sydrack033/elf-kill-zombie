@@ -11,6 +11,7 @@ export const CONQUISTAS = [
 	{ id: 'chefe2', nome: 'AÇOUGUE FECHADO', texto: 'DERROTE O CARNICEIRO' },
 	{ id: 'chefe3', nome: 'LIMPEZA', texto: 'DERROTE O PODRE' },
 	{ id: 'chefe4', nome: 'CAÇA ÀS BRUXAS', texto: 'DERROTE A BRUXA' },
+	{ id: 'chefe5', nome: 'DESCANSE EM PAZ', texto: 'DERROTE O NECROMANTE' },
 	{ id: 'maratona', nome: 'MARATONA', texto: 'VENÇA 4 CHEFÕES NO MODO CHEFÕES' },
 	{ id: 'fase10', nome: 'SOBREVIVENTE', texto: 'CHEGUE À FASE 10' },
 	{ id: 'fase20', nome: 'LENDA DO CEMITÉRIO', texto: 'CHEGUE À FASE 20' },
@@ -20,6 +21,7 @@ export const CONQUISTAS = [
 	{ id: 'arsenal', nome: 'ARSENAL', texto: 'USE TODAS AS 7 ARMAS NUMA PARTIDA' },
 	{ id: 'mira', nome: 'OLHO DE ÁGUIA', texto: 'TERMINE COM 70% DE PONTARIA (200+ TIROS)' },
 	{ id: 'rico', nome: 'MILIONÁRIO', texto: 'FAÇA 50.000 PONTOS' },
+	{ id: 'pedreiro', nome: 'QUEBRA-PEDRA', texto: 'QUEBRE 10 LÁPIDES NUMA PARTIDA' },
 ]
 
 const CHAVE = 'elf-kill-zombie-conquistas'
