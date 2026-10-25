@@ -8,7 +8,7 @@ git (pasta `Jogo1`), então dá para ver o histórico com `git log` e voltar qua
 - **Inimigos novos:** corredor (rápido), brutamontes (grandão e resistente), cuspidor (para e cospe),
   bombado (explode quando morre), fantasma (fica transparente e os tiros passam), escavador (sai da
   terra perto do elfo), coveiro (carrega uma lápide que segura os tiros de frente até quebrar),
-  gosma (se divide em duas quando morre) e revoadas de corvos.
+  gosma (se divide em duas quando morre), tamborzeiro (acelera os zumbis em volta) e revoadas de corvos.
 - **Zumbis de elite:** de vez em quando um vem dourado, maior e bem mais forte; vale mais pontos,
   sempre solta uma caixa e dá moedas.
 - **6 chefões a cada 5 fases**, cada um com ataques próprios: O Rei Zumbi (cuspe em leque e chama
@@ -23,8 +23,8 @@ git (pasta `Jogo1`), então dá para ver o histórico com `git log` e voltar qua
   A arma aparece na mão do elfo. Pegar a mesma arma de novo sobe o **nível** dela (até III, mais dano).
 - **Torreta:** caixa que monta uma torreta no chão; ela atira sozinha por 12 segundos.
 - **Poderes:** escudo, botas de velocidade e gelo (congela os zumbis).
-- **Melhorias** estilo "roguelite": a cada 2 fases escolha 1 de 3 (15 melhorias diferentes, entre
-  elas Vampiro, Ricochete e Estilhaços). A pausa mostra as que você já pegou.
+- **Melhorias** estilo "roguelite": a cada 2 fases escolha 1 de 3 (18 melhorias diferentes, entre
+  elas Vampiro, Ricochete, Estilhaços, Fragmentação, Segunda Pele e Ira Élfica). A pausa mostra as que você já pegou.
 - **Esquiva** (Shift) e **fúria élfica** (E): barra que enche matando e solta um anel de fogo.
 - **Combos**, DUPLO!/TRIPLO!/MASSACRE!, pontos flutuando e avisos nos combos de 10, 25, 50 e 100.
 - **Eventos:** a **Horda** (na metade das fases 8, 13, 18...) manda uma enxurrada de zumbis e dá
@@ -33,7 +33,8 @@ git (pasta `Jogo1`), então dá para ver o histórico com `git log` e voltar qua
 - **Fase perfeita:** passar uma fase sem apanhar dá pontos extras e uma moeda.
 - **Cenários** a cada 10 fases: cemitério, pântano (neblina e poças de lodo que deixam o elfo lento),
   cidade em ruínas (escombros caindo), inferno (meteoros) e, da fase 40 em diante, a **Terra Gelada**
-  (neve e granizo). Cada um com sua música. O que cai do céu avisa antes com uma sombra no chão.
+  (neve e granizo). Cada um com sua música e uma **abertura de capítulo** com o nome do lugar.
+  No modo infinito, depois da fase 50, os cenários recomeçam. O que cai do céu avisa antes com uma sombra no chão.
   A noite cai ao longo das fases, com chuva, raios e (no inferno) brasas subindo.
 - **Modos:** Aventura (o normal) e **Só Chefões** (uma luta atrás da outra, com melhoria entre elas),
   e **2 jogadores** no mesmo computador (o segundo elfo anda com as setas ou um controle, mira
