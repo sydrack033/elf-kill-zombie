@@ -67,7 +67,7 @@ export default class Chefes {
 		this.barra_nome.setText(this.chefe.nome)
 		this.barra_vida.setFillStyle(0xd02828)
 		this.barra_rastro.setSize(this.largura_barra, 4)
-		this.apresentar_chefe(this.chefe.nome, numero)
+		this.apresentar_chefe(this.chefe.nome, final ? 'CHEFÃO FINAL' : 'CHEFÃO ' + numero)
 		efeito(this, 'rugido', { volume: 0.9 })
 		tocar_musica(this, final ? 'musica_final' : 'musica_chefe')
 		this.tremer(400, 0.008)
@@ -197,12 +197,13 @@ export default class Chefes {
 	}
 
 	// entrada de cinema: faixas pretas em cima e embaixo e o nome do chefão atravessando a tela
-	apresentar_chefe(nome, numero) {
+	// também usada na chegada de cada cenário (com outra cor)
+	apresentar_chefe(nome, subtitulo, cor = '#ff5a5a') {
 		const L = this.largura
 		const faixa_cima = this.add.rectangle(0, 0, L, 0, 0x000000).setOrigin(0).setDepth(9.6)
 		const faixa_baixo = this.add.rectangle(0, ALTURA, L, 0, 0x000000).setOrigin(0, 1).setDepth(9.6)
-		const titulo = texto(this, -150, ALTURA / 2 - 10, nome, 16, '#ff5a5a').setOrigin(0.5).setDepth(9.7)
-		const sub = texto(this, L + 150, ALTURA / 2 + 12, 'CHEFÃO ' + numero, 8, '#ffd34d').setOrigin(0.5).setDepth(9.7)
+		const titulo = texto(this, -150, ALTURA / 2 - 10, nome, 16, cor).setOrigin(0.5).setDepth(9.7)
+		const sub = texto(this, L + 150, ALTURA / 2 + 12, subtitulo, 8, '#ffd34d').setOrigin(0.5).setDepth(9.7)
 		this.tweens.add({ targets: [faixa_cima, faixa_baixo], height: 26, duration: 300 })
 		this.tweens.add({
 			targets: titulo, x: L / 2, duration: 450, ease: 'Back.Out',

@@ -503,6 +503,8 @@ export default class Zumbis {
 		const cenario = this.cenario()
 		if (this.chao.texture.key != cenario.textura) {
 			this.trocar_cenario(cenario)
+			// abertura de capítulo, como no cinema
+			if (cenario.lema) this.apresentar_chefe(cenario.nome, cenario.lema, '#9ff07a')
 		}
 		this.pintar_noite()
 		if (this.m('anjo')) {
@@ -518,7 +520,8 @@ export default class Zumbis {
 		this.eclipse = !fase_de_chefao && !this.lua_de_sangue && !this.eclipse && !this.modo_chefes &&
 			this.nivel >= eclipse.a_partir_da_fase && Math.random() < eclipse.chance
 		if (fase_de_chefao) {
-			this.anunciar((cenario != cenario_antes ? cenario.nome + '\n' : '') + 'CHEFÃO A CAMINHO!', 300, '#ff5a5a')
+			// (o nome do cenário novo aparece na abertura de capítulo)
+			this.anunciar('CHEFÃO A CAMINHO!', 300, '#ff5a5a')
 			// no modo chefões, cada vitória dá uma melhoria antes do próximo
 			if (this.modo_chefes && venceu_chefe) {
 				this.texto_da_fase = 'CHEFÃO A CAMINHO!'
@@ -526,7 +529,7 @@ export default class Zumbis {
 			}
 		}
 		else {
-			this.texto_da_fase = cenario != cenario_antes ? cenario.nome + '\nFASE ' + this.nivel : 'FASE ' + this.nivel
+			this.texto_da_fase = 'FASE ' + this.nivel
 			if (this.eclipse) {
 				this.texto_da_fase = 'FASE ' + this.nivel + '\nECLIPSE!'
 			}

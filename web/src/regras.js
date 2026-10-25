@@ -56,11 +56,11 @@ export const FASE_DA_CHUVA = 6 // dentro de cada cenário, a partir desta fase c
 
 // o cenário muda a cada 10 fases; clima = o que cai do céu (chuva) ou sobe do chão (brasas)
 export const CENARIOS = [
-	{ a_partir_da_fase: 1, textura: 'chao', nome: 'CEMITÉRIO', clima: 'chuva', musica: 'musica_jogo' },
-	{ a_partir_da_fase: 10, textura: 'chao_pantano', nome: 'PÂNTANO', clima: 'chuva', musica: 'musica_pantano', neblina: 0.4, perigo: 'lodo', cor_zumbi: 0xc8e8b0 },
-	{ a_partir_da_fase: 20, textura: 'chao_ruinas', nome: 'CIDADE EM RUÍNAS', clima: 'chuva', musica: 'musica_ruinas', neblina: 0.2, perigo: 'escombros' },
-	{ a_partir_da_fase: 30, textura: 'chao_inferno', nome: 'INFERNO', clima: 'brasas', musica: 'musica_inferno', perigo: 'meteoros', cor_zumbi: 0xffb898 },
-	{ a_partir_da_fase: 40, textura: 'chao_gelo', nome: 'TERRA GELADA', clima: 'neve', musica: 'musica_gelo', perigo: 'granizo', cor_zumbi: 0xb8dcff },
+	{ a_partir_da_fase: 1, textura: 'chao', nome: 'CEMITÉRIO', clima: 'chuva', musica: 'musica_jogo', lema: 'ONDE TUDO COMEÇOU' },
+	{ a_partir_da_fase: 10, textura: 'chao_pantano', nome: 'PÂNTANO', lema: 'ONDE OS MORTOS AFUNDAM', clima: 'chuva', musica: 'musica_pantano', neblina: 0.4, perigo: 'lodo', cor_zumbi: 0xc8e8b0 },
+	{ a_partir_da_fase: 20, textura: 'chao_ruinas', nome: 'CIDADE EM RUÍNAS', lema: 'A VILA JÁ CAIU', clima: 'chuva', musica: 'musica_ruinas', neblina: 0.2, perigo: 'escombros' },
+	{ a_partir_da_fase: 30, textura: 'chao_inferno', nome: 'INFERNO', lema: 'DE ONDE ELES VÊM', clima: 'brasas', musica: 'musica_inferno', perigo: 'meteoros', cor_zumbi: 0xffb898 },
+	{ a_partir_da_fase: 40, textura: 'chao_gelo', nome: 'TERRA GELADA', lema: 'ONDE O MUNDO ACABA', clima: 'neve', musica: 'musica_gelo', perigo: 'granizo', cor_zumbi: 0xb8dcff },
 ]
 export const COMBO_MAXIMO = 5 // multiplicador máximo de pontos
 
