@@ -102,6 +102,12 @@ export const ARMAS = {
 		projetil: null, velocidade: 0, dano: 3, empurra: 3, especial: 'raio', saltos: 3, alcance: 260,
 		som: { chave: 'raio', volume: 0.55, rate: 1 },
 	},
+	// espingarda: um monte de chumbos em leque que somem logo (alcance) e empurram forte
+	espingarda: {
+		nome: 'ESPINGARDA', quadro: 8, espera: 55, tiros: 7, abertura: 0.11, tremida: 0.05, municao: 20,
+		projetil: 'tiro', velocidade: 7, dano: 1, empurra: 7, alcance: 26, chumbo: true,
+		som: { chave: 'explosao', volume: 0.35, rate: 1.9 },
+	},
 	// volta = depois de tantos ticks o bumerangue faz a curva e volta para a mão (acerta na ida e na volta)
 	bumerangue: {
 		nome: 'BUMERANGUE', quadro: 7, espera: 40, tiros: 1, abertura: 0, tremida: 0, municao: 25,
@@ -142,6 +148,7 @@ export const ITENS = [
 	{ tipo: 'raio', quadro: 9, peso: 1.5, nivel: 5, texto: 'PULA DE ZUMBI EM ZUMBI' },
 	{ tipo: 'torreta', quadro: 10, peso: 1.2, nivel: 3, texto: 'ATIRA SOZINHA POR 12 SEGUNDOS' },
 	{ tipo: 'bumerangue', quadro: 11, peso: 1.5, nivel: 2, texto: 'VAI E VOLTA, ACERTANDO DUAS VEZES' },
+	{ tipo: 'espingarda', quadro: 12, peso: 1.5, nivel: 3, texto: 'MUITOS CHUMBOS DE PERTO, EMPURRA FORTE' },
 ]
 
 // torreta: fica onde o elfo pegou a caixa e atira sozinha no zumbi mais perto

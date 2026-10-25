@@ -1497,6 +1497,9 @@ export default class Jogo extends Phaser.Scene {
 				if (arma.chama) {
 					sprite.setScale(0.5).setTint(Math.random() < 0.5 ? 0xffd060 : 0xff8a30)
 				}
+				else if (arma.chumbo) {
+					sprite.setScale(0.45).setTint(0xd8d8e0)
+				}
 				this.tiros.push({
 					sprite, x, y, vx, vy, arma, ha: 0,
 					dano: arma.dano + this.m('dano'),
