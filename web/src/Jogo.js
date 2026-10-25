@@ -1892,12 +1892,7 @@ export default class Jogo extends Phaser.Scene {
 			this.proxima_queda--
 			if (this.proxima_queda <= 0) {
 				this.proxima_queda = Phaser.Math.Between(regra.a_cada[0], regra.a_cada[1])
-				const h = this.heroi_mais_perto(this.heroi_x, this.heroi_y)
-				const x = Phaser.Math.Clamp(h.x + 12 + Phaser.Math.Between(-70, 70), 20, this.largura - 20)
-				const y = Phaser.Math.Clamp(h.y + 18 + Phaser.Math.Between(-60, 30), ALTURA * 0.35, ALTURA - 20)
-				const sombra = this.add.ellipse(x, y, 4, 2, 0x000000, 0.45).setDepth(1.6)
-				const pedra = this.add.circle(x, -20, regra.raio * 0.35, regra.cor).setStrokeStyle(2, 0x000000).setDepth(7.5)
-				this.quedas.push({ x, y, ha: 0, sombra, pedra, regra })
+				this.criar_queda(regra)
 			}
 		}
 		for (const q of this.quedas) {
@@ -1924,6 +1919,16 @@ export default class Jogo extends Phaser.Scene {
 			}
 		}
 		this.quedas = this.quedas.filter((q) => q.ha < q.regra.aviso)
+	}
+
+	// algo vai cair perto do elfo: a sombra aparece agora e a coisa cai no fim do aviso
+	criar_queda(regra) {
+		const h = this.heroi_mais_perto(this.heroi_x, this.heroi_y)
+		const x = Phaser.Math.Clamp(h.x + 12 + Phaser.Math.Between(-70, 70), 20, this.largura - 20)
+		const y = Phaser.Math.Clamp(h.y + 18 + Phaser.Math.Between(-60, 30), ALTURA * 0.35, ALTURA - 20)
+		const sombra = this.add.ellipse(x, y, 4, 2, 0x000000, 0.45).setDepth(1.6)
+		const pedra = this.add.circle(x, -20, regra.raio * 0.35, regra.cor).setStrokeStyle(2, 0x000000).setDepth(7.5)
+		this.quedas.push({ x, y, ha: 0, sombra, pedra, regra })
 	}
 
 	mover_lodo() {
@@ -2486,7 +2491,7 @@ export default class Jogo extends Phaser.Scene {
 			nome: tipo.nome + (romanos[volta] ?? ' ' + volta),
 			cor: tipo.cor,
 			// do 4º chefão em diante ele usa todos os ataques
-			ataques: numero > R.CHEFES.length ? ['cuspe', 'chamar', 'investida', 'chuva', 'teleporte', 'fantasmas', 'ossos', 'levantar'] : tipo.ataques,
+			ataques: numero > R.CHEFES.length ? ['cuspe', 'chamar', 'investida', 'chuva', 'teleporte', 'fantasmas', 'ossos', 'levantar', 'meteoros', 'labareda'] : tipo.ataques,
 			x: this.largura / 2 - tamanho / 2,
 			y: -tamanho,
 			vida,
@@ -2502,6 +2507,9 @@ export default class Jogo extends Phaser.Scene {
 			espera_teleporte: 250,
 			espera_fantasmas: 400,
 			espera_levantar: 300,
+			espera_meteoros: 200,
+			espera_labareda: 320,
+			labareda: 0, // ticks que faltam do jorro de fogo
 			espera_ossos: 60,
 			ossos: [], // ossos girando em volta: { angulo, sprite, x, y }
 			teleporte: null, // { ha } enquanto some e aparece em outro lugar
@@ -2702,6 +2710,32 @@ export default class Jogo extends Phaser.Scene {
 			chefe.teleporte = { ha: 0 }
 			chefe.espera_teleporte = Math.max(220, 360 - chefe.numero * 15)
 			efeito(this, 'fantasma', { volume: 0.6, rate: 0.6 })
+		}
+
+		chefe.espera_meteoros--
+		if (tem('meteoros') && chefe.espera_meteoros <= 0) {
+			for (let i = 0; i < 3 + Math.floor(chefe.numero / 6); i++) {
+				this.criar_queda(R.PERIGOS.meteoros)
+			}
+			chefe.atacando = 40
+			chefe.espera_meteoros = Math.max(260, 440 - chefe.numero * 10)
+			efeito(this, 'rugido', { volume: 0.6, rate: 1.4 })
+		}
+
+		// labareda: um jorro de bolas de fogo que vai seguindo o elfo
+		chefe.espera_labareda--
+		if (tem('labareda') && chefe.espera_labareda <= 0 && chefe.labareda == 0) {
+			chefe.labareda = 70
+			chefe.espera_labareda = Math.max(300, 420 - chefe.numero * 10)
+		}
+		if (chefe.labareda > 0) {
+			chefe.labareda--
+			chefe.atacando = 10
+			if (chefe.labareda % 5 == 0) {
+				this.cuspir(c.x + c.l / 2, c.y + c.a * 0.35, 1, 0)
+				this.cuspes[this.cuspes.length - 1].sprite.setTint(0xff8a30).setTintMode(Phaser.TintModes.FILL).setScale(1.4)
+				efeito(this, 'chama', { volume: 0.4 })
+			}
 		}
 
 		chefe.espera_levantar--

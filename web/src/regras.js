@@ -246,5 +246,7 @@ export const CHEFES = [
 	// ossos = ossos girando em volta dele seguram os tiros (voltam depois de um tempo);
 	// levantar = zumbis saem das manchas de sangue do chão
 	{ nome: 'O NECROMANTE', cor: 0x7af0d8, ataques: ['cuspe', 'ossos', 'levantar'] },
+	// meteoros = chama meteoros perto do elfo; labareda = jorro de fogo que vai seguindo o elfo
+	{ nome: 'O DEMÔNIO', cor: 0xff6a4a, ataques: ['cuspe', 'meteoros', 'labareda'] },
 ]
 export const OSSOS = { quantos: 6, raio: 58, giro: 0.025, volta_em: 700 }
