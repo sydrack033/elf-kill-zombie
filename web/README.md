@@ -40,9 +40,10 @@ funciona **sem internet** depois da primeira visita.
 | Conquistas (no título) | C | troféu no canto | Y |
 | Loja (no título) | L | moeda no canto | Select |
 | Modo de jogo (no título) | X | setas na tela | X |
-| Começar adiantado (no título) | I | setas na tela | |
+| Começar adiantado (no título) | I | setas na tela | LB / RB |
 | Bestiário / história (no título) | B / H | | |
 | Opções (no título) | O | "OPÇÕES" no canto | |
+| Estatísticas (nas conquistas) | E | tocar na linha de números | |
 | Desafios do dia (no título) | D | "DESAFIOS" no canto | |
 | Recomeçar (na pausa) | R | botão na pausa | |
 | Sair para o menu (na pausa) | T | botão na pausa | Select |
