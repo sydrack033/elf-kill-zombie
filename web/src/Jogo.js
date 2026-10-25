@@ -3,6 +3,7 @@ import { ALTURA, ajustar_tela, texto, tecla_tela_cheia, tecla_som, ler_recorde, 
 import * as R from './regras.js'
 import { tocar_musica, parar_musica, tecla_musica, atualizar_volume_musica } from './musica.js'
 import { desbloquear } from './conquistas.js'
+import { marcar_visto } from './Bestiario.js'
 import { efeito, opcoes, gravar_opcoes } from './opcoes.js'
 
 // Igual à versão do Portugol, o jogo anda em "ticks" de 10 ms e cada tick roda
@@ -1670,6 +1671,7 @@ export default class Jogo extends Phaser.Scene {
 
 	criar_zumbi(tipo, x, y) {
 		const regra = R.ZUMBIS[tipo]
+		marcar_visto(tipo) // para o bestiário
 		const n = this.nivel - 1
 		const persegue = Math.random() < Math.min(0.7, 0.2 + n * 0.08)
 		const zumbi = {
@@ -2005,6 +2007,7 @@ export default class Jogo extends Phaser.Scene {
 		const vida = R.CHEFE.vida_base + R.CHEFE.vida_por_chefe * (numero - 1)
 		const tamanho = 64 * R.CHEFE.escala
 		const tipo = R.CHEFES[(numero - 1) % R.CHEFES.length]
+		marcar_visto('chefe' + (((numero - 1) % R.CHEFES.length) + 1))
 		// quando os chefões voltam do começo ganham um número: O REI ZUMBI II, III...
 		const volta = Math.floor((numero - 1) / R.CHEFES.length) + 1
 		const romanos = ['', '', ' II', ' III', ' IV', ' V', ' VI', ' VII', ' VIII', ' IX', ' X']

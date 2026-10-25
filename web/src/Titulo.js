@@ -59,7 +59,7 @@ export default class Titulo extends Phaser.Scene {
 			this, 0, 340,
 			celular
 				? 'ARRASTE NA ESQUERDA: ANDAR\nO ELFO ATIRA SOZINHO\nTOQUE NA DIREITA: MIRAR\nBOTÕES NA TELA: BOMBA, ESQUIVA E PAUSA'
-				: 'WASD/SETAS: ANDAR   MOUSE: MIRAR   SHIFT: ESQUIVA\nCLIQUE: ATIRAR   CLIQUE DIREITO: BOMBA\nP: PAUSA  F: TELA CHEIA  M: SOM  N: MÚSICA\nC: CONQUISTAS   H: HISTÓRIA   SETAS: DIFICULDADE E ELFO',
+				: 'WASD/SETAS: ANDAR   MOUSE: MIRAR   SHIFT: ESQUIVA\nCLIQUE: ATIRAR   CLIQUE DIREITO: BOMBA\nP: PAUSA  F: TELA CHEIA  M: SOM  N: MÚSICA\nC: CONQUISTAS   B: BESTIÁRIO   H: HISTÓRIA',
 			8, '#cfcfcf',
 		).setOrigin(0.5).setDepth(6)
 
@@ -91,6 +91,7 @@ export default class Titulo extends Phaser.Scene {
 		this.input.keyboard.on('keydown-ENTER', comecar)
 		this.input.keyboard.on('keydown-C', () => ir('Conquistas'))
 		this.input.keyboard.on('keydown-H', () => ir('Historia', { depois: 'Titulo' }))
+		this.input.keyboard.on('keydown-B', () => ir('Bestiario'))
 		this.input.keyboard.on('keydown-LEFT', () => this.mudar_dificuldade(-1))
 		this.input.keyboard.on('keydown-RIGHT', () => this.mudar_dificuldade(1))
 		this.input.keyboard.on('keydown-UP', () => this.mudar_elfo(-1))
