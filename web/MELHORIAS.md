@@ -8,7 +8,7 @@ git (pasta `Jogo1`), então dá para ver o histórico com `git log` e voltar qua
 - **Inimigos novos:** corredor (rápido), brutamontes (grandão e resistente), cuspidor (para e cospe),
   bombado (explode quando morre), fantasma (fica transparente e os tiros passam), escavador (sai da
   terra perto do elfo), coveiro (carrega uma lápide que segura os tiros de frente até quebrar),
-  gosma (se divide em duas quando morre), tamborzeiro (acelera os zumbis em volta) e revoadas de corvos.
+  gosma (se divide em duas quando morre), tamborzeiro (acelera os zumbis em volta), revoadas de corvos e de morcegos (que mergulham no elfo).
 - **Zumbis de elite:** de vez em quando um vem dourado, maior e bem mais forte; vale mais pontos,
   sempre solta uma caixa e dá moedas.
 - **6 chefões a cada 5 fases**, cada um com ataques próprios: O Rei Zumbi (cuspe em leque e chama
