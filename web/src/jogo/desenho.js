@@ -180,6 +180,17 @@ export default class Desenho {
 				this.pintar(s, zumbi.flash, null)
 				continue
 			}
+			if (zumbi.enfeite) {
+				if (zumbi.morrendo) {
+					// a abóbora cai rolando quando ele morre
+					const abobora = zumbi.enfeite
+					zumbi.enfeite = null
+					this.tweens.add({ targets: abobora, y: abobora.y + 22, angle: 90, alpha: 0, duration: 600, onComplete: () => abobora.destroy() })
+				}
+				else {
+					zumbi.enfeite.setPosition(Math.round(zumbi.x + 22 * zumbi.escala), Math.round(zumbi.y + 15 * zumbi.escala))
+				}
+			}
 			if (!zumbi.morrendo) {
 				s.setFrame(zumbi.xi)
 				s.setPosition(Math.round(zumbi.x), Math.round(zumbi.y))

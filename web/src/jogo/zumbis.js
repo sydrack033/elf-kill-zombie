@@ -342,6 +342,10 @@ export default class Zumbis {
 		if (zumbi.cor) {
 			zumbi.sprite.setTint(zumbi.cor)
 		}
+		// Halloween: de vez em quando um zumbi comum vem com uma abóbora na cabeça (só enfeite)
+		if (this.halloween && tipo == 'comum' && Math.random() < 0.15) {
+			zumbi.enfeite = this.add.sprite(x, y, 'chapeu_abobora').setOrigin(0.5, 1).setScale(regra.escala).setDepth(2.05)
+		}
 		if (regra.aura) {
 			// círculo vermelho mostrando até onde vai o efeito do tambor
 			zumbi.aura = this.add.circle(x, y, regra.aura, 0xff4a4a, 0.07).setStrokeStyle(1, 0xff6a6a, 0.35).setDepth(1.6)
@@ -773,6 +777,7 @@ export default class Zumbis {
 				if (zumbi.lapide) zumbi.lapide.destroy()
 				if (zumbi.aura) zumbi.aura.destroy()
 				if (zumbi.saco) zumbi.saco.destroy()
+				if (zumbi.enfeite) zumbi.enfeite.destroy()
 			}
 		}
 		this.zumbis = this.zumbis.filter((zumbi) => !zumbi.fugiu && !(zumbi.morrendo && zumbi.morto_ha >= 75))

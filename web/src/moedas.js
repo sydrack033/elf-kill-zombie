@@ -62,11 +62,16 @@ export function preco(loja, produto) {
 }
 
 // devolve true se comprou
-// semana do Halloween (24/10 a 02/11): a abóbora vem de presente (uma vez só)
-export function presente_de_halloween(hoje = new Date()) {
+// semana do Halloween: de 24/10 a 02/11
+export function semana_do_halloween(hoje = new Date()) {
 	const mes = hoje.getMonth() + 1
 	const dia = hoje.getDate()
-	if (!((mes == 10 && dia >= 24) || (mes == 11 && dia <= 2))) {
+	return (mes == 10 && dia >= 24) || (mes == 11 && dia <= 2)
+}
+
+// no Halloween a abóbora vem de presente (uma vez só)
+export function presente_de_halloween(hoje = new Date()) {
+	if (!semana_do_halloween(hoje)) {
 		return false
 	}
 	const loja = ler_loja()

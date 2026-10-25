@@ -3,7 +3,7 @@ import { ALTURA, ajustar_tela, tecla_tela_cheia, tecla_som, ler_recorde, ler_est
 import * as R from './regras.js'
 import { tocar_musica, tecla_musica } from './musica.js'
 import { opcoes, efeito } from './opcoes.js'
-import { ler_loja } from './moedas.js'
+import { ler_loja, semana_do_halloween } from './moedas.js'
 import { dia_de_hoje } from './desafios.js'
 import { ler_conquistas } from './conquistas.js'
 import { memoria, sorteador } from './jogo/comum.js'
@@ -64,6 +64,7 @@ export default class Jogo extends Phaser.Scene {
 		// Partida do Dia: sem loja, classe, modificadores nem começo adiantado, e o sorteio dos zumbis e
 		// caixas com a data como semente (a mesma sequência para todo mundo naquele dia)
 		this.diario = opcoes.modo == 'diario' && !this.treino
+		this.halloween = semana_do_halloween() // alguns zumbis vêm de cabeça de abóbora
 		// (dois sorteios separados, para zumbis e caixas não se atrapalharem)
 		this.rng = this.diario ? sorteador(dia_de_hoje()) : Math.random
 		this.rng_caixas = this.diario ? sorteador(dia_de_hoje() ^ 0x9e3779b9) : Math.random
