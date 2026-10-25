@@ -633,6 +633,16 @@ export default class Jogo extends Phaser.Scene {
 		}
 	}
 
+	// vibra o controle de videogame (se tiver um e se o tremor estiver ligado); forca de 0 a 1
+	vibrar(forca, duracao) {
+		const pad = this.input.gamepad && this.input.gamepad.pad1
+		const motor = pad && pad.vibration
+		if (!opcoes.tremor || !motor || !motor.playEffect) {
+			return
+		}
+		motor.playEffect('dual-rumble', { duration: duracao, strongMagnitude: forca, weakMagnitude: Math.min(1, forca * 1.3) }).catch(() => {})
+	}
+
 	// menu da pausa: volume da música e dos efeitos (setas, mouse, toque ou controle)
 	mostrar_menu_pausa() {
 		const meio = this.largura / 2
@@ -1532,6 +1542,7 @@ export default class Jogo extends Phaser.Scene {
 		this.combo_ha = 0
 		this.multiplicador = 1
 		this.tremer(200, 0.01)
+		this.vibrar(0.8, 220)
 		efeito(this, 'perder_vida', { volume: 0.7 })
 		this.atualizar_hud()
 		if (this.vidas <= 0) {
@@ -1597,6 +1608,7 @@ export default class Jogo extends Phaser.Scene {
 		const sprite = this.add.sprite(x, y, 'explosao', 0).setDepth(7).setScale(raio / R.RAIO_DA_EXPLOSAO)
 		this.explosoes.push({ sprite, ha: 0 })
 		this.tremer(150, 0.004 + raio / 10000)
+		this.vibrar(0.25 + raio / 200, 120)
 		if (com_som) {
 			efeito(this, 'explosao', { volume: 0.8, rate: raio < R.RAIO_DA_EXPLOSAO ? 1.25 : 1 })
 		}
@@ -2340,6 +2352,7 @@ export default class Jogo extends Phaser.Scene {
 			this.pontos += ganho
 			this.flutuar(chefe.x + 64, chefe.y + 20, '+' + ganho, '#ff9a3c')
 			efeito(this, 'rugido', { volume: 1, rate: 0.75 })
+			this.vibrar(1, 600)
 			this.atualizar_hud()
 		}
 	}
