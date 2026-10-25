@@ -217,7 +217,7 @@ export default class Chefes {
 
 		const c = corpo_chefe(chefe)
 		if (!chefe.intangivel && this.encosta_em_heroi(c.x, c.y, c.l, c.a)) {
-			this.levar_dano()
+			this.levar_dano('ESMAGADO POR ' + chefe.nome)
 		}
 	}
 
@@ -232,11 +232,13 @@ export default class Chefes {
 			return
 		}
 		this.cartao_ate = agora + 245
+		this.cartao_atual = [] // (preenchido abaixo; o fim de jogo apaga o cartão que estiver na tela)
 		const L = this.largura
 		const faixa_cima = this.add.rectangle(0, 0, L, 0, 0x000000).setOrigin(0).setDepth(9.6)
 		const faixa_baixo = this.add.rectangle(0, ALTURA, L, 0, 0x000000).setOrigin(0, 1).setDepth(9.6)
 		const titulo = texto(this, -150, ALTURA / 2 - 10, nome, 16, cor).setOrigin(0.5).setDepth(9.7)
 		const sub = texto(this, L + 150, ALTURA / 2 + 12, subtitulo, 8, '#ffd34d').setOrigin(0.5).setDepth(9.7)
+		this.cartao_atual = [faixa_cima, faixa_baixo, titulo, sub]
 		this.tweens.add({ targets: [faixa_cima, faixa_baixo], height: 26, duration: 300 })
 		this.tweens.add({
 			targets: titulo, x: L / 2, duration: 450, ease: 'Back.Out',

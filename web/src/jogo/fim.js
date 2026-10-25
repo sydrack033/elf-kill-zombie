@@ -13,6 +13,9 @@ export default class Fim {
 
 	fim_de_jogo() {
 		this.estado = 'fim'
+		for (const o of this.cartao_atual || []) {
+			if (o.active) o.destroy()
+		}
 		this.barra_carga.setVisible(false)
 		parar_musica(300)
 		efeito(this, 'fim', { volume: 0.7 })
@@ -85,6 +88,7 @@ export default class Fim {
 		this.mensagem.setY(ALTURA / 2 + 25)
 		this.mensagem.setText(
 			'PONTOS: ' + this.pontos + '\n' +
+			(this.causa_do_golpe ? 'MORTE: ' + this.causa_do_golpe + '\n' : '') +
 			(novo_recorde ? 'NOVO RECORDE!' : posicao ? posicao + 'º LUGAR NO PLACAR' : 'RECORDE: ' + this.recorde) + '\n\n' +
 			'FASE ' + this.nivel + '   TEMPO ' + tempo + '\n' +
 			'ZUMBIS ' + this.stats.mortos + '   CHEFÕES ' + this.stats.chefes + '\n' +

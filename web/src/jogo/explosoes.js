@@ -89,7 +89,7 @@ export default class Explosoes {
 			efeito(this, 'explosao', { volume: 0.8, rate: raio < R.RAIO_DA_EXPLOSAO ? 1.25 : 1 })
 		}
 		if (fere_heroi && this.herois().some((h) => Phaser.Math.Distance.Between(x, y, h.x + 12, h.y + 12) < raio * 0.8)) {
-			this.levar_dano()
+			this.levar_dano(do_cenario ? 'ALGO CAIU DO CÉU' : 'EXPLOSÃO DE UM BOMBADO')
 		}
 		const mortos_antes = this.stats.mortos
 		if (this.chefe && dano > 0 && !do_cenario) {

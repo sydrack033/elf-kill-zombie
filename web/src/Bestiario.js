@@ -24,6 +24,12 @@ const FICHAS = [
 	{ tipo: 'chefe_final', nome: CHEFE_FINAL.nome, texto: 'O CHEFÃO FINAL,\nNA FASE ' + CHEFE_FINAL.fase + '.', chefe: CHEFE_FINAL },
 ]
 
+// nome do inimigo para mostrar (ex.: 'brutamontes' -> 'BRUTAMONTES')
+export function nome_de(tipo) {
+	const ficha = FICHAS.find((f) => f.tipo == tipo)
+	return ficha ? ficha.nome : tipo.toUpperCase()
+}
+
 // devolve a ficha do inimigo se for a primeira vez que ele aparece (senão, null)
 // eventos e perigos (aba EVENTOS): nome, cor e explicação
 const EVENTOS = [

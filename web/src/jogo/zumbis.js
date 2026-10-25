@@ -4,7 +4,7 @@ import Phaser from 'phaser'
 import { ALTURA, texto } from '../tela.js'
 import * as R from '../regras.js'
 import { desbloquear } from '../conquistas.js'
-import { marcar_visto } from '../Bestiario.js'
+import { marcar_visto, nome_de } from '../Bestiario.js'
 import { efeito, opcoes } from '../opcoes.js'
 import { sortear, corpo } from './comum.js'
 
@@ -725,12 +725,12 @@ export default class Zumbis {
 					zumbi.morrendo = true
 					zumbi.morto_ha = 0
 				}
-				this.levar_dano()
+				this.levar_dano('MORDIDA DE ' + nome_de(zumbi.tipo))
 			}
 			else if (zumbi.y > ALTURA) {
 				// passou pelo elfo e fugiu pela parte de baixo: também custa uma vida
 				zumbi.fugiu = true
-				this.perder_vida()
+				this.perder_vida('UM ' + nome_de(zumbi.tipo) + ' PASSOU POR VOCÊ')
 			}
 		}
 
@@ -799,7 +799,7 @@ export default class Zumbis {
 			corvo.morrendo = true
 			corvo.morto_ha = 75
 			this.espirrar_sangue(c.x + c.l / 2, c.y + c.a / 2)
-			this.levar_dano()
+			this.levar_dano('BICADA DE ' + nome_de(corvo.tipo))
 		}
 		// saiu pelos lados ou por baixo: só vai embora (corvo não custa vida)
 		if (corvo.x < -60 || corvo.x > this.largura + 60 || corvo.y > ALTURA + 20) {
@@ -829,7 +829,7 @@ export default class Zumbis {
 			}
 			if (this.encosta_em_heroi(cuspe.x - 3, cuspe.y - 3, 6, 6) && !this.intocavel) {
 				cuspe.sumiu = true
-				this.levar_dano()
+				this.levar_dano(this.chefe ? 'ATAQUE DE ' + this.chefe.nome : 'CUSPE DE ZUMBI')
 			}
 			if (cuspe.x < -10 || cuspe.x > this.largura + 10 || cuspe.y < -10 || cuspe.y > ALTURA + 10) {
 				cuspe.sumiu = true

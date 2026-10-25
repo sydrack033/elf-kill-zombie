@@ -125,6 +125,9 @@ export default class Hud {
 	}
 
 	mostrar_dicas() {
+		if (this.estado != 'jogando') {
+			return // o elfo pode ter caído neste mesmo tick
+		}
 		const dica = this.dicas[0]
 		if (!dica) {
 			this.dica_texto.setVisible(false)
