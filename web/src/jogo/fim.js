@@ -13,6 +13,7 @@ export default class Fim {
 
 	fim_de_jogo() {
 		this.estado = 'fim'
+		this.barra_carga.setVisible(false)
 		parar_musica(300)
 		efeito(this, 'fim', { volume: 0.7 })
 

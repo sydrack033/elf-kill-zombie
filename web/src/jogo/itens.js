@@ -38,7 +38,7 @@ export default class Itens {
 			if (quem >= 0) {
 				item.pegou = true
 				// arma pega pelo jogador 2 fica com ele
-				if (quem == 1 && R.ARMAS[item.tipo] && item.tipo != 'raio') {
+				if (quem == 1 && R.ARMAS[item.tipo] && item.tipo != 'raio' && !R.ARMAS[item.tipo].carrega) {
 					this.trocar_arma_p2(item.tipo)
 					this.explicar_item(item.tipo)
 					this.usou_arma(item.tipo)

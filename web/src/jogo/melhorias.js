@@ -226,6 +226,7 @@ export default class Melhorias {
 	pausar() {
 		if (this.estado == 'jogando') {
 			this.estado = 'pausado'
+			this.carga = 0 // o arco não dispara sozinho ao despausar
 			this.escurecer.setVisible(true)
 			this.sound.pauseAll()
 			this.tweens.pauseAll() // faixas, avisos e efeitos esperam a pausa acabar

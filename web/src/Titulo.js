@@ -135,6 +135,7 @@ export default class Titulo extends Phaser.Scene {
 					12: () => this.mudar_elfo(-1), 13: () => this.mudar_elfo(1),
 					14: () => this.mudar_dificuldade(-1), 15: () => this.mudar_dificuldade(1),
 					3: () => ir('Conquistas'), 2: () => this.mudar_modo(), 8: () => ir('Loja'),
+					4: () => this.mudar_inicio(-1), 5: () => this.mudar_inicio(1), // LB / RB: capítulo
 				}
 				;(acoes[botao.index] || comecar)()
 			})
@@ -308,6 +309,8 @@ export default class Titulo extends Phaser.Scene {
 		const liberados = R.ELFOS.filter((e) => R.elfo_liberado(e, this.feitas)).length
 		this.seletores[1].valor.setText(elfo.nome + '  ' + liberados + '/' + R.ELFOS.length)
 		if (this.seletor_inicio) {
+			// no modo chefões o começo adiantado não vale
+			for (const o of Object.values(this.seletor_inicio)) o.setAlpha(opcoes.modo == 'chefes' ? 0.35 : 1)
 			const cenario = [...R.CENARIOS].reverse().find((c) => opcoes.inicio >= c.a_partir_da_fase)
 			this.seletor_inicio.valor.setText('FASE ' + opcoes.inicio + (cenario.a_partir_da_fase > 1 ? ' (' + cenario.nome.split(' ')[0] + ')' : '')).setColor(opcoes.inicio > 1 ? '#9ff07a' : '#ffffff')
 		}

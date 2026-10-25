@@ -521,8 +521,8 @@ export default class Zumbis {
 			this.nivel = Math.ceil((this.nivel + 1) / R.NIVEIS_ENTRE_CHEFOES) * R.NIVEIS_ENTRE_CHEFOES - 1
 		}
 		this.nivel++
-		if (this.nivel >= 10) desbloquear(this, 'fase10')
-		if (this.nivel >= 20) desbloquear(this, 'fase20')
+		if (this.nivel >= 10 && !this.comecou_adiantado) desbloquear(this, 'fase10')
+		if (this.nivel >= 20 && !this.comecou_adiantado) desbloquear(this, 'fase20')
 		this.mortes_no_nivel = 0
 		const fase_de_chefao = this.nivel % R.NIVEIS_ENTRE_CHEFOES == 0
 		if (fase_de_chefao) {

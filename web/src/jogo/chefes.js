@@ -443,6 +443,7 @@ export default class Chefes {
 			return // o elfo morreu no mesmo instante: vale o fim de jogo
 		}
 		this.estado = 'final'
+		this.barra_carga.setVisible(false)
 		desbloquear(this, 'zerou')
 		this.dica_texto.setVisible(false)
 		tocar_musica(this, 'musica_titulo')

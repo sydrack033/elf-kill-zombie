@@ -297,9 +297,14 @@ export default class Elfo {
 		if (this.atirar_on) {
 			this.carga = Math.min(1, this.carga + 1 / arma.carrega)
 			const sozinho = this.modo_toque || opcoes.tiro_auto || this.mira_controle
+			this.arco_sozinho = sozinho
 			if (!(this.carga >= 1 && sozinho)) {
 				return
 			}
+		}
+		else if (this.arco_sozinho) {
+			// no automático, o alvo sumir não é soltar o botão: guarda a carga
+			return
 		}
 		if (this.carga < 0.15) {
 			this.carga = 0 // um toque rápido não dispara nada
@@ -327,9 +332,11 @@ export default class Elfo {
 		this.atualizar_hud()
 	}
 
-	// dano de um tiro da arma: base + Fogo Forte, e +25% por nível da arma (nível II e III)
+	// dano de um tiro da arma: base + Fogo Forte, e por nível da arma (II e III) +25% ou +1, o que for maior
 	dano_da_arma(arma) {
-		return Math.max(1, Math.round((arma.dano + this.m('dano')) * (1 + 0.25 * ((this.nivel_arma || 1) - 1))))
+		const base = arma.dano + this.m('dano')
+		const nivel = (this.nivel_arma || 1) - 1
+		return Math.max(base + nivel, Math.round(base * (1 + 0.25 * nivel)))
 	}
 
 	encher_furia(quanto) {
@@ -420,7 +427,7 @@ export default class Elfo {
 	}
 
 	trocar_arma(arma) {
-		// pegar a mesma arma especial de novo sobe o nível dela (até 3): +1 de dano por nível
+		// pegar a mesma arma especial de novo sobe o nível dela (até 3): mais dano (ver dano_da_arma)
 		this.nivel_arma = arma == this.arma && arma != 'pistola' ? Math.min(3, (this.nivel_arma || 1) + 1) : 1
 		this.carga = 0
 		this.arma = arma

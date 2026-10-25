@@ -227,8 +227,10 @@ export default class Jogo extends Phaser.Scene {
 
 		this.aplicar_loja()
 
+		// (definido antes do começo adiantado: a cena é reaproveitada e guardaria o valor da partida anterior)
+		this.modo_chefes = opcoes.modo == 'chefes'
 		// começar num capítulo adiantado (escolhido no título)
-		const inicio = opcoes.modo == 'chefes' ? 1 : opcoes.inicio
+		const inicio = this.modo_chefes ? 1 : opcoes.inicio
 		this.comecou_adiantado = inicio > 1 && ler_estatisticas().melhor_fase >= inicio
 		if (this.comecou_adiantado) {
 			this.comecar_no_capitulo(inicio)
