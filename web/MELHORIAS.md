@@ -52,7 +52,8 @@ git (pasta `Jogo1`), então dá para ver o histórico com `git log` e voltar qua
 - **Desafios do dia:** 3 missões que mudam todo dia (tecla D no título), cada uma vale 25 moedas.
 - **Dificuldade** fácil / normal / difícil (vale também para a vida dos chefões) e **cores do elfo**
   liberadas por conquistas.
-- **22 conquistas** com aviso na tela, tela própria e estatísticas de todas as partidas.
+- **23 conquistas** com aviso na tela e tela própria; dela se abre a tela de **Estatísticas** (tecla E),
+  com os números de todas as partidas, os inimigos mais abatidos e as últimas 10 partidas.
 - Na primeira vez que aparece cada **inimigo** ou **caixa**, o jogo explica o que ele faz.
 - **Placar** com os 5 melhores e nome de 3 letras, estilo fliperama (com a marca do modo).
 - **Bestiário** com os inimigos já encontrados (e quantos de cada você já abateu), mais as abas
