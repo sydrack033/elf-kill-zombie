@@ -1,5 +1,5 @@
 import Phaser from 'phaser'
-import { ALTURA, ajustar_tela, texto, tecla_tela_cheia, tecla_som, ler_recorde, ler_placar } from './tela.js'
+import { ALTURA, ajustar_tela, texto, tecla_tela_cheia, tecla_som, ler_recorde, ler_placar, ler_estatisticas } from './tela.js'
 import { tocar_musica, tecla_musica } from './musica.js'
 import { opcoes, gravar_opcoes, efeito } from './opcoes.js'
 import { ler_conquistas } from './conquistas.js'
@@ -54,7 +54,7 @@ export default class Titulo extends Phaser.Scene {
 		const placar = ler_placar()
 		const letra = { facil: '  F', normal: '', dificil: '  D' } // F = fácil, D = difícil, C = modo chefões
 		const linhas = placar.length
-			? ['MELHORES'].concat(placar.map((p, i) => i + 1 + '. ' + (p.nome || 'ELF').padEnd(3, ' ') + '  ' + String(p.pontos).padStart(6, ' ') + '  FASE ' + p.fase + (letra[p.dificuldade] || '') + (p.modo == 'chefes' ? '  C' : '')))
+			? ['MELHORES  (' + this.progresso() + ')'].concat(placar.map((p, i) => i + 1 + '. ' + (p.nome || 'ELF').padEnd(3, ' ') + '  ' + String(p.pontos).padStart(6, ' ') + '  FASE ' + p.fase + (letra[p.dificuldade] || '') + (p.modo == 'chefes' ? '  C' : '')))
 			: ['RECORDE: ' + ler_recorde()]
 		this.placar = texto(this, 0, 264, placar.length || ler_recorde() ? linhas.join('\n') : '', 8, '#ffffff').setOrigin(0.5).setDepth(6)
 
@@ -160,6 +160,12 @@ export default class Titulo extends Phaser.Scene {
 		this.botao_desafios = texto(this, 6, 30, 'DESAFIOS ' + feitos + '/' + desafios.length, 8, feitos == desafios.length ? '#9ff07a' : '#9fd8ff').setOrigin(0, 0.5).setDepth(6)
 		this.cameras.main.fadeIn(300, 0, 0, 0)
 		this.ao_redimensionar()
+	}
+
+	// quanto falta para o final: a melhor fase já alcançada, de 50
+	progresso() {
+		const melhor = ler_estatisticas().melhor_fase
+		return this.feitas.has('zerou') ? 'JOGO ZERADO!' : 'MELHOR FASE ' + melhor + ' DE ' + R.CHEFE_FINAL.fase
 	}
 
 	// uma linha "RÓTULO  < VALOR >" com setas clicáveis
