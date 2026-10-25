@@ -57,6 +57,7 @@ export default class Zumbis {
 	mover_perigos() {
 		this.mover_lodo()
 		this.mover_chuva_de_moedas()
+		this.criar_covas()
 		const regra = R.PERIGOS[this.cenario().perigo]
 		if (regra && !this.chefe && this.chefe_em == 0 && this.chuva_de_moedas <= 0) {
 			this.proxima_queda--
@@ -150,6 +151,35 @@ export default class Zumbis {
 		}
 		if (this.chuva_de_moedas == 0) {
 			this.anunciar('FIM DO BÔNUS!', 150, '#ffd34d')
+		}
+	}
+
+	// de tempos em tempos uma cova aberta aparece lá em cima
+	criar_covas() {
+		if (this.nivel < R.COVAS.a_partir_da_fase || this.chefe || this.chefe_em > 0 || this.chuva_de_moedas > 0 || this.modo_chefes) {
+			return
+		}
+		this.proxima_cova = (this.proxima_cova ?? R.COVAS.a_cada[0]) - 1
+		if (this.proxima_cova > 0) {
+			return
+		}
+		this.proxima_cova = Phaser.Math.Between(R.COVAS.a_cada[0], R.COVAS.a_cada[1])
+		this.criar_zumbi('cova', Phaser.Math.Between(10, Math.max(11, Math.floor(this.largura - 50))), -50)
+	}
+
+	// a cova desce junto com o chão e solta zumbis; saindo por baixo, só some
+	mover_cova(cova) {
+		cova.y += R.ROLAGEM_DO_CHAO
+		cova.ninho_ha++
+		if (cova.ninho_ha % cova.regra.ninho == 0 && cova.y > -20 && cova.y < ALTURA * 0.45) {
+			const z = this.criar_zumbi('comum', cova.x - 2, cova.y + 6)
+			z.sprite.setAlpha(0)
+			this.tweens.add({ targets: z.sprite, alpha: 1, duration: 300 })
+			efeito(this, 'cuspe', { volume: 0.4, rate: 0.5 })
+		}
+		if (cova.y > ALTURA) {
+			cova.morrendo = true
+			cova.morto_ha = 75
 		}
 	}
 
@@ -296,6 +326,14 @@ export default class Zumbis {
 			this.zumbis.push(zumbi)
 			return zumbi
 		}
+		if (regra.ninho) {
+			// cova: uma lápide grande e escura (o buraco é o corpo dela)
+			zumbi.sprite = this.add.sprite(x, y, regra.textura, 0).setOrigin(0).setScale(2).setDepth(1.9).setTint(0x9a9aa8)
+			zumbi.ninho_ha = 0
+			zumbi.vx = 0
+			this.zumbis.push(zumbi)
+			return zumbi
+		}
 		zumbi.sprite = this.add.sprite(x, y, 'zumbi', zumbi.xi).setOrigin(0).setScale(regra.escala).setDepth(2)
 		// os zumbis sem cor própria pegam o tom do cenário (azulados no gelo, avermelhados no inferno...)
 		zumbi.cor = regra.cor || this.cenario().cor_zumbi || null
@@ -423,6 +461,19 @@ export default class Zumbis {
 			const c0 = corpo(zumbi)
 			this.flutuar(c0.x + c0.l / 2, c0.y - 10, nomes[juntas] || 'MASSACRE!', '#ff5a5a')
 			this.pontos += 25 * juntas * this.nivel
+		}
+		// cova quebrada: some na hora (poeira) e solta moedas
+		if (zumbi.regra.ninho) {
+			zumbi.morto_ha = 75
+			const cx = zumbi.x + 20
+			const cy = zumbi.y + 22
+			this.explodir(cx, cy, 20, 0, false)
+			this.explosoes[this.explosoes.length - 1].sprite.setTint(0x9a9aa8)
+			efeito(this, 'pedra', { volume: 0.7, rate: 0.6 })
+			for (let i = 0; i < 3; i++) {
+				const sprite = this.add.sprite(cx, cy, 'moeda').setScale(1.5).setDepth(1.8)
+				this.moedas.push({ sprite, x: cx - 6 + (i - 1) * 14, y: cy - 6 })
+			}
 		}
 		// gosma: se divide em duas menores, mais rápidas e com 1 de vida
 		if (zumbi.regra.divide && !zumbi.filhote) {
@@ -611,6 +662,10 @@ export default class Zumbis {
 				continue
 			}
 
+			if (zumbi.regra.ninho) {
+				this.mover_cova(zumbi)
+				continue
+			}
 			if (zumbi.regra.voa) {
 				this.voar(zumbi)
 				continue

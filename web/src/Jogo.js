@@ -135,6 +135,7 @@ export default class Jogo extends Phaser.Scene {
 		this.desafios_avisados = new Set()
 		this.desafios_pagos = []
 		this.polvora_da_classe = 0
+		this.proxima_cova = undefined // a primeira cova vem depois de um tempo
 		this.ja_trocou = false // troca de cartas de melhoria (uma por partida)
 		this.tecla_trocar = null
 		// setinhas vermelhas no pé da tela marcando zumbis perto de passar (passar custa vida)

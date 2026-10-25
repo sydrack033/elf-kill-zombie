@@ -132,7 +132,7 @@ export default class Desenho {
 		if (Math.floor(this.quadro_atual / 10) % 2 == 0) {
 			this.alertas.fillStyle(0xff3030, 0.8)
 			for (const z of this.zumbis) {
-				if (z.morrendo || z.regra.voa || z.intangivel) continue
+				if (z.morrendo || z.regra.voa || z.regra.ninho || z.intangivel) continue
 				const c = corpo(z)
 				if (c.y + c.a > ALTURA - 60) {
 					const x = c.x + c.l / 2
@@ -162,6 +162,13 @@ export default class Desenho {
 	desenhar_zumbis() {
 		for (const zumbi of this.zumbis) {
 			const s = zumbi.sprite
+			if (zumbi.regra.ninho) {
+				// cova: racha quando está fraca; quebrada some
+				s.setVisible(!zumbi.morrendo)
+				s.setPosition(Math.round(zumbi.x), Math.round(zumbi.y)).setFrame(zumbi.vida <= zumbi.vida_max / 2 ? 1 : 0)
+				this.pintar(s, zumbi.flash, 0x9a9aa8)
+				continue
+			}
 			if (zumbi.regra.voa) {
 				// bate as asas (0, 1, 2, 1...) e aponta o bico para onde voa
 				const quadros = [0, 1, 2, 1]

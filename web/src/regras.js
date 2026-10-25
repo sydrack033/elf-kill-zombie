@@ -240,6 +240,13 @@ export const ZUMBIS = {
 		textura: 'corvo', corpo: { x: 0, y: 0, l: 16, a: 12 }, // desenhado 40% maior
 		peso: () => 0,
 	},
+	// cova aberta: um túmulo que desce com o chão e solta um zumbi a cada 'ninho' ticks até ser quebrado
+	// (não morde nem custa vida se passar; quebrar solta moedas)
+	cova: {
+		escala: 1, cor: null, vida: 12, vy: 0, pontos: 60, empurravel: false, ninho: 170,
+		textura: 'lapide', corpo: { x: 0, y: 0, l: 40, a: 44 },
+		peso: () => 0,
+	},
 	// morcego: vem em revoadas como o corvo (fase 16+), mas faz zigue-zague e mergulha no elfo
 	morcego: {
 		escala: 1, cor: 0x8a6aaa, vida: 1, vy: 0, pontos: 25, empurravel: false, voa: true, mergulha: true,
@@ -249,6 +256,9 @@ export const ZUMBIS = {
 }
 
 // chuva de moedas: depois de vencer o 2º, 4º, 6º... chefão, alguns segundos sem zumbis e com moedas caindo
+// covas abertas: a partir da fase 6, de tempos em tempos
+export const COVAS = { a_partir_da_fase: 6, a_cada: [1800, 2800] }
+
 export const CHUVA_DE_MOEDAS = { duracao: 700, a_cada: 9 }
 
 // horda: na metade das fases 8, 13, 18... vem uma enxurrada de zumbis; quem sobrevive ganha um prêmio

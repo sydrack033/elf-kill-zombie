@@ -17,6 +17,7 @@ const FICHAS = [
 	{ tipo: 'coveiro', nome: 'COVEIRO', texto: 'A LÁPIDE SEGURA O TIRO.\nACERTE DE LADO OU EXPLODA.' },
 	{ tipo: 'gosma', nome: 'GOSMA', texto: 'QUANDO MORRE, VIRA\nDUAS GOSMINHAS.' },
 	{ tipo: 'tamborzeiro', nome: 'TAMBORZEIRO', texto: 'OS ZUMBIS PERTO DELE\nANDAM MAIS RÁPIDO.' },
+	{ tipo: 'cova', nome: 'COVA ABERTA', texto: 'SOLTA ZUMBIS ATÉ SER\nQUEBRADA. DÁ MOEDAS.' },
 	{ tipo: 'morcego', nome: 'MORCEGO', texto: 'VOA EM ZIGUE-ZAGUE\nE MERGULHA EM VOCÊ.' },
 	{ tipo: 'corvo', nome: 'CORVO', texto: 'VEM EM BANDO,\nVOANDO EM DIAGONAL.' },
 	...CHEFES.map((c, i) => ({ tipo: 'chefe' + (i + 1), nome: c.nome, texto: 'CHEFÃO DA FASE ' + (i + 1) * 5 + '.', chefe: c })),
@@ -94,6 +95,9 @@ export default class Bestiario extends Phaser.Scene {
 			if (ficha.chefe) {
 				figura = this.add.sprite(0, 0, 'chefe', 0).setScale(0.6)
 				if (ficha.chefe.cor) figura.setTint(ficha.chefe.cor)
+			}
+			else if (ZUMBIS[ficha.tipo] && ZUMBIS[ficha.tipo].ninho) {
+				figura = this.add.sprite(0, 0, 'lapide', 0).setScale(1.6).setTint(0x9a9aa8)
 			}
 			else if (ZUMBIS[ficha.tipo] && ZUMBIS[ficha.tipo].voa) {
 				figura = this.add.sprite(0, 0, 'corvo', 0).setScale(2)
@@ -216,6 +220,7 @@ export default class Bestiario extends Phaser.Scene {
 		// os vistos ficam andando no lugar
 		const quadro = Math.floor(this.time.now / 140) % 7
 		for (const c of this.cartas) {
+			if (ZUMBIS[c.ficha.tipo] && ZUMBIS[c.ficha.tipo].ninho) continue
 			c.figura.setFrame(ZUMBIS[c.ficha.tipo] && ZUMBIS[c.ficha.tipo].voa ? [0, 1, 2, 1][quadro % 4] : quadro)
 		}
 	}
