@@ -50,6 +50,16 @@ export default class Fim {
 	}
 
 	mostrar_fim() {
+		// treino não vale nada: sem placar, moedas, estatísticas ou desafios
+		if (this.treino) {
+			this.escurecer.setVisible(true)
+			this.aviso.setText('TREINO').setColor('#9fd8ff').setVisible(true).setY(ALTURA / 2 - 60)
+			this.aviso_ha = 0
+			this.mensagem.setY(ALTURA / 2).setText('O CHEFÃO VENCEU DESTA VEZ.\nO TREINO NÃO CONTA PARA O PLACAR.')
+			this.instrucao = texto(this, this.largura / 2, ALTURA - 50, '', 8, '#cfcfcf').setOrigin(0.5).setDepth(10)
+			this.liberar_reinicio()
+			return
+		}
 		const novo_recorde = this.pontos > this.recorde
 		if (novo_recorde) {
 			this.recorde = this.pontos

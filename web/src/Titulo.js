@@ -127,7 +127,7 @@ export default class Titulo extends Phaser.Scene {
 		} catch {
 			// sem localStorage: vai direto para o jogo
 		}
-		const comecar = () => (viu_historia ? ir('Jogo') : ir('Historia', { depois: 'Jogo' }))
+		const comecar = () => (viu_historia ? ir('Jogo', { treino: 0 }) : ir('Historia', { depois: 'Jogo' }))
 		this.input.keyboard.on('keydown-SPACE', comecar)
 		this.input.keyboard.on('keydown-ENTER', comecar)
 		this.input.keyboard.on('keydown-C', () => ir('Conquistas'))

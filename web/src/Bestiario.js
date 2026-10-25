@@ -112,7 +112,12 @@ export default class Bestiario extends Phaser.Scene {
 			const n = abatidos[ficha.tipo] || 0
 			const desc = texto(this, 0, 0, visto ? ficha.texto : '', 8, '#9fbf8a').setOrigin(0.5, 0).setLineSpacing(1).setScale(0.75)
 			// quantos já foram abatidos em todas as partidas, no canto de cima da carta
-			const conta = texto(this, 0, 0, visto && !ficha.chefe ? 'x' + n.toLocaleString('pt-BR') : '', 8, '#ffd34d').setOrigin(1, 0)
+			const conta = texto(this, 0, 0, visto && !ficha.chefe ? 'x' + n.toLocaleString('pt-BR') : visto ? 'TREINAR' : '', 8, ficha.chefe ? '#9fd8ff' : '#ffd34d').setOrigin(1, 0)
+			// chefão já visto: tocar na carta começa um treino contra ele
+			if (visto && ficha.chefe) {
+				const numero = ficha.tipo == 'chefe_final' ? CHEFE_FINAL.fase / 5 : Number(ficha.tipo.slice(5))
+				fundo.setInteractive({ useHandCursor: true }).on('pointerdown', () => this.scene.start('Jogo', { treino: numero }))
+			}
 			return { fundo, figura, nome, desc, conta, ficha, base: figura.scaleX }
 		})
 		this.voltar = texto(this, 0, ALTURA - 12, 'ESC, ESPAÇO OU CLIQUE: VOLTAR', 8, '#cfcfcf').setOrigin(0.5)

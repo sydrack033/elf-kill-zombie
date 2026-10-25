@@ -258,22 +258,32 @@ export default class Jogo extends Phaser.Scene {
 		}
 
 		// (definido antes do começo adiantado: a cena é reaproveitada e guardaria o valor da partida anterior)
-		this.modo_chefes = opcoes.modo == 'chefes'
+		this.modo_chefes = opcoes.modo == 'chefes' && !(this.scene.settings.data && this.scene.settings.data.treino)
 		// começar num capítulo adiantado (escolhido no título)
-		const inicio = this.modo_chefes || this.diario ? 1 : opcoes.inicio
+		const treino = this.scene.settings.data && this.scene.settings.data.treino
+		const inicio = opcoes.modo == 'chefes' || this.diario || treino ? 1 : opcoes.inicio
 		this.comecou_adiantado = inicio > 1 && ler_estatisticas().melhor_fase >= inicio
 		if (this.comecou_adiantado) {
 			this.comecar_no_capitulo(inicio)
 		}
 
-		this.modo_chefes = opcoes.modo == 'chefes'
+		// treino (pelo bestiário): direto no chefão escolhido, com melhorias, sem valer nada
+		this.treino = (this.scene.settings.data && this.scene.settings.data.treino) || 0
+		if (this.treino) {
+			this.ganhar_melhorias(Math.min(14, this.treino * 2))
+			this.vidas = this.vidas_max
+			this.nivel = this.treino * 5 - 1
+			this.subir_nivel()
+			this.anunciar('TREINO!', 200, '#9fd8ff')
+		}
+		this.modo_chefes = opcoes.modo == 'chefes' && !this.treino
 		if (this.modo_chefes) {
 			this.ganhar_melhorias(2) // no modo chefões começa já com duas, além da escolha
 			this.texto_da_fase = 'CHEFÃO A CAMINHO!'
 			this.subir_nivel()
 			this.oferecer_melhorias()
 		}
-		else if (!this.comecou_adiantado) {
+		else if (!this.comecou_adiantado && !this.treino) {
 			// abre a partida como um capítulo: CEMITÉRIO, ONDE TUDO COMEÇOU
 			const cenario = this.cenario()
 			this.time.delayedCall(500, () => {

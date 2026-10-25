@@ -95,7 +95,7 @@ export default class Chefes {
 			chefe.morto_ha = 0
 			this.parada = 18
 			this.stats.chefes++
-			if (!chefe.final) desbloquear(this, 'chefe' + (((chefe.numero - 1) % R.CHEFES.length) + 1))
+			if (!chefe.final && !this.treino) desbloquear(this, 'chefe' + (((chefe.numero - 1) % R.CHEFES.length) + 1))
 			if (this.modo_chefes && this.stats.chefes >= 4) desbloquear(this, 'maratona')
 			const ganho = R.CHEFE.pontos * chefe.numero
 			this.pontos += ganho
@@ -135,7 +135,14 @@ export default class Chefes {
 				this.soltar_item(c.x + c.l / 2 + 22, c.y + c.a / 2 - 10)
 				chefe.sprite.destroy()
 				this.chefe = null
-				if (chefe.final) {
+				if (this.treino) {
+					// treino vencido: volta para o bestiário
+					this.anunciar('TREINO VENCIDO!', 300, '#9ff07a')
+					efeito(this, 'fase', { volume: 0.7 })
+					this.estado = 'fim'
+					this.time.delayedCall(2200, () => this.scene.start('Bestiario'))
+				}
+				else if (chefe.final) {
 					this.mostrar_final()
 				}
 				else {

@@ -41,7 +41,7 @@ export default class Historia extends Phaser.Scene {
 				// sem localStorage: mostra de novo na próxima vez
 			}
 			this.cameras.main.fadeOut(300, 0, 0, 0)
-			this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start(this.depois))
+			this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start(this.depois, { treino: 0 }))
 		}
 		this.ir = ir
 		this.depois = (this.scene.settings.data && this.scene.settings.data.depois) || 'Jogo'
