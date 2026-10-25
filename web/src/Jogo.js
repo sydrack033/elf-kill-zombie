@@ -1595,6 +1595,11 @@ export default class Jogo extends Phaser.Scene {
 				const c = corpo(zumbi)
 				// o tiro conta como um quadradinho de 8x8 em volta do centro dele
 				if (encostou(tiro.x - 4, tiro.y - 4, 8, 8, c.x, c.y, c.l, c.a)) {
+					// coveiro: tiro vindo de baixo bate na lápide
+					if (zumbi.escudo > 0 && tiro.vy < 0 && !tiro.arma.furia) {
+						this.bater_na_lapide(zumbi, tiro)
+						break
+					}
 					this.acertar(tiro, Phaser.Math.Clamp(tiro.x, c.x, c.x + c.l), Phaser.Math.Clamp(tiro.y, c.y, c.y + c.a))
 					this.ferir_zumbi(zumbi, tiro.dano, tiro.arma.empurra)
 					tiro.acertou.add(zumbi)
@@ -1727,8 +1732,51 @@ export default class Jogo extends Phaser.Scene {
 		if (regra.cor) {
 			zumbi.sprite.setTint(regra.cor)
 		}
+		if (regra.escudo) {
+			zumbi.escudo = zumbi.escudo_max = regra.escudo + Math.floor(n / 4)
+			zumbi.lapide = this.add.sprite(x, y, 'lapide', 0).setOrigin(0.5, 0).setDepth(2.1)
+		}
 		this.zumbis.push(zumbi)
 		return zumbi
+	}
+
+	// o tiro bate na lápide do coveiro: faísca, tim e a pedra vai rachando até quebrar
+	bater_na_lapide(zumbi, tiro) {
+		tiro.sumiu = true
+		zumbi.escudo -= tiro.dano
+		zumbi.lapide_flash = 4
+		const l = zumbi.lapide
+		efeito(this, 'acerto', { volume: 0.35, rate: 2.2 + Math.random() * 0.3 })
+		for (let i = 0; i < 3; i++) {
+			const faisca = this.add.rectangle(tiro.x, l.y + 2, 2, 2, 0xffe9a0).setDepth(7)
+			this.tweens.add({
+				targets: faisca, x: tiro.x + Phaser.Math.Between(-14, 14), y: l.y - Phaser.Math.Between(4, 14), alpha: 0,
+				duration: 220, onComplete: () => faisca.destroy(),
+			})
+		}
+		if (zumbi.escudo <= zumbi.escudo_max / 2) {
+			l.setFrame(1)
+		}
+		if (zumbi.escudo <= 0) {
+			this.soltar_lapide(zumbi)
+			efeito(this, 'escudo_quebra', { volume: 0.6, rate: 0.7 })
+			this.flutuar(l.x, l.y - 6, 'QUEBROU!', '#cfcfd8')
+		}
+	}
+
+	// a lápide cai para o lado e some (quebrou, ou o coveiro morreu)
+	soltar_lapide(zumbi) {
+		const l = zumbi.lapide
+		if (!l) {
+			return
+		}
+		zumbi.lapide = null
+		zumbi.escudo = 0
+		l.setFrame(1).clearTint()
+		this.tweens.add({
+			targets: l, y: l.y + 14, angle: Phaser.Math.Between(0, 1) ? 80 : -80, alpha: 0,
+			duration: 600, ease: 'Quad.easeIn', onComplete: () => l.destroy(),
+		})
 	}
 
 	ferir_zumbi(zumbi, dano, empurra = 0) {
@@ -1941,6 +1989,7 @@ export default class Jogo extends Phaser.Scene {
 		for (const zumbi of this.zumbis) {
 			if (zumbi.fugiu || (zumbi.morrendo && zumbi.morto_ha >= 75)) {
 				zumbi.sprite.destroy()
+				if (zumbi.lapide) zumbi.lapide.destroy()
 			}
 		}
 		this.zumbis = this.zumbis.filter((zumbi) => !zumbi.fugiu && !(zumbi.morrendo && zumbi.morto_ha >= 75))
@@ -2650,6 +2699,19 @@ export default class Jogo extends Phaser.Scene {
 				s.setPosition(Math.round(zumbi.x + (22 - 30) * e), Math.round(zumbi.y + (44 - 71) * e))
 			}
 			this.pintar(s, zumbi.flash, zumbi.regra.cor)
+
+			// coveiro: a lápide vai na frente, nas mãos dele
+			if (zumbi.lapide) {
+				if (zumbi.morrendo) {
+					this.soltar_lapide(zumbi)
+				}
+				else {
+					const e = zumbi.escala
+					zumbi.lapide.setPosition(Math.round(zumbi.x + 22 * e), Math.round(zumbi.y + 20 * e + Math.sin(this.quadro_atual / 10) * 1))
+					if (zumbi.lapide_flash > 0) zumbi.lapide_flash--
+					this.pintar(zumbi.lapide, zumbi.lapide_flash, null)
+				}
+			}
 
 			// fantasma: some e aparece aos poucos
 			if (zumbi.regra.fantasma && !zumbi.morrendo) {

@@ -13,6 +13,7 @@ const FICHAS = [
 	{ tipo: 'bombado', nome: 'BOMBADO', texto: 'EXPLODE QUANDO MORRE.\nNÃO FIQUE PERTO.' },
 	{ tipo: 'fantasma', nome: 'FANTASMA', texto: 'SOME DE VEZ EM QUANDO;\nO TIRO PASSA DIRETO.' },
 	{ tipo: 'escavador', nome: 'ESCAVADOR', texto: 'SAI DA TERRA PERTO DE\nVOCÊ. A TERRA TREME ANTES.' },
+	{ tipo: 'coveiro', nome: 'COVEIRO', texto: 'A LÁPIDE SEGURA O TIRO.\nACERTE DE LADO OU EXPLODA.' },
 	{ tipo: 'corvo', nome: 'CORVO', texto: 'VEM EM BANDO,\nVOANDO EM DIAGONAL.' },
 	...CHEFES.map((c, i) => ({ tipo: 'chefe' + (i + 1), nome: c.nome, texto: 'CHEFÃO DA FASE ' + (i + 1) * 5 + '.', chefe: c })),
 ]

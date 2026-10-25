@@ -54,6 +54,8 @@ export default class Carregar extends Phaser.Scene {
 		// troféu das conquistas: quadro 0 dourado, quadro 1 cinza
 		this.load.spritesheet('trofeu', PASTA + 'trofeu.png', { frameWidth: 12, frameHeight: 12 })
 		// manchas de sangue que ficam no chão: 3 quadros de 24x14
+		// lápide do coveiro: quadro 0 inteira, quadro 1 rachada (20x22)
+		this.load.spritesheet('lapide', PASTA + 'lapide.png', { frameWidth: 20, frameHeight: 22 })
 		this.load.spritesheet('mancha', PASTA + 'mancha.png', { frameWidth: 24, frameHeight: 14 })
 
 		// efeitos e músicas são gerados por ferramentas/gerar_sons.mjs

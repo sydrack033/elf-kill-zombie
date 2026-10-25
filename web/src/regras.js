@@ -157,6 +157,12 @@ export const ZUMBIS = {
 		escala: 1, cor: 0xc8a070, vida: 3, vy: 0.2, pontos: 35, empurravel: true, cava: true,
 		peso: (nivel) => (nivel >= 7 ? 1 + nivel * 0.25 : 0),
 	},
+	// coveiro: carrega uma lápide na frente; o tiro de frente bate na pedra até ela quebrar
+	// (explosão, raio e fúria passam por cima, e tiro de lado acerta o corpo)
+	coveiro: {
+		escala: 1.05, cor: 0xd8c8a8, vida: 3, vy: 0.22, pontos: 45, empurravel: false, escudo: 6,
+		peso: (nivel) => (nivel >= 8 ? 1 + nivel * 0.25 : 0),
+	},
 	// corvo: não aparece sozinho, vem em revoadas (ver CORVOS); voa em diagonal e não custa vida se passar
 	corvo: {
 		escala: 1, cor: null, vida: 1, vy: 0, pontos: 15, empurravel: false, voa: true,
