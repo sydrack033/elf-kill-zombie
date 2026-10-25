@@ -230,6 +230,77 @@ function baixo(nota, oitava_acima) {
 	salvar('musica_titulo', musica)
 }
 
+// ---------------------------------------------------------------- música do pântano (ré dórico, 108 bpm, gingada e úmida)
+
+{
+	const bpm = 108
+	const melodia = [
+		'D5 . . . F5 . . E5 . . D5 . C5 . . .',
+		'A4 . . . . . C5 . D5 . . . - - - -',
+		'D5 . . . F5 . . G5 . . A5 . G5 . F5 .',
+		'E5 . . . . . D5 . C5 . . . - - - -',
+		'F5 . . . E5 . . D5 . . C5 . D5 . . .',
+		'B4 . . . C5 . D5 . E5 . . . - - - -',
+		'D5 . F5 . A5 . . . G5 . F5 . E5 . . .',
+		'D5 . . . . . . . - - - - - - - -',
+	]
+	const acordes = [['D3', 'F3', 'A3'], ['C3', 'E3', 'G3'], ['D3', 'F3', 'A3'], ['A2', 'C3', 'E3'],
+		['F3', 'A3', 'C4'], ['G3', 'B3', 'D4'], ['D3', 'F3', 'A3'], ['A2', 'C#3', 'E3']]
+	// baixo "gingado": nota, pausa, nota de novo atrasada
+	const baixo_gingado = (n) => [n, '.', '-', n, '-', '-', n, '.', n, '.', '-', n, '-', '-', n, '-'].join(' ')
+	const raizes = ['D2', 'C2', 'D2', 'A1', 'F2', 'G2', 'D2', 'A1']
+	const silencio = rep('- - - - - - - - - - - - - - - -', 8)
+	salvar('musica_pantano', misturar(
+		canal_melodico([...silencio, ...melodia, ...melodia], { onda: 'triangulo', volume: 0.3, bpm, queda: 0.5, sustento: 0.6, vibrato: 0.018 }),
+		canal_melodico([...acordes, ...acordes, ...acordes].map((a) => arpejo(a, [0, 2, 1, 2])), { onda: 'fina', volume: 0.05, bpm, queda: 0.08, sustento: 0.2 }),
+		canal_melodico([...raizes, ...raizes, ...raizes].map(baixo_gingado), { onda: 'quadrada', volume: 0.12, bpm, queda: 0.12, sustento: 0.4 }),
+		canal_bateria(rep('k - - h - - s - k - h - s - h h', 24), { volume: 0.3, bpm }),
+	))
+}
+
+// ---------------------------------------------------------------- música da cidade em ruínas (mi menor, 132 bpm, industrial)
+
+{
+	const bpm = 132
+	const riff = ['E2 E2 - E2 G2 - E2 - A2 - G2 E2 - D2 - E2', 'E2 E2 - E2 G2 - E2 - B2 - A2 G2 - F#2 - G2']
+	const melodia = [
+		'B4 . . . . . . . E5 . . . D5 . B4 .',
+		'A4 . . . G4 . . . E4 . . . . . . .',
+		'B4 . . . . . . . E5 . . . G5 . F#5 .',
+		'E5 . . . . . . . - - - - - - - -',
+	]
+	const silencio = rep('- - - - - - - - - - - - - - - -', 4)
+	salvar('musica_ruinas', misturar(
+		canal_melodico([...rep(riff[0], 1), riff[1], riff[0], riff[1], ...rep(riff[0], 1), riff[1], riff[0], riff[1], riff[0], riff[1], riff[0], riff[1]], { onda: 'quadrada', volume: 0.16, bpm, queda: 0.07, sustento: 0.5 }),
+		canal_melodico([...silencio, ...melodia, ...melodia], { onda: 'serra', volume: 0.1, bpm, queda: 0.4, sustento: 0.6, vibrato: 0.01 }),
+		canal_bateria(rep('k - h - s - h k k - h - s - h h', 12), { volume: 0.38, bpm }),
+	))
+}
+
+// ---------------------------------------------------------------- música do inferno (lá frígio, 176 bpm, pesada e rápida)
+
+{
+	const bpm = 176
+	const melodia = [
+		'A5 . . A5 . . A#5 . A5 . . G5 . . F5 .',
+		'E5 . . . . . F5 . E5 . . . D5 . . .',
+		'A5 . . A5 . . C6 . A#5 . . A5 . . G5 .',
+		'A5 . . . . . . . - - . . - - . .',
+	]
+	const raizes = ['A1', 'A#1', 'A1', 'G1']
+	const baixo_corrido = raizes.map((n) => {
+		const o = n.replace(/\d/, (d) => String(Number(d) + 1))
+		return [n, n, o, n, n, o, n, n, n, n, o, n, n, o, n, o].join(' ')
+	})
+	const acordes = [['A3', 'C4', 'E4'], ['A#3', 'D4', 'F4'], ['A3', 'C4', 'E4'], ['G3', 'A#3', 'D4']]
+	salvar('musica_inferno', misturar(
+		canal_melodico([...melodia, ...melodia, ...melodia], { onda: 'quadrada', volume: 0.14, bpm, queda: 0.15, sustento: 0.5, vibrato: 0.01 }),
+		canal_melodico([...acordes, ...acordes, ...acordes].map((a) => arpejo(a, [0, 1, 2, 1, 2, 0])), { onda: 'finissima', volume: 0.06, bpm, queda: 0.04, sustento: 0.2 }),
+		canal_melodico([...baixo_corrido, ...baixo_corrido, ...baixo_corrido], { onda: 'triangulo', volume: 0.32, bpm, queda: 0.05, sustento: 0.5 }),
+		canal_bateria(rep('k h k h s h k k k h k h s h s s', 12), { volume: 0.4, bpm }),
+	))
+}
+
 // ---------------------------------------------------------------- vinhetas
 
 // subiu de fase: arpejo rápido subindo

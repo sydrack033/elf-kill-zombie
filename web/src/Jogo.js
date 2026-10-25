@@ -173,7 +173,7 @@ export default class Jogo extends Phaser.Scene {
 		tecla_tela_cheia(this)
 		tecla_som(this)
 		tecla_musica(this)
-		tocar_musica(this, 'musica_jogo')
+		tocar_musica(this, this.cenario().musica)
 		this.input.keyboard.on('keydown-P', () => this.pausar())
 		this.input.keyboard.on('keydown-ESC', () => this.pausar())
 		// setas e WASD também mexem no menu da pausa
@@ -521,6 +521,9 @@ export default class Jogo extends Phaser.Scene {
 		const novo = this.add.tileSprite(0, 0, this.largura, ALTURA, cenario.textura).setOrigin(0).setDepth(0.1).setAlpha(0)
 		novo.tilePositionY = velho.tilePositionY
 		this.chao = novo
+		if (!this.chefe && this.chefe_em == 0) {
+			tocar_musica(this, cenario.musica)
+		}
 		this.pintar_noite()
 		this.tweens.add({
 			targets: novo,
@@ -2081,7 +2084,7 @@ export default class Jogo extends Phaser.Scene {
 				this.soltar_item(c.x + c.l / 2 + 22, c.y + c.a / 2 - 10)
 				chefe.sprite.destroy()
 				this.chefe = null
-				tocar_musica(this, 'musica_jogo')
+				tocar_musica(this, this.cenario().musica)
 				this.subir_nivel(true)
 			}
 			return

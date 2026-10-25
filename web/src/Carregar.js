@@ -60,10 +60,15 @@ export default class Carregar extends Phaser.Scene {
 		const sons = [
 			'tiro', 'laser', 'foguete', 'acerto', 'explosao', 'zumbi_morre', 'rugido', 'cuspe', 'item', 'poder',
 			'escudo_quebra', 'perder_vida', 'arremesso', 'combo', 'fase', 'fim', 'trovao', 'fantasma', 'chama', 'raio',
-			'musica_titulo', 'musica_jogo', 'musica_chefe',
 		]
 		for (const som of sons) {
 			this.load.audio(som, 'assets/sons/' + som + '.wav')
+		}
+		// músicas comprimidas (ferramentas/comprimir_musicas.mjs): o navegador fica com o OGG ou, se não
+		// souber tocar (Safari antigo), com o MP3
+		const musicas = ['titulo', 'jogo', 'chefe', 'pantano', 'ruinas', 'inferno']
+		for (const musica of musicas) {
+			this.load.audio('musica_' + musica, ['assets/sons/musica_' + musica + '.ogg', 'assets/sons/musica_' + musica + '.mp3'])
 		}
 	}
 
