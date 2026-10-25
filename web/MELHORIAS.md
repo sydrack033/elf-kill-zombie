@@ -16,6 +16,8 @@ git (pasta `Jogo1`), então dá para ver o histórico com `git log` e voltar qua
   aparece, chama fantasmas), O Necromante (escudo de ossos girando e mortos levantando das manchas
   de sangue) e O Demônio (chuva de meteoros e labareda). Com metade da vida eles **enfurecem**
   (do 2º em diante). Depois voltam com tudo junto. Entrada de cinema com o nome do chefão.
+- **Final do jogo:** na fase 50 vem o chefão final, **O Senhor dos Mortos** (maior e com todos os
+  ataques). Vencendo, a história termina e dá para continuar no **modo infinito** ou encerrar.
 - **Armas:** triplo, metralhadora, laser (atravessa), bazuca (explode), lança-chamas, raio (pula de
   zumbi em zumbi), bumerangue (vai, faz a curva e volta) e espingarda (chumbos em leque, de perto).
   A arma aparece na mão do elfo.
@@ -47,7 +49,8 @@ git (pasta `Jogo1`), então dá para ver o histórico com `git log` e voltar qua
 - **22 conquistas** com aviso na tela, tela própria e estatísticas de todas as partidas.
 - Na primeira vez que aparece cada **inimigo** ou **caixa**, o jogo explica o que ele faz.
 - **Placar** com os 5 melhores e nome de 3 letras, estilo fliperama (com a marca do modo).
-- **Bestiário** com os inimigos já encontrados e uma **história** de abertura na primeira partida.
+- **Bestiário** com os inimigos já encontrados (e quantos de cada você já abateu) e uma **história**
+  de abertura na primeira partida.
 
 ## Visual e som
 

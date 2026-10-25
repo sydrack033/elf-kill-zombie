@@ -66,6 +66,8 @@ funciona **sem internet** depois da primeira visita.
 - **Eventos**: a **Horda** (fases 8, 13, 18...) manda uma enxurrada de zumbis e dá prêmio a quem
   sobrevive; a **Lua de Sangue** deixa uma fase com zumbis mais rápidos e pontos em dobro; o
   **Eclipse** deixa a fase escura, só com luz em volta do elfo.
+- **Final**: na fase 50 vem o chefão final, O Senhor dos Mortos. Vencendo, aparece o final da
+  história e dá para seguir no modo infinito.
 - **Modo Chefões**: só as lutas contra chefões, com uma melhoria entre cada uma.
 - **Moedas**: cada partida rende moedas (pontos, chefões, elites, hordas, desafios e as que caem dos
   zumbis). Na **loja** elas compram vantagens para o começo de todas as partidas (bombas, corações,
