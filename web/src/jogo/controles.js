@@ -175,6 +175,7 @@ export default class Controles {
 		this.mover_perigos()
 		this.chamar_chefe()
 		this.criar_revoada()
+		this.criar_saqueador()
 		this.criar_itens()
 		this.mover_tiros()
 		this.mover_cuspes()

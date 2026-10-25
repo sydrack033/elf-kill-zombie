@@ -4,7 +4,7 @@ import { ALTURA, ajustar_tela, texto, ler_estatisticas, ler_historico } from './
 // nomes dos inimigos para a lista dos mais abatidos
 const NOMES = {
 	comum: 'ZUMBI', corredor: 'CORREDOR', brutamontes: 'BRUTAMONTES', cuspidor: 'CUSPIDOR', bombado: 'BOMBADO',
-	fantasma: 'FANTASMA', escavador: 'ESCAVADOR', coveiro: 'COVEIRO', gosma: 'GOSMA', tamborzeiro: 'TAMBORZEIRO', corvo: 'CORVO',
+	fantasma: 'FANTASMA', escavador: 'ESCAVADOR', coveiro: 'COVEIRO', gosma: 'GOSMA', tamborzeiro: 'TAMBORZEIRO', corvo: 'CORVO', saqueador: 'SAQUEADOR',
 }
 
 // Estatísticas (aberta pela tela de conquistas): números de todas as partidas e as últimas 10.

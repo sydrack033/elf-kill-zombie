@@ -38,6 +38,8 @@ git (pasta `Jogo1`), então dá para ver o histórico com `git log` e voltar qua
   e uma vez por partida dá para **trocar as cartas** (tecla R). Algumas são **raras** (borda laranja).
 - **Por um fio:** com 1 coração só, a tela pulsa vermelha e cai o dobro de corações.
 - **Esquiva** (Shift) e **fúria élfica** (E): barra que enche matando e solta um anel de fogo.
+- **Saqueador** (fase 3+): de vez em quando um zumbi cruza a tela de lado com um saco de moedas;
+  matando, as moedas se espalham; se ele fugir, leva tudo (mas não custa vida).
 - **Acertos críticos**: 7% dos tiros dão dano dobrado, com um CRÍTICO! laranja quando faz diferença.
 - **Combos**, DUPLO!/TRIPLO!/MASSACRE!, pontos flutuando e presentes nos combos de 10 (+1 bomba),
   25 (escudo), 50 (fúria cheia) e 100 (+1 vida). O maior combo e a maior pontuação de todas as

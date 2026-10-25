@@ -254,6 +254,12 @@ export const ZUMBIS = {
 		textura: 'corvo', corpo: { x: 0, y: 0, l: 16, a: 12 },
 		peso: () => 0,
 	},
+	// saqueador: aparece sozinho de vez em quando, atravessa a tela de lado com um saco de moedas;
+	// não morde nem custa vida, mas se fugir leva as moedas junto
+	saqueador: {
+		escala: 0.9, cor: 0x5ad0c0, vida: 6, vy: 0, pontos: 80, empurravel: false, corre: true,
+		peso: () => 0,
+	},
 }
 
 // chuva de moedas: depois de vencer o 2º, 4º, 6º... chefão, alguns segundos sem zumbis e com moedas caindo
@@ -270,6 +276,8 @@ export const ELITE = { a_partir_da_fase: 4, chance: 0.04, vida: 4, escala: 1.2, 
 
 // revoadas de corvos atravessando a tela
 export const CORVOS = { a_partir_da_fase: 2, a_cada: [1100, 1900], quantos: [3, 5], velocidade: 1.3 }
+// saqueador: a partir da fase 3, um de cada vez; morto, espalha moedas
+export const SAQUEADOR = { a_partir_da_fase: 3, a_cada: [2600, 4000], velocidade: 0.85, moedas: 6 }
 export const VELOCIDADE_CUSPE = 1.7
 
 // a imagem do zumbi tem 44x44, mas o corpo dele ocupa só este pedaço (sem contar a escala)

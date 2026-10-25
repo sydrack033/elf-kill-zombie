@@ -214,6 +214,25 @@ s.invencivel = 0
 s.perder_vida()
 confere('segunda chance só vale uma vez', s.estado == 'fim')
 
+// ---- saqueador
+s = await nova_partida()
+s.criar_zumbis = () => {} // só o saqueador na tela
+for (const z of s.zumbis) { z.morrendo = true; z.morto_ha = 75 }
+s.proxima_revoada = 999999
+s.nivel = 4
+s.proximo_saqueador = 1
+teste.ticks(2)
+let ladrao = s.zumbis.find((z) => z.tipo == 'saqueador')
+s.ferir_zumbi(ladrao, 99)
+confere('saqueador morto espalha moedas', s.moedas.length >= 6)
+s.proximo_saqueador = 1
+teste.ticks(2)
+ladrao = s.zumbis.find((z) => z.tipo == 'saqueador' && !z.morrendo)
+const vidas_antes = s.vidas
+teste.ticks(1500)
+confere('saqueador que foge não custa vida', !s.zumbis.includes(ladrao) && s.vidas == vidas_antes)
+delete s.criar_zumbis // a cena é a mesma nas próximas partidas
+
 // ---- chefão final na fase 50
 s = await nova_partida()
 s.vidas = 99

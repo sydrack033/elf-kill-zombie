@@ -487,6 +487,18 @@ export default class Zumbis {
 				this.moedas.push({ sprite, x: cx - 6 + (i - 1) * 14, y: cy - 6 })
 			}
 		}
+		// saqueador: o saco rasga e as moedas se espalham
+		if (zumbi.regra.corre) {
+			const cs = corpo(zumbi)
+			zumbi.saco.destroy()
+			zumbi.saco = null
+			for (let i = 0; i < R.SAQUEADOR.moedas; i++) {
+				const ang = (i / R.SAQUEADOR.moedas) * Math.PI * 2
+				const sprite = this.add.sprite(cs.x, cs.y, 'moeda').setScale(1.5).setDepth(1.8)
+				this.moedas.push({ sprite, x: cs.x + cs.l / 2 - 6 + Math.cos(ang) * 16, y: cs.y + cs.a / 2 - 6 + Math.sin(ang) * 12 })
+			}
+			efeito(this, 'moeda', { volume: 0.7 })
+		}
 		// gosma: se divide em duas menores, mais rápidas e com 1 de vida
 		if (zumbi.regra.divide && !zumbi.filhote) {
 			for (const lado of [-1, 1]) {
@@ -685,6 +697,10 @@ export default class Zumbis {
 				this.voar(zumbi)
 				continue
 			}
+			if (zumbi.regra.corre) {
+				this.correr(zumbi)
+				continue
+			}
 
 			if (zumbi.cavando > 0) {
 				zumbi.cavando--
@@ -756,6 +772,7 @@ export default class Zumbis {
 				zumbi.sprite.destroy()
 				if (zumbi.lapide) zumbi.lapide.destroy()
 				if (zumbi.aura) zumbi.aura.destroy()
+				if (zumbi.saco) zumbi.saco.destroy()
 			}
 		}
 		this.zumbis = this.zumbis.filter((zumbi) => !zumbi.fugiu && !(zumbi.morrendo && zumbi.morto_ha >= 75))
@@ -796,6 +813,40 @@ export default class Zumbis {
 			corvo.voo = Math.random() * 100
 		}
 		efeito(this, 'fantasma', { volume: 0.2, rate: this.revoada_de_morcegos && this.nivel >= 16 ? 2.6 : 1.8 }) // grasnado (ou guincho)
+	}
+
+	// saqueador: de vez em quando um zumbi com um saco de moedas cruza a tela de um lado para o outro
+	criar_saqueador() {
+		if (this.nivel < R.SAQUEADOR.a_partir_da_fase || this.chefe || this.chefe_em > 0 || this.treino || this.horda) {
+			return
+		}
+		this.proximo_saqueador--
+		if (this.proximo_saqueador > 0) {
+			return
+		}
+		this.proximo_saqueador = Phaser.Math.Between(R.SAQUEADOR.a_cada[0], R.SAQUEADOR.a_cada[1])
+		const da_esquerda = Math.random() < 0.5
+		const y = Phaser.Math.Between(50, 170)
+		const ladrao = this.criar_zumbi('saqueador', da_esquerda ? -40 : this.largura + 4, y)
+		ladrao.vx = (da_esquerda ? 1 : -1) * R.SAQUEADOR.velocidade
+		ladrao.base_y = y
+		ladrao.passo = 0
+		ladrao.saco = this.add.sprite(ladrao.x, y, 'moeda').setScale(1.6).setDepth(2.2)
+		this.flutuar(this.largura / 2, 40, 'SAQUEADOR! NÃO DEIXE FUGIR', '#5ad0c0')
+		efeito(this, 'moeda', { volume: 0.5, rate: 0.7 })
+	}
+
+	correr(ladrao) {
+		ladrao.passo++
+		ladrao.x += ladrao.vx * this.dificuldade.velocidade
+		ladrao.y = ladrao.base_y - Math.abs(Math.sin(ladrao.passo / 7)) * 3 // pulinhos
+		const c = corpo(ladrao)
+		ladrao.saco.setPosition(c.x + c.l / 2 - Math.sign(ladrao.vx) * 10, c.y + 4)
+		// chegou do outro lado: foge com as moedas (não custa vida)
+		if ((ladrao.vx > 0 && ladrao.x > this.largura + 20) || (ladrao.vx < 0 && ladrao.x < -60)) {
+			ladrao.fugiu = true
+			this.flutuar(Phaser.Math.Clamp(c.x, 40, this.largura - 40), c.y, 'FUGIU COM AS MOEDAS!', '#9a9aa8')
+		}
 	}
 
 	voar(corvo) {

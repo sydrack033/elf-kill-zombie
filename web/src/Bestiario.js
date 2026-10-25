@@ -20,6 +20,7 @@ const FICHAS = [
 	{ tipo: 'cova', nome: 'COVA ABERTA', texto: 'SOLTA ZUMBIS ATÉ SER\nQUEBRADA. DÁ MOEDAS.' },
 	{ tipo: 'morcego', nome: 'MORCEGO', texto: 'VOA EM ZIGUE-ZAGUE\nE MERGULHA EM VOCÊ.' },
 	{ tipo: 'corvo', nome: 'CORVO', texto: 'VEM EM BANDO,\nVOANDO EM DIAGONAL.' },
+	{ tipo: 'saqueador', nome: 'SAQUEADOR', texto: 'FOGE DE LADO COM MOEDAS.\nPEGUE ANTES QUE SUMA!' },
 	...CHEFES.map((c, i) => ({ tipo: 'chefe' + (i + 1), nome: c.nome, texto: 'CHEFÃO DA FASE ' + (i + 1) * 5 + '.', chefe: c })),
 	{ tipo: 'chefe_final', nome: CHEFE_FINAL.nome, texto: 'O CHEFÃO FINAL,\nNA FASE ' + CHEFE_FINAL.fase + '.', chefe: CHEFE_FINAL },
 ]

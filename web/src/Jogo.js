@@ -122,6 +122,7 @@ export default class Jogo extends Phaser.Scene {
 		this.zumbis = [] // ver criar_zumbi()
 		this.proximo_zumbi = 60
 		this.proxima_revoada = Phaser.Math.Between(R.CORVOS.a_cada[0], R.CORVOS.a_cada[1])
+		this.proximo_saqueador = Phaser.Math.Between(R.SAQUEADOR.a_cada[0], R.SAQUEADOR.a_cada[1])
 		this.chefe = null
 		this.chefe_em = 0 // ticks até o chefão entrar (0 = não tem chefão vindo)
 		this.cuspes = [] // { sprite, x, y, vx, vy }
