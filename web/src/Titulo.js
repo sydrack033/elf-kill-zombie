@@ -7,6 +7,9 @@ import { ler_loja } from './moedas.js'
 import { desafios_de_hoje } from './desafios.js'
 import * as R from './regras.js'
 
+// versão das novidades: troque quando quiser mostrar o painel de novidades de novo
+const VERSAO = '2026-10-25'
+
 // Tela de título: enquanto espera, roda uma demonstração no fundo (o elfo atirando nos zumbis).
 export default class Titulo extends Phaser.Scene {
 	constructor() {
@@ -90,6 +93,11 @@ export default class Titulo extends Phaser.Scene {
 		// cuidado para não começar duas vezes (tecla e clique juntos, por exemplo)
 		let saiu = false
 		const ir = (cena, dados) => {
+			// com o painel de novidades aberto, o primeiro clique ou tecla só fecha o painel
+			if (this.novidades) {
+				this.fechar_novidades()
+				return
+			}
 			if (!saiu) {
 				saiu = true
 				this.cameras.main.fadeOut(250, 0, 0, 0)
@@ -172,7 +180,57 @@ export default class Titulo extends Phaser.Scene {
 		const feitos = desafios.filter((d) => d.feita).length
 		this.botao_desafios = texto(this, 6, 30, 'DESAFIOS ' + feitos + '/' + desafios.length, 8, feitos == desafios.length ? '#9ff07a' : '#9fd8ff').setOrigin(0, 0.5).setDepth(6)
 		this.cameras.main.fadeIn(300, 0, 0, 0)
+		this.mostrar_novidades()
 		this.ao_redimensionar()
+	}
+
+	// painel que aparece uma vez por versão, contando o que mudou no jogo
+	mostrar_novidades() {
+		let vista = null
+		try {
+			vista = localStorage.getItem('elf-kill-zombie-novidades')
+		} catch {
+			return // sem localStorage o painel apareceria toda vez
+		}
+		// quem nunca jogou não precisa de novidades (vê tudo pela primeira vez)
+		const ja_jogou = ler_estatisticas().partidas > 0
+		if (vista == VERSAO || !ja_jogou) {
+			try { localStorage.setItem('elf-kill-zombie-novidades', VERSAO) } catch { /* nada */ }
+			return
+		}
+		const linhas = [
+			'NOVIDADES!',
+			'',
+			'6 CHEFÕES E UM CHEFÃO FINAL NA FASE 50 (COM FINAL DA HISTÓRIA)',
+			'CENÁRIO NOVO: TERRA GELADA. EVENTOS: HORDA, LUA DE SANGUE, ECLIPSE',
+			'ZUMBIS NOVOS: COVEIRO, GOSMA, TAMBORZEIRO E OS DE ELITE',
+			'ARMAS NOVAS: BUMERANGUE, ESPINGARDA E ARCO ÉLFICO (E NÍVEIS DE ARMA)',
+			'LOJA COM MOEDAS, CHAPÉUS, DESAFIOS DO DIA E OPÇÕES',
+			'MODO SÓ CHEFÕES, 2 JOGADORES E COMEÇAR EM CAPÍTULOS ADIANTADOS',
+			'',
+			'VEJA TUDO NO BESTIÁRIO (TECLA B)',
+			'',
+			'CLIQUE OU APERTE QUALQUER TECLA',
+		]
+		const fundo = this.add.rectangle(0, 0, 10, ALTURA, 0x000000, 0.85).setOrigin(0).setDepth(20)
+		const texto_novidades = texto(this, 0, ALTURA / 2, linhas.join('\n'), 8, '#e8f5c8').setOrigin(0.5).setDepth(21).setLineSpacing(4)
+		this.novidades = { fundo, texto: texto_novidades }
+		// qualquer tecla fecha também
+		this.input.keyboard.once('keydown', () => this.time.delayedCall(0, () => this.fechar_novidades()))
+	}
+
+	fechar_novidades() {
+		if (!this.novidades) {
+			return
+		}
+		this.novidades.fundo.destroy()
+		this.novidades.texto.destroy()
+		this.novidades = null
+		try {
+			localStorage.setItem('elf-kill-zombie-novidades', VERSAO)
+		} catch {
+			// sem localStorage: aparece de novo
+		}
 	}
 
 	// quanto falta para o final: a melhor fase já alcançada, de 50
@@ -283,6 +341,11 @@ export default class Titulo extends Phaser.Scene {
 			s.menos.x = meio - 30
 			s.valor.x = meio + 30
 			s.mais.x = meio + 90
+		}
+		if (this.novidades) {
+			this.novidades.fundo.setSize(this.largura, ALTURA)
+			this.novidades.texto.x = meio
+			this.novidades.texto.setScale(Math.min(1, (this.largura - 10) / this.novidades.texto.width))
 		}
 		if (this.botao_trofeu) {
 			this.botao_trofeu.x = this.largura - 14
