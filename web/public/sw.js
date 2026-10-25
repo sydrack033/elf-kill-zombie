@@ -1,6 +1,8 @@
 // Service worker: deixa o jogo funcionar sem internet depois da primeira visita.
 // Responde com o que já está guardado (rápido) e, ao mesmo tempo, busca a versão nova para a próxima vez.
-const CACHE = 'elf-kill-zombie-v1'
+// troque o número quando imagens ou sons mudarem (eles não têm nome com hash como o código):
+// assim quem já tinha o jogo guardado não fica com uma imagem velha junto com o código novo
+const CACHE = 'elf-kill-zombie-v2'
 
 self.addEventListener('install', () => self.skipWaiting())
 
