@@ -256,7 +256,9 @@ export default class Jogo extends Phaser.Scene {
 	// vantagens compradas na loja valem para o começo de toda partida
 	aplicar_loja() {
 		const compras = ler_loja().compras
-		this.vidas = Math.min(this.vidas_max, this.vidas + (compras.vida || 0))
+		// os corações comprados valem mesmo quando o jogo já começa com o máximo (fácil)
+		this.vidas += compras.vida || 0
+		this.vidas_max = Math.max(this.vidas_max, this.vidas)
 		this.bombas = Math.min(this.bombas_max(), this.bombas + (compras.bombas || 0))
 		if (compras.furia) {
 			this.furia = 0.5
@@ -281,7 +283,7 @@ export default class Jogo extends Phaser.Scene {
 
 	criar_hud() {
 		this.hud_coracoes = []
-		for (let i = 0; i < R.VIDAS_NO_MAXIMO + R.VIDAS_EXTRAS_MAXIMO; i++) {
+		for (let i = 0; i < R.VIDAS_NO_MAXIMO + R.VIDAS_EXTRAS_MAXIMO + 2; i++) { // +2 da loja
 			this.hud_coracoes.push(this.add.sprite(8 + i * 11, 8, 'coracao', 0).setOrigin(0).setDepth(10))
 		}
 		this.hud_melhorias = [] // ícones das melhorias pegas, embaixo da fase
@@ -1017,7 +1019,7 @@ export default class Jogo extends Phaser.Scene {
 				considerar(c.x + c.l / 2, c.y + c.a / 2)
 			}
 		}
-		if (this.chefe && this.chefe.fase != 'morrendo') {
+		if (this.chefe && this.chefe.fase != 'morrendo' && !this.chefe.intangivel) {
 			const c = corpo_chefe(this.chefe)
 			considerar(c.x + c.l / 2, c.y + c.a / 2)
 		}
@@ -1694,7 +1696,13 @@ export default class Jogo extends Phaser.Scene {
 				if (encostou(tiro.x - 4, tiro.y - 4, 8, 8, c.x, c.y, c.l, c.a)) {
 					// coveiro: tiro vindo de baixo bate na lápide
 					if (zumbi.escudo > 0 && tiro.vy < 0 && !tiro.arma.furia) {
-						this.bater_na_lapide(zumbi, tiro)
+						// a bazuca explode na pedra (e a explosão passa por cima da lápide)
+						if (tiro.arma.explode) {
+							this.acertar(tiro, tiro.x, tiro.y)
+						}
+						else {
+							this.bater_na_lapide(zumbi, tiro)
+						}
 						break
 					}
 					this.acertar(tiro, Phaser.Math.Clamp(tiro.x, c.x, c.x + c.l), Phaser.Math.Clamp(tiro.y, c.y, c.y + c.a))
@@ -1787,7 +1795,9 @@ export default class Jogo extends Phaser.Scene {
 	// o tiro bateu em alguém em (x, y): sangue, som e, conforme a arma, some ou explode
 	acertar(tiro, x, y) {
 		// os tiros da fúria não contam na pontaria (não contam como disparos também)
-		if (tiro.acertou.size == 0 && !tiro.arma.sem_pontaria) {
+		// conta uma vez por tiro (o bumerangue e o ricochete acertam de novo, mas é o mesmo disparo)
+		if (!tiro.contou && !tiro.arma.sem_pontaria) {
+			tiro.contou = true
 			this.stats.acertos++
 		}
 		if (!tiro.arma.chama || Math.random() < 0.15) {
@@ -1853,7 +1863,7 @@ export default class Jogo extends Phaser.Scene {
 	}
 
 	comecar_horda() {
-		this.horda = { ha: 0, zumbis: [] }
+		this.horda = { ha: 0, zumbis: [], mortos: 0 }
 		this.horda_na_fase = this.nivel
 		this.anunciar('HORDA!', 220, '#ff5a5a')
 		efeito(this, 'rugido', { volume: 0.9, rate: 0.85 })
@@ -1876,6 +1886,11 @@ export default class Jogo extends Phaser.Scene {
 		}
 		if (h.ha >= R.HORDA.duracao && h.zumbis.every((z) => z.morrendo || z.fugiu || !this.zumbis.includes(z))) {
 			this.horda = null
+			// só ganha o prêmio quem matou a maior parte da horda (deixar passar não vale)
+			if (h.mortos < h.zumbis.length * 0.6) {
+				this.anunciar('A HORDA PASSOU...', 180, '#cfcfcf')
+				return
+			}
 			this.stats.hordas++
 			this.anunciar('HORDA DERROTADA!', 220, '#9ff07a')
 			efeito(this, 'combo', { volume: 0.7, rate: 0.8 })
@@ -1966,6 +1981,16 @@ export default class Jogo extends Phaser.Scene {
 		zumbi.escudo -= tiro.dano
 		zumbi.lapide_flash = 4
 		const l = zumbi.lapide
+		// o lança-chamas solta muitas labaredas: só a pedra rachando, sem faísca nem som a cada uma
+		if (tiro.arma.chama) {
+			if (zumbi.escudo <= zumbi.escudo_max / 2) l.setFrame(1)
+			if (zumbi.escudo <= 0) {
+				this.soltar_lapide(zumbi)
+				this.lapides_quebradas++
+				if (this.lapides_quebradas >= 10) desbloquear(this, 'pedreiro')
+			}
+			return
+		}
 		efeito(this, 'pedra', { volume: 0.45, rate: 0.9 + Math.random() * 0.2 })
 		for (let i = 0; i < 3; i++) {
 			const faisca = this.add.rectangle(tiro.x, l.y + 2, 2, 2, 0xffe9a0).setDepth(7)
@@ -2018,6 +2043,7 @@ export default class Jogo extends Phaser.Scene {
 		this.stats.mortos++
 		this.stats.por_tipo[zumbi.tipo] = (this.stats.por_tipo[zumbi.tipo] || 0) + 1
 		if (zumbi.elite) this.stats.elites++
+		if (zumbi.horda && this.horda) this.horda.mortos++
 		// cada zumbi geme num tom um pouco diferente (os grandes mais grave)
 		efeito(this, 'zumbi_morre', { volume: 0.6, rate: (0.85 + Math.random() * 0.3) / zumbi.escala })
 
@@ -2090,7 +2116,8 @@ export default class Jogo extends Phaser.Scene {
 		}
 
 		// em nível de chefão as mortes não contam para subir de nível
-		if (this.chefe == null && this.chefe_em == 0) {
+		// (e os da horda também não: a horda é um extra no meio da fase)
+		if (this.chefe == null && this.chefe_em == 0 && !zumbi.horda && this.estado != 'fim') {
 			this.mortes_no_nivel++
 			// na metade de algumas fases começa a horda
 			const meta = R.MORTES_POR_NIVEL(this.nivel)
