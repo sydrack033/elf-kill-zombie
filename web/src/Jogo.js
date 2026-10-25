@@ -2504,8 +2504,8 @@ export default class Jogo extends Phaser.Scene {
 		chefe.vida -= dano
 		chefe.flash = 5
 		this.encher_furia(R.FURIA.por_acerto_no_chefe)
-		// com metade da vida ele enfurece: anda e ataca mais rápido
-		if (!chefe.furioso && chefe.vida > 0 && chefe.vida <= chefe.vida_max / 2) {
+		// com metade da vida ele enfurece: anda e ataca mais rápido (o primeiro chefão não, para aprender)
+		if (!chefe.furioso && chefe.numero >= 2 && chefe.vida > 0 && chefe.vida <= chefe.vida_max / 2) {
 			chefe.furioso = true
 			this.anunciar('ENFURECIDO!', 150, '#ff5a5a')
 			efeito(this, 'rugido', { volume: 0.9, rate: 1.15 })
