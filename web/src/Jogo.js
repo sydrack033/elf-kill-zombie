@@ -2615,7 +2615,8 @@ export default class Jogo extends Phaser.Scene {
 		for (let i = 0; i < quantos; i++) {
 			const a = angulo + (i - (quantos - 1) / 2) * abertura
 			const sprite = this.add.sprite(x, y, 'cuspe', 0).setDepth(4.5)
-			this.cuspes.push({ sprite, x, y, vx: Math.cos(a) * R.VELOCIDADE_CUSPE, vy: Math.sin(a) * R.VELOCIDADE_CUSPE })
+			const v = R.VELOCIDADE_CUSPE * this.dificuldade.velocidade
+			this.cuspes.push({ sprite, x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v })
 		}
 		efeito(this, 'cuspe', { volume: 0.5, rate: 0.9 + Math.random() * 0.2 })
 	}
@@ -2651,7 +2652,7 @@ export default class Jogo extends Phaser.Scene {
 			return
 		}
 		const numero = this.nivel / R.NIVEIS_ENTRE_CHEFOES
-		const vida = R.CHEFE.vida_base + R.CHEFE.vida_por_chefe * (numero - 1)
+		const vida = Math.round((R.CHEFE.vida_base + R.CHEFE.vida_por_chefe * (numero - 1)) * this.dificuldade.chefe)
 		const tamanho = 64 * R.CHEFE.escala
 		const tipo = R.CHEFES[(numero - 1) % R.CHEFES.length]
 		marcar_visto('chefe' + (((numero - 1) % R.CHEFES.length) + 1))

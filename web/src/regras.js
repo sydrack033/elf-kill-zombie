@@ -7,9 +7,9 @@ export const TICK_MS = 10
 // vidas = vidas no começo; velocidade = multiplica a velocidade dos zumbis;
 // frequencia = multiplica quantos zumbis aparecem; pontos = multiplica os pontos
 export const DIFICULDADES = {
-	facil: { nome: 'FÁCIL', vidas: 5, velocidade: 0.8, frequencia: 0.75, pontos: 0.5 },
-	normal: { nome: 'NORMAL', vidas: 3, velocidade: 1, frequencia: 1, pontos: 1 },
-	dificil: { nome: 'DIFÍCIL', vidas: 2, velocidade: 1.2, frequencia: 1.3, pontos: 2 },
+	facil: { nome: 'FÁCIL', vidas: 5, velocidade: 0.8, frequencia: 0.75, pontos: 0.5, chefe: 0.7 },
+	normal: { nome: 'NORMAL', vidas: 3, velocidade: 1, frequencia: 1, pontos: 1, chefe: 1 },
+	dificil: { nome: 'DIFÍCIL', vidas: 2, velocidade: 1.2, frequencia: 1.3, pontos: 2, chefe: 1.3 }, // chefe = vida dos chefões
 }
 
 // ---------- cores do elfo (liberadas com conquistas) ----------
