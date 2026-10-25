@@ -54,7 +54,8 @@ git (pasta `Jogo1`), então dá para ver o histórico com `git log` e voltar qua
 - **22 conquistas** com aviso na tela, tela própria e estatísticas de todas as partidas.
 - Na primeira vez que aparece cada **inimigo** ou **caixa**, o jogo explica o que ele faz.
 - **Placar** com os 5 melhores e nome de 3 letras, estilo fliperama (com a marca do modo).
-- **Bestiário** com os inimigos já encontrados (e quantos de cada você já abateu) e uma **história**
+- **Bestiário** com os inimigos já encontrados (e quantos de cada você já abateu), mais as abas
+  **CAIXAS** (o que cada item faz) e **EVENTOS** (horda, lua de sangue, eclipse...), e uma **história**
   de abertura na primeira partida.
 
 ## Visual e som
