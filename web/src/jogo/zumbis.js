@@ -26,7 +26,7 @@ export default class Zumbis {
 		const entre = (a, b) => a + Math.floor(r() * (b - a + 1))
 		// quanto maior o nível, mais zumbis e mais rápidos
 		const n = this.nivel - 1
-		this.proximo_zumbi = (Math.max(35, 140 - n * 8) + entre(0, 60)) / this.dificuldade.frequencia
+		this.proximo_zumbi = (Math.max(35, 155 - n * 8) + entre(0, 60)) / this.dificuldade.frequencia
 
 		// às vezes vem uma fileira de zumbis juntos
 		const sorte_fileira = r() // sorteado sempre, para a sequência não depender da fase
