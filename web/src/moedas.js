@@ -2,6 +2,15 @@
 // Tudo fica guardado no navegador.
 const CHAVE = 'elf-kill-zombie-loja'
 
+// chapéus: só enfeite; comprado uma vez, o jogador escolhe na loja qual usar
+export const CHAPEUS = [
+	{ id: 'chapeu_gorro', nome: 'GORRO DE NATAL', texto: 'HO HO HO', custo: [80] },
+	{ id: 'chapeu_cartola', nome: 'CARTOLA', texto: 'ELEGÂNCIA NO CEMITÉRIO', custo: [100] },
+	{ id: 'chapeu_bruxa', nome: 'CHAPÉU DE BRUXA', texto: 'ROUBADO DA BRUXA', custo: [120] },
+	{ id: 'chapeu_viking', nome: 'ELMO VIKING', texto: 'PARA GUERREIROS DO NORTE', custo: [150] },
+	{ id: 'chapeu_coroa', nome: 'COROA', texto: 'DO REI ZUMBI', custo: [250] },
+]
+
 // custo = preço de cada nível (o tamanho da lista é o máximo de vezes que dá para comprar)
 export const PRODUTOS = [
 	{ id: 'bombas', nome: 'BOLSA DE BOMBAS', texto: '+1 BOMBA NO COMEÇO', custo: [30, 60, 120] },

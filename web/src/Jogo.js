@@ -87,6 +87,9 @@ export default class Jogo extends Phaser.Scene {
 		this.arma_na_mao = this.add.sprite(0, 0, 'armas', 0).setOrigin(3 / 16, 4 / 8).setDepth(6)
 		this.clarao = this.add.circle(0, 0, 4, 0xffe680).setDepth(7).setVisible(false)
 		this.clarao_ha = 0
+		// chapéu comprado na loja (só enfeite)
+		const compras = ler_loja().compras
+		this.chapeu = opcoes.chapeu && compras[opcoes.chapeu] ? this.add.sprite(0, 0, opcoes.chapeu).setOrigin(0.5, 1).setDepth(5.5) : null
 		this.bolha = this.add.circle(0, 0, 21).setStrokeStyle(2, 0x70c8ff, 0.9).setFillStyle(0x70c8ff, 0.15).setDepth(6.5).setVisible(false)
 
 		this.dificuldade = R.DIFICULDADES[opcoes.dificuldade] || R.DIFICULDADES.normal
@@ -3183,6 +3186,12 @@ export default class Jogo extends Phaser.Scene {
 		this.deixar_mancha(this.heroi_x + 12, this.heroi_y + 24)
 		this.tremer(400, 0.012)
 		this.tweens.add({ targets: this.heroi, angle: 90, duration: 500, ease: 'Bounce.Out' })
+		if (this.chapeu) {
+			// o chapéu voa longe
+			this.chapeu.setVisible(true)
+			this.tweens.add({ targets: this.chapeu, x: this.chapeu.x + 30, y: this.chapeu.y - 30, angle: 200, duration: 450, ease: 'Quad.Out' })
+			this.tweens.add({ targets: this.chapeu, y: this.heroi_y + 24, delay: 450, duration: 350, ease: 'Bounce.Out' })
+		}
 		this.tweens.add({ targets: this.heroi, alpha: 0.35, delay: 400, duration: 600 })
 		if (this.p2) {
 			// o segundo elfo cai junto
@@ -3423,6 +3432,13 @@ export default class Jogo extends Phaser.Scene {
 		this.arma_na_mao.setFlipY(Math.abs(this.angulo) > Math.PI / 2)
 		this.arma_na_mao.setVisible(visivel)
 		this.clarao.setVisible(this.clarao_ha > 0)
+		if (this.chapeu) {
+			// em cima da cabeça; de lado a cabeça fica um pouco mais para a frente
+			const dx = { esquerda: -1, direita: 1 }[this.heroi_direcao] || 0
+			const pulo = andando && this.heroi_xi % 5 < 2 ? 1 : 0
+			this.chapeu.setPosition(Math.round(this.heroi_x + 12 + dx), Math.round(this.heroi_y + 6 - pulo))
+			this.chapeu.setFlipX(this.heroi_direcao == 'esquerda').setVisible(visivel)
+		}
 
 		// bolha do escudo: pisca quando está acabando
 		const escudo = this.poderes.escudo

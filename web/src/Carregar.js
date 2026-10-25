@@ -108,6 +108,23 @@ export default class Carregar extends Phaser.Scene {
 		g.fillStyle(0xfff0a0).fillRect(2, 2, 1, 3)
 		g.fillStyle(0xc89a20).fillRect(4, 2, 1, 4)
 		g.generateTexture('moeda', 8, 8)
+
+		// chapéus da loja (14x10), desenhados aqui mesmo: cada linha é [cor, x, y, largura, altura]
+		const CHAPEUS = {
+			chapeu_coroa: [[0x6a4a10, 1, 3, 12, 7], [0xffd34d, 2, 4, 10, 5], [0x6a4a10, 1, 0, 2, 4], [0x6a4a10, 6, 0, 2, 4], [0x6a4a10, 11, 0, 2, 4],
+				[0xffd34d, 2, 1, 1, 3], [0xffd34d, 7, 1, 1, 3], [0xffd34d, 11, 1, 1, 3], [0xd82a2a, 6, 5, 2, 2], [0xfff0a0, 3, 5, 1, 1]],
+			chapeu_cartola: [[0x000000, 0, 7, 14, 3], [0x2a2a30, 1, 8, 12, 1], [0x000000, 3, 0, 8, 8], [0x2a2a30, 4, 1, 6, 6], [0xd82a2a, 4, 5, 6, 1], [0x4a4a54, 5, 1, 1, 4]],
+			chapeu_gorro: [[0xffffff, 0, 7, 14, 3], [0x8a1010, 3, 2, 8, 5], [0xd82a2a, 4, 3, 6, 4], [0x8a1010, 9, 0, 3, 3], [0xd82a2a, 9, 1, 2, 2], [0xffffff, 11, 0, 3, 3]],
+			chapeu_bruxa: [[0x1a0a2a, 0, 7, 14, 3], [0x5a2a8a, 1, 8, 12, 1], [0x1a0a2a, 4, 2, 6, 6], [0x5a2a8a, 5, 3, 4, 4], [0x1a0a2a, 6, 0, 3, 3], [0x5a2a8a, 7, 1, 1, 2], [0xffd34d, 5, 6, 4, 1]],
+			chapeu_viking: [[0x2a2a30, 2, 3, 10, 7], [0x9aa0aa, 3, 4, 8, 5], [0xc8ccd4, 4, 4, 3, 2], [0xf0e8d0, 0, 0, 2, 5], [0xf0e8d0, 12, 0, 2, 5], [0x8a7a5a, 1, 4, 2, 2], [0x8a7a5a, 11, 4, 2, 2], [0x6a6a74, 3, 8, 8, 1]],
+		}
+		for (const [chave, partes] of Object.entries(CHAPEUS)) {
+			g.clear()
+			for (const [cor, x, y, l, a] of partes) {
+				g.fillStyle(cor).fillRect(x, y, l, a)
+			}
+			g.generateTexture(chave, 14, 10)
+		}
 		g.destroy()
 
 		// neblina: manchas brancas bem suaves, que emendam nas bordas (para rolar sem costura)
