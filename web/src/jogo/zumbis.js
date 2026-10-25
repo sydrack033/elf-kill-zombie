@@ -533,7 +533,9 @@ export default class Zumbis {
 		}
 
 		const sorte = 1 + this.m('sorte')
-		if (Math.random() < R.CHANCE_DE_CORACAO * sorte) {
+		// por um fio (1 coração): o dobro de chance de cair coração
+		const fio = this.vidas == 1 && !this.mod.vidro ? 2 : 1
+		if (Math.random() < R.CHANCE_DE_CORACAO * sorte * fio) {
 			this.soltar_coracao(c.x + c.l / 2 - 7, c.y + c.a / 2)
 		}
 		else if (Math.random() < R.CHANCE_DE_ITEM * sorte) {

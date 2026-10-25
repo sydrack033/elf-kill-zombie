@@ -411,7 +411,9 @@ export default class Desenho {
 	}
 
 	desenhar_hud_do_tick() {
-		this.vermelho.setFillStyle(0xff0000, this.dano_ha > 0 ? (this.dano_ha / 30) * 0.35 : 0)
+		// com 1 coração só, a tela pulsa de leve em vermelho (como um coração batendo)
+		const por_um_fio = this.vidas == 1 && this.vidas_max > 1 ? 0.05 + 0.05 * Math.max(0, Math.sin(this.quadro_atual / 9)) : 0
+		this.vermelho.setFillStyle(0xff0000, this.dano_ha > 0 ? (this.dano_ha / 30) * 0.35 : por_um_fio)
 		this.hud_combo.setText(this.multiplicador > 1 ? 'COMBO x' + this.multiplicador : '')
 
 		// fúria: a barra pisca quando está cheia
