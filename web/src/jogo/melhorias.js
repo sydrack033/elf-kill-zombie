@@ -20,7 +20,9 @@ export default class Melhorias {
 		if (this.estado == 'fim') {
 			return // a mesma explosão que matou o elfo pode ter fechado a fase
 		}
-		const possiveis = R.MELHORIAS.filter((mel) => this.m(mel.id) < mel.maximo)
+		// no Elfo de Vidro, as melhorias de vida não servem para nada e nem aparecem
+		const inuteis = this.mod.vidro ? ['vida_max', 'vampiro'] : []
+		const possiveis = R.MELHORIAS.filter((mel) => this.m(mel.id) < mel.maximo && !inuteis.includes(mel.id))
 		if (possiveis.length == 0) {
 			return
 		}
