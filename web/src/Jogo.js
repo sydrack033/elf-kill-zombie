@@ -48,7 +48,7 @@ function corpo(zumbi) {
 }
 
 function corpo_chefe(chefe) {
-	const e = R.CHEFE.escala
+	const e = chefe.escala || R.CHEFE.escala
 	const c = R.CHEFE.corpo
 	return { x: chefe.x + c.x * e, y: chefe.y + c.y * e, l: c.l * e, a: c.a * e }
 }
@@ -920,6 +920,9 @@ export default class Jogo extends Phaser.Scene {
 			else if (indice == 0) {
 				this.escolher(this.carta_destacada)
 			}
+		}
+		else if (this.estado == 'final' && this.botoes_do_final && (indice == 0 || indice == 1)) {
+			this.botoes_do_final.sair(indice == 0)
 		}
 		else if (this.estado == 'fim' && this.pode_reiniciar && (indice == 0 || indice == 9)) {
 			this.scene.restart()
@@ -2657,19 +2660,24 @@ export default class Jogo extends Phaser.Scene {
 			return
 		}
 		const numero = this.nivel / R.NIVEIS_ENTRE_CHEFOES
-		const vida = Math.round((R.CHEFE.vida_base + R.CHEFE.vida_por_chefe * (numero - 1)) * this.dificuldade.chefe)
-		const tamanho = 64 * R.CHEFE.escala
-		const tipo = R.CHEFES[(numero - 1) % R.CHEFES.length]
+		// na fase 50 vem o chefão final: maior, mais forte e com todos os ataques
+		const final = this.nivel == R.CHEFE_FINAL.fase
+		const vida = Math.round((R.CHEFE.vida_base + R.CHEFE.vida_por_chefe * (numero - 1)) * this.dificuldade.chefe * (final ? R.CHEFE_FINAL.vida : 1))
+		const escala = final ? R.CHEFE_FINAL.escala : R.CHEFE.escala
+		const tamanho = 64 * escala
+		const tipo = final ? R.CHEFE_FINAL : R.CHEFES[(numero - 1) % R.CHEFES.length]
 		marcar_visto('chefe' + (((numero - 1) % R.CHEFES.length) + 1))
 		// quando os chefões voltam do começo ganham um número: O REI ZUMBI II, III...
 		const volta = Math.floor((numero - 1) / R.CHEFES.length) + 1
 		const romanos = ['', '', ' II', ' III', ' IV', ' V', ' VI', ' VII', ' VIII', ' IX', ' X']
 		this.chefe = {
 			numero,
-			nome: tipo.nome + (romanos[volta] ?? ' ' + volta),
+			nome: final ? tipo.nome : tipo.nome + (romanos[volta] ?? ' ' + volta),
+			final,
+			escala,
 			cor: tipo.cor,
 			// do 4º chefão em diante ele usa todos os ataques
-			ataques: numero > R.CHEFES.length ? ['cuspe', 'chamar', 'investida', 'chuva', 'teleporte', 'fantasmas', 'ossos', 'levantar', 'meteoros', 'labareda'] : tipo.ataques,
+			ataques: final || numero > R.CHEFES.length ? ['cuspe', 'chamar', 'investida', 'chuva', 'teleporte', 'fantasmas', 'ossos', 'levantar', 'meteoros', 'labareda'] : tipo.ataques,
 			x: this.largura / 2 - tamanho / 2,
 			y: -tamanho,
 			vida,
@@ -2694,7 +2702,7 @@ export default class Jogo extends Phaser.Scene {
 			investida: null, // { etapa: 'aviso' | 'descendo' | 'voltando', ha, alvo_x, alvo_y }
 			morto_ha: 0,
 		}
-		this.chefe.sprite = this.add.sprite(this.chefe.x, this.chefe.y, 'chefe', 0).setOrigin(0).setScale(R.CHEFE.escala).setDepth(3)
+		this.chefe.sprite = this.add.sprite(this.chefe.x, this.chefe.y, 'chefe', 0).setOrigin(0).setScale(escala).setDepth(3)
 		this.barra_nome.setText(this.chefe.nome)
 		this.barra_vida.setFillStyle(0xd02828)
 		this.barra_rastro.setSize(this.largura_barra, 4)
@@ -2726,7 +2734,7 @@ export default class Jogo extends Phaser.Scene {
 			chefe.morto_ha = 0
 			this.parada = 18
 			this.stats.chefes++
-			desbloquear(this, 'chefe' + (((chefe.numero - 1) % R.CHEFES.length) + 1))
+			if (!chefe.final) desbloquear(this, 'chefe' + (((chefe.numero - 1) % R.CHEFES.length) + 1))
 			if (this.modo_chefes && this.stats.chefes >= 4) desbloquear(this, 'maratona')
 			const ganho = R.CHEFE.pontos * chefe.numero
 			this.pontos += ganho
@@ -2766,8 +2774,13 @@ export default class Jogo extends Phaser.Scene {
 				this.soltar_item(c.x + c.l / 2 + 22, c.y + c.a / 2 - 10)
 				chefe.sprite.destroy()
 				this.chefe = null
-				tocar_musica(this, this.cenario().musica)
-				this.subir_nivel(true)
+				if (chefe.final) {
+					this.mostrar_final()
+				}
+				else {
+					tocar_musica(this, this.cenario().musica)
+					this.subir_nivel(true)
+				}
 			}
 			return
 		}
@@ -2775,7 +2788,7 @@ export default class Jogo extends Phaser.Scene {
 			return
 		}
 
-		const tamanho = 64 * R.CHEFE.escala
+		const tamanho = 64 * chefe.escala
 		if (chefe.fase == 'entrando') {
 			chefe.y += 0.5
 			if (chefe.y >= 48) {
@@ -3267,6 +3280,89 @@ export default class Jogo extends Phaser.Scene {
 	espirrar_sangue(x, y) {
 		const sprite = this.add.sprite(x, y, 'sangue', 0).setDepth(3.5)
 		this.sangues.push({ sprite, ha: 0 })
+	}
+
+	// venceu o chefão final: a história termina (e dá para continuar jogando no modo infinito)
+	mostrar_final() {
+		this.estado = 'final'
+		desbloquear(this, 'zerou')
+		this.dica_texto.setVisible(false)
+		tocar_musica(this, 'musica_titulo')
+		this.escurecer.setVisible(true).setAlpha(0)
+		this.tweens.add({ targets: this.escurecer, alpha: 1, duration: 1200 })
+		const frases = [
+			'O SENHOR DOS MORTOS CAIU.',
+			'OS SINOS SE CALARAM E OS MORTOS VOLTARAM PARA AS COVAS.',
+			'PELA PRIMEIRA VEZ EM MUITO TEMPO,',
+			'O CEMITÉRIO DORME.',
+			'OBRIGADO POR JOGAR!',
+		]
+		const meio = this.largura / 2
+		const objetos = []
+		const linhas = frases.map((_, i) => {
+			const linha = texto(this, meio, 90 + i * 26, '', 8, i == frases.length - 1 ? '#ffd34d' : '#e8f5c8').setOrigin(0.5).setDepth(12)
+			objetos.push(linha)
+			return linha
+		})
+		this.objetos_final = objetos
+		// máquina de escrever, uma letra a cada 45 ms
+		let frase = 0
+		let letra = 0
+		const escrever = this.time.addEvent({
+			delay: 45, loop: true, startAt: -1500,
+			callback: () => {
+				if (frase >= frases.length) {
+					escrever.remove()
+					this.opcoes_do_final(objetos)
+					return
+				}
+				letra++
+				linhas[frase].setText(frases[frase].slice(0, letra))
+				linhas[frase].setScale(Math.min(1, (this.largura - 10) / Math.max(1, linhas[frase].width)))
+				if (letra >= frases[frase].length) {
+					frase++
+					letra = 0
+				}
+			},
+		})
+	}
+
+	// depois do final: continuar no modo infinito ou terminar a partida (vai para a tela de fim)
+	opcoes_do_final(objetos) {
+		const meio = this.largura / 2
+		const continuar = texto(this, meio, 260, '[ CONTINUAR JOGANDO ]', 8, '#9ff07a').setOrigin(0.5).setDepth(12).setInteractive({ useHandCursor: true })
+		const terminar = texto(this, meio, 284, '[ TERMINAR A PARTIDA ]', 8, '#cfcfcf').setOrigin(0.5).setDepth(12).setInteractive({ useHandCursor: true })
+		const dica = texto(this, meio, 310, this.modo_toque ? '' : 'ENTER: CONTINUAR   ESC: TERMINAR', 8, '#8a8a90').setOrigin(0.5).setDepth(12)
+		objetos.push(continuar, terminar, dica)
+		let escolheu = false
+		const sair = (seguir) => {
+			if (escolheu || this.estado != 'final') return
+			escolheu = true
+			for (const o of objetos) o.destroy()
+			this.input.keyboard.off('keydown-ENTER', seguir_tecla)
+			this.input.keyboard.off('keydown-ESC', terminar_tecla)
+			if (seguir) {
+				this.escurecer.setVisible(false).setAlpha(1)
+				this.estado = 'jogando'
+				this.tempo_acumulado = 0
+				tocar_musica(this, this.cenario().musica)
+				this.subir_nivel(true)
+				this.anunciar('MODO INFINITO!', 250, '#c08aff')
+			}
+			else {
+				this.escurecer.setAlpha(1)
+				this.estado = 'fim'
+				parar_musica(300)
+				this.mostrar_fim()
+			}
+		}
+		const seguir_tecla = () => sair(true)
+		const terminar_tecla = () => sair(false)
+		continuar.on('pointerdown', (p, x, y, ev) => { ev.stopPropagation(); sair(true) })
+		terminar.on('pointerdown', (p, x, y, ev) => { ev.stopPropagation(); sair(false) })
+		this.input.keyboard.on('keydown-ENTER', seguir_tecla)
+		this.input.keyboard.on('keydown-ESC', terminar_tecla)
+		this.botoes_do_final = { sair }
 	}
 
 	// ------------------------------------------------------------------ fim de jogo

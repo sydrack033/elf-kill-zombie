@@ -13,6 +13,7 @@ export const CONQUISTAS = [
 	{ id: 'chefe4', nome: 'CAÇA ÀS BRUXAS', texto: 'DERROTE A BRUXA' },
 	{ id: 'chefe5', nome: 'DESCANSE EM PAZ', texto: 'DERROTE O NECROMANTE' },
 	{ id: 'chefe6', nome: 'EXORCISTA', texto: 'DERROTE O DEMÔNIO' },
+	{ id: 'zerou', nome: 'O CEMITÉRIO DORME', texto: 'VENÇA O SENHOR DOS MORTOS (FASE 50)' },
 	{ id: 'maratona', nome: 'MARATONA', texto: 'VENÇA 4 CHEFÕES NO MODO CHEFÕES' },
 	{ id: 'fase10', nome: 'SOBREVIVENTE', texto: 'CHEGUE À FASE 10' },
 	{ id: 'fase20', nome: 'LENDA DO CEMITÉRIO', texto: 'CHEGUE À FASE 20' },

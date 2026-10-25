@@ -265,4 +265,6 @@ export const CHEFES = [
 	// meteoros = chama meteoros perto do elfo; labareda = jorro de fogo que vai seguindo o elfo
 	{ nome: 'O DEMÔNIO', cor: 0xff6a4a, ataques: ['cuspe', 'meteoros', 'labareda'] },
 ]
+// chefão final, na fase 50: tem todos os ataques, é maior e bem mais forte; vencer mostra o final do jogo
+export const CHEFE_FINAL = { fase: 50, nome: 'O SENHOR DOS MORTOS', cor: 0xb08aff, vida: 1.6, escala: 2.4 }
 export const OSSOS = { quantos: 6, raio: 58, giro: 0.025, volta_em: 700 }
