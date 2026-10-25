@@ -281,6 +281,7 @@ export default class Jogo extends Phaser.Scene {
 		if (compras.arma) {
 			this.trocar_arma('triplo')
 		}
+		this.pode_reviver = !!compras.reviver
 		this.atualizar_hud_melhorias()
 		this.atualizar_hud()
 	}
@@ -1614,9 +1615,34 @@ export default class Jogo extends Phaser.Scene {
 		this.vibrar(0.8, 220)
 		efeito(this, 'perder_vida', { volume: 0.7 })
 		this.atualizar_hud()
-		if (this.vidas <= 0) {
+		if (this.vidas <= 0 && this.pode_reviver) {
+			this.reviver()
+		}
+		else if (this.vidas <= 0) {
 			this.fim_de_jogo()
 		}
+	}
+
+	// Segunda Chance (loja): na hora de morrer, o elfo volta com um coração e uma onda empurra tudo
+	reviver() {
+		this.pode_reviver = false
+		this.vidas = 1
+		this.invencivel = 300
+		this.anunciar('SEGUNDA CHANCE!', 200, '#9ff07a')
+		this.cameras.main.flash(400, 200, 255, 200)
+		efeito(this, 'poder', { volume: 0.8, rate: 0.6 })
+		const cx = this.heroi_x + 12
+		const cy = this.heroi_y + 12
+		const onda = this.add.circle(cx, cy, 10).setStrokeStyle(3, 0x9ff07a).setDepth(7)
+		this.tweens.add({ targets: onda, radius: 140, alpha: 0, duration: 500, onComplete: () => onda.destroy() })
+		for (const zumbi of this.zumbis) {
+			const c = corpo(zumbi)
+			if (!zumbi.morrendo && Phaser.Math.Distance.Between(cx, cy, c.x + c.l / 2, c.y + c.a / 2) < 140) {
+				this.matar_zumbi(zumbi)
+			}
+		}
+		this.cuspes.forEach((cuspe) => (cuspe.sumiu = true))
+		this.atualizar_hud()
 	}
 
 	// ------------------------------------------------------------------ bombas e explosões

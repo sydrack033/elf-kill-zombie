@@ -10,6 +10,7 @@ export const PRODUTOS = [
 	{ id: 'furia', nome: 'SANGUE QUENTE', texto: 'A FÚRIA COMEÇA PELA METADE', custo: [80] },
 	{ id: 'ima', nome: 'BOLSO MAGNÉTICO', texto: 'COMEÇA COM O ÍMÃ', custo: [90] },
 	{ id: 'melhoria', nome: 'TALENTO', texto: 'COMEÇA COM 1 MELHORIA SORTEADA', custo: [200] },
+	{ id: 'reviver', nome: 'SEGUNDA CHANCE', texto: 'VOLTA UMA VEZ QUANDO MORRER', custo: [350] },
 ]
 
 export function ler_loja() {
