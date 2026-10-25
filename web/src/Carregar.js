@@ -43,6 +43,8 @@ export default class Carregar extends Phaser.Scene {
 
 		this.load.image('chao', PASTA + 'chao.png')
 		this.load.spritesheet('melhorias', PASTA + 'melhorias.png', { frameWidth: 16, frameHeight: 16 })
+		// corvo visto de cima: 3 quadros de 16x12 (asas abertas, no meio, fechadas)
+		this.load.spritesheet('corvo', PASTA + 'corvo.png', { frameWidth: 16, frameHeight: 12 })
 		// troféu das conquistas: quadro 0 dourado, quadro 1 cinza
 		this.load.spritesheet('trofeu', PASTA + 'trofeu.png', { frameWidth: 12, frameHeight: 12 })
 		// manchas de sangue que ficam no chão: 3 quadros de 24x14

@@ -27,6 +27,10 @@ function sortear(lista, peso) {
 
 // o pedaço da tela que o corpo do zumbi ocupa (a imagem tem sobra transparente em volta)
 function corpo(zumbi) {
+	const proprio = zumbi.regra.corpo // o corvo tem um corpo próprio, sem escala
+	if (proprio) {
+		return { x: zumbi.x + proprio.x, y: zumbi.y + proprio.y, l: proprio.l, a: proprio.a }
+	}
 	const e = zumbi.escala
 	return {
 		x: zumbi.x + R.CORPO_ZUMBI.x * e,
@@ -108,6 +112,7 @@ export default class Jogo extends Phaser.Scene {
 		this.explosoes = [] // { sprite, ha }
 		this.zumbis = [] // ver criar_zumbi()
 		this.proximo_zumbi = 60
+		this.proxima_revoada = Phaser.Math.Between(R.CORVOS.a_cada[0], R.CORVOS.a_cada[1])
 		this.chefe = null
 		this.chefe_em = 0 // ticks até o chefão entrar (0 = não tem chefão vindo)
 		this.cuspes = [] // { sprite, x, y, vx, vy }
@@ -728,6 +733,7 @@ export default class Jogo extends Phaser.Scene {
 		this.jogar_bomba()
 		this.criar_zumbis()
 		this.chamar_chefe()
+		this.criar_revoada()
 		this.criar_itens()
 		this.mover_tiros()
 		this.mover_cuspes()
@@ -1223,6 +1229,13 @@ export default class Jogo extends Phaser.Scene {
 			intangivel: false,
 		}
 		zumbi.vida_max = zumbi.vida
+		if (regra.voa) {
+			// voando fica por cima de tudo que está no chão
+			zumbi.vida = regra.vida
+			zumbi.sprite = this.add.sprite(x, y, regra.textura, 0).setOrigin(0.5).setScale(1.4).setDepth(4.6)
+			this.zumbis.push(zumbi)
+			return zumbi
+		}
 		zumbi.sprite = this.add.sprite(x, y, 'zumbi', zumbi.xi).setOrigin(0).setScale(regra.escala).setDepth(2)
 		if (regra.cor) {
 			zumbi.sprite.setTint(regra.cor)
@@ -1267,7 +1280,10 @@ export default class Jogo extends Phaser.Scene {
 		if (this.pontos >= 50000) desbloquear(this, 'rico')
 		const c = corpo(zumbi)
 		this.flutuar(c.x + c.l / 2, c.y, '+' + ganho, this.multiplicador > 1 ? '#ff9a3c' : '#ffffff')
-		if (!zumbi.regra.fantasma) {
+		if (zumbi.regra.voa) {
+			zumbi.morto_ha = 75 // o corvo some na hora (sem a animação do zumbi caindo)
+		}
+		else if (!zumbi.regra.fantasma) {
 			this.deixar_mancha(c.x + c.l / 2, c.y + c.a - 2)
 		}
 
@@ -1335,6 +1351,11 @@ export default class Jogo extends Phaser.Scene {
 				continue
 			}
 
+			if (zumbi.regra.voa) {
+				this.voar(zumbi)
+				continue
+			}
+
 			if (zumbi.regra.fantasma) {
 				zumbi.ciclo = (zumbi.ciclo + 1) % 320
 				const estava = zumbi.intangivel
@@ -1391,6 +1412,46 @@ export default class Jogo extends Phaser.Scene {
 			}
 		}
 		this.zumbis = this.zumbis.filter((zumbi) => !zumbi.fugiu && !(zumbi.morrendo && zumbi.morto_ha >= 75))
+	}
+
+	// revoada: um bando de corvos entra por um canto de cima e atravessa a tela em diagonal
+	criar_revoada() {
+		if (this.nivel < R.CORVOS.a_partir_da_fase || this.chefe || this.chefe_em > 0) {
+			return
+		}
+		this.proxima_revoada--
+		if (this.proxima_revoada > 0) {
+			return
+		}
+		this.proxima_revoada = Phaser.Math.Between(R.CORVOS.a_cada[0], R.CORVOS.a_cada[1])
+		const da_esquerda = Math.random() < 0.5
+		const quantos = Phaser.Math.Between(R.CORVOS.quantos[0], R.CORVOS.quantos[1])
+		for (let i = 0; i < quantos; i++) {
+			const x = da_esquerda ? -20 - i * 18 : this.largura + 4 + i * 18
+			const corvo = this.criar_zumbi('corvo', x, 10 + i * 12 + Math.random() * 30)
+			corvo.vx = (da_esquerda ? 1 : -1) * R.CORVOS.velocidade * (0.9 + Math.random() * 0.2)
+			corvo.vy = 0.5 + Math.random() * 0.25
+			corvo.voo = Math.random() * 100
+		}
+		this.sound.play('fantasma', { volume: 0.2, rate: 1.8 }) // grasnado
+	}
+
+	voar(corvo) {
+		corvo.voo++
+		corvo.x += corvo.vx
+		corvo.y += corvo.vy + Math.sin(corvo.voo / 12) * 0.6 // voo ondulado
+		const c = corpo(corvo)
+		if (!this.intocavel && encostou(c.x, c.y, c.l, c.a, this.heroi_x + 4, this.heroi_y + 2, 17, 22)) {
+			corvo.morrendo = true
+			corvo.morto_ha = 75
+			this.espirrar_sangue(c.x + c.l / 2, c.y + c.a / 2)
+			this.levar_dano()
+		}
+		// saiu pelos lados ou por baixo: só vai embora (corvo não custa vida)
+		if (corvo.x < -60 || corvo.x > this.largura + 60 || corvo.y > ALTURA + 20) {
+			corvo.morrendo = true
+			corvo.morto_ha = 75
+		}
 	}
 
 	// cospe "quantos" cuspes em leque na direção do elfo
@@ -1885,6 +1946,17 @@ export default class Jogo extends Phaser.Scene {
 	desenhar_zumbis() {
 		for (const zumbi of this.zumbis) {
 			const s = zumbi.sprite
+			if (zumbi.regra.voa) {
+				// bate as asas (0, 1, 2, 1...) e aponta o bico para onde voa
+				const quadros = [0, 1, 2, 1]
+				if (!this.congelado) {
+					s.setFrame(quadros[Math.floor(this.quadro_atual / 5) % 4])
+				}
+				s.setPosition(Math.round(zumbi.x + 8), Math.round(zumbi.y + 6))
+				s.setRotation(Math.atan2(zumbi.vy, zumbi.vx) - Math.PI / 2)
+				this.pintar(s, zumbi.flash, null)
+				continue
+			}
 			if (!zumbi.morrendo) {
 				s.setFrame(zumbi.xi)
 				s.setPosition(Math.round(zumbi.x), Math.round(zumbi.y))
@@ -2021,8 +2093,15 @@ export default class Jogo extends Phaser.Scene {
 		g.fillStyle(0x000000, 0.28)
 		g.fillEllipse(this.heroi_x + 12.5, this.heroi_y + 25, 18, 6)
 		for (const zumbi of this.zumbis) {
-			if (!zumbi.morrendo) {
-				const c = corpo(zumbi)
+			if (zumbi.morrendo) {
+				continue
+			}
+			const c = corpo(zumbi)
+			if (zumbi.regra.voa) {
+				// voando alto: a sombra fica bem abaixo dele
+				g.fillEllipse(c.x + c.l / 2, c.y + c.a + 24, 10, 3)
+			}
+			else {
 				g.fillEllipse(c.x + c.l / 2, c.y + c.a + 2 * zumbi.escala, c.l * 0.9, 6 * zumbi.escala)
 			}
 		}

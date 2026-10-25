@@ -109,7 +109,16 @@ export const ZUMBIS = {
 		escala: 1, cor: 0xc8d8ff, vida: 2, vy: 0.36, pontos: 30, empurravel: true, fantasma: true,
 		peso: (nivel) => (nivel >= 6 ? 1 + nivel * 0.3 : 0),
 	},
+	// corvo: não aparece sozinho, vem em revoadas (ver CORVOS); voa em diagonal e não custa vida se passar
+	corvo: {
+		escala: 1, cor: null, vida: 1, vy: 0, pontos: 15, empurravel: false, voa: true,
+		textura: 'corvo', corpo: { x: 0, y: 0, l: 16, a: 12 }, // desenhado 40% maior
+		peso: () => 0,
+	},
 }
+
+// revoadas de corvos atravessando a tela
+export const CORVOS = { a_partir_da_fase: 2, a_cada: [1100, 1900], quantos: [3, 5], velocidade: 1.3 }
 export const VELOCIDADE_CUSPE = 1.7
 
 // a imagem do zumbi tem 44x44, mas o corpo dele ocupa só este pedaço (sem contar a escala)
