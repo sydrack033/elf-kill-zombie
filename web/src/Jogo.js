@@ -2,7 +2,7 @@ import Phaser from 'phaser'
 import { ALTURA, ajustar_tela, tecla_tela_cheia, tecla_som, ler_recorde, ler_estatisticas } from './tela.js'
 import * as R from './regras.js'
 import { tocar_musica, tecla_musica } from './musica.js'
-import { opcoes } from './opcoes.js'
+import { opcoes, efeito } from './opcoes.js'
 import { ler_loja } from './moedas.js'
 import { dia_de_hoje } from './desafios.js'
 import { memoria } from './jogo/comum.js'
@@ -243,7 +243,10 @@ export default class Jogo extends Phaser.Scene {
 		else if (!this.comecou_adiantado) {
 			// abre a partida como um capítulo: CEMITÉRIO, ONDE TUDO COMEÇOU
 			const cenario = this.cenario()
-			this.time.delayedCall(500, () => this.apresentar_chefe(cenario.nome, cenario.lema, '#9ff07a'))
+			this.time.delayedCall(500, () => {
+				this.apresentar_chefe(cenario.nome, cenario.lema, '#9ff07a')
+				efeito(this, 'sino', { volume: 0.6 })
+			})
 		}
 
 		// modo 2 jogadores (só no computador)

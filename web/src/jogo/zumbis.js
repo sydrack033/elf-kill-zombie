@@ -562,6 +562,7 @@ export default class Zumbis {
 		}
 		this.capitulo_pendente = null
 		this.apresentar_chefe(cenario.nome, cenario.lema, '#9ff07a')
+		efeito(this, 'sino', { volume: 0.6 })
 	}
 
 	mover_zumbis() {

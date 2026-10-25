@@ -490,3 +490,10 @@ salvar('moeda', gerar(0.22, (t, p, osc) => quadrada(osc(p < 0.35 ? 988 : 1319)) 
 		canal_bateria(rep('k k s - k h s h k k s - k s s s', 16), { volume: 0.42, bpm }),
 	))
 }
+
+// sino: badalada grave para as aberturas de capítulo (som com parciais que somem em tempos diferentes)
+salvar('sino', gerar(2.2, (t, p, osc) => {
+	const f = 196
+	const parcial = (mult, queda, vol) => Math.sin(2 * Math.PI * f * mult * t) * vol * Math.exp(-t * queda)
+	return (parcial(1, 1.6, 0.35) + parcial(2.01, 2.5, 0.2) + parcial(2.76, 3.5, 0.12) + parcial(5.4, 6, 0.06)) * Math.min(1, t * 200)
+}))
