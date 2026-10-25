@@ -1,6 +1,6 @@
 import Phaser from 'phaser'
 import { ALTURA, ajustar_tela, texto, ler_estatisticas } from './tela.js'
-import { ZUMBIS, CHEFES } from './regras.js'
+import { ZUMBIS, CHEFES, CHEFE_FINAL } from './regras.js'
 
 // Galeria dos inimigos que o jogador já encontrou (tecla B na tela de título).
 const CHAVE = 'elf-kill-zombie-vistos'
@@ -17,6 +17,7 @@ const FICHAS = [
 	{ tipo: 'gosma', nome: 'GOSMA', texto: 'QUANDO MORRE, VIRA\nDUAS GOSMINHAS.' },
 	{ tipo: 'corvo', nome: 'CORVO', texto: 'VEM EM BANDO,\nVOANDO EM DIAGONAL.' },
 	...CHEFES.map((c, i) => ({ tipo: 'chefe' + (i + 1), nome: c.nome, texto: 'CHEFÃO DA FASE ' + (i + 1) * 5 + '.', chefe: c })),
+	{ tipo: 'chefe_final', nome: CHEFE_FINAL.nome, texto: 'O CHEFÃO FINAL,\nNA FASE ' + CHEFE_FINAL.fase + '.', chefe: CHEFE_FINAL },
 ]
 
 // devolve a ficha do inimigo se for a primeira vez que ele aparece (senão, null)

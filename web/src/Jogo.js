@@ -2669,7 +2669,7 @@ export default class Jogo extends Phaser.Scene {
 		const escala = final ? R.CHEFE_FINAL.escala : R.CHEFE.escala
 		const tamanho = 64 * escala
 		const tipo = final ? R.CHEFE_FINAL : R.CHEFES[(numero - 1) % R.CHEFES.length]
-		marcar_visto('chefe' + (((numero - 1) % R.CHEFES.length) + 1))
+		marcar_visto(final ? 'chefe_final' : 'chefe' + (((numero - 1) % R.CHEFES.length) + 1))
 		// quando os chefões voltam do começo ganham um número: O REI ZUMBI II, III...
 		const volta = Math.floor((numero - 1) / R.CHEFES.length) + 1
 		const romanos = ['', '', ' II', ' III', ' IV', ' V', ' VI', ' VII', ' VIII', ' IX', ' X']
