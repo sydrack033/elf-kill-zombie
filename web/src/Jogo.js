@@ -6,7 +6,7 @@ import { desbloquear } from './conquistas.js'
 import { marcar_visto } from './Bestiario.js'
 import { efeito, opcoes, gravar_opcoes } from './opcoes.js'
 import { ler_loja, moedas_da_partida, ganhar_moedas } from './moedas.js'
-import { conferir_desafios, PREMIO } from './desafios.js'
+import { conferir_desafios, dia_de_hoje, PREMIO } from './desafios.js'
 
 // Igual à versão do Portugol, o jogo anda em "ticks" de 10 ms e cada tick roda
 // entrada() -> processamento() -> saida(). Os números de dificuldade ficam em regras.js.
@@ -139,6 +139,8 @@ export default class Jogo extends Phaser.Scene {
 		this.moedas = [] // moedas caindo para pegar: { sprite, x, y }
 		this.itens = [] // caixas: { sprite, tipo, x, y }
 		this.lapides_quebradas = 0
+		this.dia = dia_de_hoje() // os desafios valem pelo dia em que a partida começou
+		this.faixas = 0
 		this.moedas_extras = 0 // moedas dos zumbis de elite e das hordas, somadas no fim
 		this.horda = null // { ha, zumbis } enquanto a horda está vindo
 		this.pocas = [] // poças de lodo do pântano: { x, y, sprite }
@@ -1575,12 +1577,17 @@ export default class Jogo extends Phaser.Scene {
 
 	trocar_arma(arma) {
 		this.arma = arma
-		this.armas_usadas.add(arma)
-		if (this.armas_usadas.size >= Object.keys(R.ARMAS).length) desbloquear(this, 'arsenal')
+		this.usou_arma(arma)
 		// o Cinto de Balas aumenta a munição das armas especiais
 		this.municao = Math.round(R.ARMAS[arma].municao * (1 + 0.5 * this.m('cinto')))
 		this.arma_na_mao.setFrame(R.ARMAS[arma].quadro)
 		this.atualizar_hud()
+	}
+
+	// para a conquista Arsenal (vale arma pega por qualquer um dos dois elfos)
+	usou_arma(arma) {
+		this.armas_usadas.add(arma)
+		if (this.armas_usadas.size >= Object.keys(R.ARMAS).length) desbloquear(this, 'arsenal')
 	}
 
 	// o elfo leva um golpe: o escudo segura, senão perde uma vida
@@ -1644,7 +1651,11 @@ export default class Jogo extends Phaser.Scene {
 				this.matar_zumbi(zumbi)
 			}
 		}
-		this.cuspes.forEach((cuspe) => (cuspe.sumiu = true))
+		this.cuspes.forEach((cuspe) => {
+			cuspe.sumiu = true
+			cuspe.sprite.destroy()
+		})
+		this.cuspes = []
 		this.atualizar_hud()
 	}
 
@@ -1702,7 +1713,8 @@ export default class Jogo extends Phaser.Scene {
 
 	// explosão em (x, y): machuca todo zumbi dentro do raio e desfaz os cuspes;
 	// a do zumbi bombado também machuca o elfo (fere_heroi)
-	explodir(x, y, raio, dano, com_som = true, fere_heroi = false) {
+	// do_cenario: escombros, meteoros e granizo (não ferem o chefão nem contam como explosão do jogador)
+	explodir(x, y, raio, dano, com_som = true, fere_heroi = false, do_cenario = false) {
 		const sprite = this.add.sprite(x, y, 'explosao', 0).setDepth(7).setScale(raio / R.RAIO_DA_EXPLOSAO)
 		this.explosoes.push({ sprite, ha: 0 })
 		this.tremer(150, 0.004 + raio / 10000)
@@ -1714,7 +1726,7 @@ export default class Jogo extends Phaser.Scene {
 			this.levar_dano()
 		}
 		const mortos_antes = this.stats.mortos
-		if (this.chefe && dano > 0) {
+		if (this.chefe && dano > 0 && !do_cenario) {
 			for (const osso of this.chefe.ossos.slice()) {
 				if (Phaser.Math.Distance.Between(x, y, osso.x, osso.y) < raio) {
 					this.quebrar_osso(osso)
@@ -1735,11 +1747,13 @@ export default class Jogo extends Phaser.Scene {
 		if (this.stats.mortos - mortos_antes >= 3) {
 			this.parada = Math.max(this.parada, 5)
 		}
-		if (this.stats.mortos - mortos_antes >= 5) {
+		if (this.stats.mortos - mortos_antes >= 5 && !do_cenario) {
 			desbloquear(this, 'bomba5')
 		}
-		this.stats.por_explosao += this.stats.mortos - mortos_antes
-		if (this.chefe && this.chefe.fase != 'morrendo' && !this.chefe.intangivel) {
+		if (!do_cenario) {
+			this.stats.por_explosao += this.stats.mortos - mortos_antes
+		}
+		if (this.chefe && !do_cenario && this.chefe.fase != 'morrendo' && !this.chefe.intangivel) {
 			const c = corpo_chefe(this.chefe)
 			if (Phaser.Math.Distance.Between(x, y, c.x + c.l / 2, c.y + c.a / 2) <= raio + c.l / 2) {
 				this.ferir_chefe(dano, x, y)
@@ -1973,7 +1987,7 @@ export default class Jogo extends Phaser.Scene {
 			if (q.ha >= q.regra.aviso) {
 				q.sombra.destroy()
 				q.pedra.destroy()
-				this.explodir(q.x, q.y, q.regra.raio, 3, true, true)
+				this.explodir(q.x, q.y, q.regra.raio, 3, true, true, true)
 				// escombros levantam poeira e granizo estoura em gelo, em vez de fogo
 				if (q.regra.cor != 0xff7a2a) {
 					this.explosoes[this.explosoes.length - 1].sprite.setTint(q.regra.cor)
@@ -1985,7 +1999,7 @@ export default class Jogo extends Phaser.Scene {
 
 	// algo vai cair perto do elfo: a sombra aparece agora e a coisa cai no fim do aviso
 	criar_queda(regra) {
-		const h = this.heroi_mais_perto(this.heroi_x, this.heroi_y)
+		const h = Phaser.Utils.Array.GetRandom(this.herois()) // com 2 jogadores, cai perto de um dos dois
 		const x = Phaser.Math.Clamp(h.x + 12 + Phaser.Math.Between(-70, 70), 20, this.largura - 20)
 		const y = Phaser.Math.Clamp(h.y + 18 + Phaser.Math.Between(-60, 30), ALTURA * 0.35, ALTURA - 20)
 		const sombra = this.add.ellipse(x, y, 4, 2, 0x000000, 0.45).setDepth(1.6)
@@ -2084,7 +2098,9 @@ export default class Jogo extends Phaser.Scene {
 
 	// primeira vez que um tipo de zumbi aparece: faixa em cima com o nome e a dica
 	apresentar_inimigo(ficha) {
-		const y = 70
+		// se já tem outra faixa na tela, esta vai embaixo dela
+		this.faixas = (this.faixas || 0) + 1
+		const y = 70 + (this.faixas - 1) * 40
 		const fundo = this.add.rectangle(this.largura / 2, y, 210, 34, 0x1c1630, 0.92).setStrokeStyle(1, 0xff6a6a).setDepth(12.5)
 		const nome = texto(this, this.largura / 2, y - 8, 'NOVO: ' + ficha.nome, 8, '#ff9a9a').setOrigin(0.5).setDepth(12.5)
 		const dica = texto(this, this.largura / 2, y + 7, ficha.texto.replace('\n', ' '), 8, '#ffffff').setOrigin(0.5).setDepth(12.5)
@@ -2092,7 +2108,13 @@ export default class Jogo extends Phaser.Scene {
 		const objetos = [fundo, nome, dica]
 		for (const o of objetos) o.setAlpha(0)
 		this.tweens.add({ targets: objetos, alpha: 1, duration: 200 })
-		this.tweens.add({ targets: objetos, alpha: 0, delay: 3500, duration: 400, onComplete: () => objetos.forEach((o) => o.destroy()) })
+		this.tweens.add({
+			targets: objetos, alpha: 0, delay: 3500, duration: 400,
+			onComplete: () => {
+				objetos.forEach((o) => o.destroy())
+				this.faixas--
+			},
+		})
 	}
 
 	tornar_elite(zumbi) {
@@ -2991,7 +3013,7 @@ export default class Jogo extends Phaser.Scene {
 				if (quem == 1 && R.ARMAS[item.tipo] && item.tipo != 'raio') {
 					this.trocar_arma_p2(item.tipo)
 					this.explicar_item(item.tipo)
-					this.armas_usadas.add(item.tipo)
+					this.usou_arma(item.tipo)
 					efeito(this, 'item', { volume: 0.6 })
 					this.anunciar('P2: ' + R.ARMAS[item.tipo].nome + '!', 100, '#d0a0ff')
 				}
@@ -3225,7 +3247,7 @@ export default class Jogo extends Phaser.Scene {
 		const pontaria = this.stats.disparos ? Math.round((100 * this.stats.acertos) / this.stats.disparos) : 0
 		if (pontaria >= 70 && this.stats.disparos >= 200) desbloquear(this, 'mira')
 		// desafios do dia cumpridos nesta partida
-		const cumpridos = conferir_desafios({ ...this.stats, fase: this.nivel, pontos: this.pontos, lapides: this.lapides_quebradas })
+		const cumpridos = conferir_desafios(this.dia, { ...this.stats, fase: this.nivel, pontos: this.pontos, lapides: this.lapides_quebradas })
 		const moedas = moedas_da_partida(this.pontos, this.stats.chefes) + this.moedas_extras + cumpridos.length * PREMIO
 		const carteira = ganhar_moedas(moedas)
 

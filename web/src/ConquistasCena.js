@@ -88,6 +88,7 @@ export default class ConquistasCena extends Phaser.Scene {
 		const espaco = Math.max(colunas == 1 ? 21 : 0, Math.min(24, (ALTURA - 42 - 56) / linhas))
 		const escala = Math.min(1, (this.largura - 8) / largura_item)
 		this.rolagem_max = Math.max(0, linhas * espaco - (ALTURA - 40 - 58))
+		this.rolagem = Phaser.Math.Clamp(this.rolagem, 0, this.rolagem_max) // girou o celular: a lista pode ter encolhido
 		const largura_total = (largura_item * escala) * colunas + 16 * (colunas - 1)
 		const x0 = Math.max(4, (this.largura - largura_total) / 2)
 		this.objetos.forEach((o, i) => {

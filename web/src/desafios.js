@@ -21,7 +21,7 @@ const MISSOES = [
 	{ id: 'zumbis150', texto: 'MATE 150 ZUMBIS', confere: (r) => r.mortos >= 150 },
 ]
 
-function hoje() {
+export function dia_de_hoje() {
 	const d = new Date()
 	return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()
 }
@@ -49,14 +49,13 @@ function ler_feitas(dia) {
 
 // as missões de hoje: [{ id, texto, feita }]
 export function desafios_de_hoje() {
-	const dia = hoje()
+	const dia = dia_de_hoje()
 	const feitas = ler_feitas(dia)
 	return sortear_do_dia(dia).map((m) => ({ id: m.id, texto: m.texto, feita: feitas.includes(m.id) }))
 }
 
-// confere a partida que acabou; devolve as missões cumpridas agora (para mostrar e pagar)
-export function conferir_desafios(resumo) {
-	const dia = hoje()
+// confere a partida que acabou (pelo dia em que ela começou); devolve as missões cumpridas agora
+export function conferir_desafios(dia, resumo) {
 	const feitas = ler_feitas(dia)
 	const novas = sortear_do_dia(dia).filter((m) => !feitas.includes(m.id) && m.confere(resumo))
 	if (novas.length) {
