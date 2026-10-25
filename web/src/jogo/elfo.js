@@ -448,7 +448,6 @@ export default class Elfo {
 
 	// o elfo leva um golpe: o escudo segura, senão perde uma vida
 	levar_dano(causa) {
-		if (causa) this.causa_do_golpe = causa // para a tela de fim
 		if (this.intocavel || this.estado != 'jogando') {
 			return
 		}
@@ -459,14 +458,14 @@ export default class Elfo {
 			efeito(this, 'escudo_quebra', { volume: 0.7 })
 			return
 		}
-		this.perder_vida()
+		this.perder_vida(causa)
 	}
 
 	perder_vida(causa) {
-		if (causa) this.causa_do_golpe = causa
 		if (this.estado != 'jogando') {
 			return
 		}
+		this.causa_do_golpe = causa || this.causa_do_golpe // para a tela de fim
 		this.vidas--
 		this.parada = 6
 		this.apanhou_na_fase = true

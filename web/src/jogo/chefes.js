@@ -7,7 +7,7 @@ import { tocar_musica, parar_musica } from '../musica.js'
 import { desbloquear } from '../conquistas.js'
 import { marcar_visto } from '../Bestiario.js'
 import { efeito, opcoes } from '../opcoes.js'
-import { corpo_chefe } from './comum.js'
+import { corpo_chefe, de_quem } from './comum.js'
 
 export default class Chefes {
 	// ------------------------------------------------------------------ chefão
@@ -141,6 +141,7 @@ export default class Chefes {
 					desbloquear(this, 'treino')
 					efeito(this, 'fase', { volume: 0.7 })
 					this.estado = 'fim'
+					parar_musica(1500)
 					this.time.delayedCall(2200, () => this.scene.start('Bestiario'))
 				}
 				else if (chefe.final) {
@@ -218,13 +219,16 @@ export default class Chefes {
 
 		const c = corpo_chefe(chefe)
 		if (!chefe.intangivel && this.encosta_em_heroi(c.x, c.y, c.l, c.a)) {
-			this.levar_dano('ESMAGADO POR ' + chefe.nome)
+			this.levar_dano('ESMAGADO ' + de_quem(chefe.nome).replace(/^D/, 'P'))
 		}
 	}
 
 	// entrada de cinema: faixas pretas em cima e embaixo e o nome do chefão atravessando a tela
 	// também usada na chegada de cada cenário (com outra cor)
 	apresentar_chefe(nome, subtitulo, cor = '#ff5a5a') {
+		if (this.estado == 'fim') {
+			return // (um cartão na fila não aparece por cima do fim de jogo)
+		}
 		// um cartão por vez: se já tem um na tela, este espera ele acabar
 		// (conta em ticks do jogo, que param na pausa junto com as animações do cartão)
 		const agora = this.quadro_atual
@@ -265,7 +269,7 @@ export default class Chefes {
 		chefe.espera_cuspe--
 		if (tem('cuspe') && chefe.espera_cuspe <= 0) {
 			const quantos = Math.min(9, 1 + chefe.numero * 2) // 3 no primeiro chefão, 5 no segundo...
-			this.cuspir(c.x + c.l / 2, c.y + c.a * 0.4, quantos, 0.18)
+			this.cuspir(c.x + c.l / 2, c.y + c.a * 0.4, quantos, 0.18, true)
 			chefe.atacando = 40
 			chefe.espera_cuspe = Math.max(70, 150 - chefe.numero * 15)
 		}
@@ -273,7 +277,7 @@ export default class Chefes {
 		chefe.espera_chamar--
 		if (tem('chamar') && chefe.espera_chamar <= 0) {
 			for (let i = 0; i < 1 + chefe.numero; i++) {
-				this.criar_zumbi('corredor', Phaser.Math.Clamp(c.x + Math.random() * c.l - 18, 0, this.largura - 36), c.y + c.a - 20)
+				this.criar_zumbi('corredor', Phaser.Math.Clamp(c.x + Math.random() * c.l - 18, 0, this.largura - 36), c.y + c.a - 20).chamado = true
 			}
 			chefe.atacando = 40
 			chefe.espera_chamar = 500
@@ -286,7 +290,7 @@ export default class Chefes {
 			for (let i = 0; i < quantos; i++) {
 				const x = i < this.herois().length ? this.herois()[i].x + 12 : Math.random() * this.largura
 				const sprite = this.add.sprite(x, -10 - Math.random() * 120, 'cuspe', 0).setDepth(4.5)
-				this.cuspes.push({ sprite, x, y: sprite.y, vx: 0, vy: R.VELOCIDADE_CUSPE * 1.1 })
+				this.cuspes.push({ sprite, x, y: sprite.y, vx: 0, vy: R.VELOCIDADE_CUSPE * 1.1, do_chefe: true })
 			}
 			efeito(this, 'cuspe', { volume: 0.6, rate: 0.7 })
 			chefe.atacando = 40
@@ -327,7 +331,7 @@ export default class Chefes {
 			chefe.labareda--
 			chefe.atacando = 10
 			if (chefe.labareda % 5 == 0) {
-				this.cuspir(c.x + c.l / 2, c.y + c.a * 0.35, 1, 0)
+				this.cuspir(c.x + c.l / 2, c.y + c.a * 0.35, 1, 0, true)
 				this.cuspes[this.cuspes.length - 1].sprite.setTint(0xff8a30).setTintMode(Phaser.TintModes.FILL).setScale(1.4)
 				efeito(this, 'chama', { volume: 0.4 })
 			}
@@ -352,7 +356,7 @@ export default class Chefes {
 		chefe.espera_fantasmas--
 		if (tem('fantasmas') && chefe.espera_fantasmas <= 0) {
 			for (let i = 0; i < 2; i++) {
-				this.criar_zumbi('fantasma', Phaser.Math.Clamp(c.x + Math.random() * c.l - 22, 0, this.largura - 44), c.y + c.a - 30)
+				this.criar_zumbi('fantasma', Phaser.Math.Clamp(c.x + Math.random() * c.l - 22, 0, this.largura - 44), c.y + c.a - 30).chamado = true
 			}
 			chefe.atacando = 40
 			chefe.espera_fantasmas = 520
@@ -409,6 +413,7 @@ export default class Chefes {
 				m.sprite.setTint(0x7af0d8)
 			}
 			const zumbi = this.criar_zumbi('comum', Phaser.Math.Clamp(x - 22, 0, this.largura - 44), y - 40)
+			zumbi.chamado = true
 			zumbi.cavando = 90
 			zumbi.intangivel = true
 			zumbi.vx = 0.3

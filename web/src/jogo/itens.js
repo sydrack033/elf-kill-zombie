@@ -14,7 +14,7 @@ export default class Itens {
 		if (this.proximo_item > 0) {
 			return
 		}
-		const r = this.rng
+		const r = this.rng_caixas
 		this.proximo_item = R.ITEM_A_CADA[0] + Math.floor(r() * (R.ITEM_A_CADA[1] - R.ITEM_A_CADA[0] + 1))
 		this.soltar_item(8 + Math.floor(r() * (this.largura - 32)), -16, r)
 	}

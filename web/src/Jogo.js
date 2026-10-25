@@ -63,8 +63,10 @@ export default class Jogo extends Phaser.Scene {
 		// modificadores das Opções: mudam a dificuldade desta partida e multiplicam os pontos
 		// Partida do Dia: sem loja, classe, modificadores nem começo adiantado, e o sorteio dos zumbis e
 		// caixas com a data como semente (a mesma sequência para todo mundo naquele dia)
-		this.diario = opcoes.modo == 'diario'
+		this.diario = opcoes.modo == 'diario' && !this.treino
+		// (dois sorteios separados, para zumbis e caixas não se atrapalharem)
 		this.rng = this.diario ? sorteador(dia_de_hoje()) : Math.random
+		this.rng_caixas = this.diario ? sorteador(dia_de_hoje() ^ 0x9e3779b9) : Math.random
 		if (this.diario) {
 			this.dificuldade = { ...R.DIFICULDADES.normal }
 		}
@@ -333,6 +335,7 @@ export default class Jogo extends Phaser.Scene {
 	// vantagens compradas na loja valem para o começo de toda partida
 	aplicar_loja() {
 		const compras = ler_loja().compras
+		this.forja = !!compras.forja // antes das armas da Herança e do Arqueiro
 		// os corações comprados valem mesmo quando o jogo já começa com o máximo (fácil)
 		this.vidas += compras.vida || 0
 		this.vidas_max = Math.max(this.vidas_max, this.vidas)
@@ -363,7 +366,7 @@ export default class Jogo extends Phaser.Scene {
 		const liberada = R.CLASSES.find((c) => c.id == classe && R.classe_liberada(c, feitas_classe, ler_estatisticas().melhor_fase))
 		if (liberada && classe == 'arqueiro' && !this.mod.pistola) {
 			this.trocar_arma('arco')
-			this.trocar_arma('arco') // nível II
+			if (!this.forja) this.trocar_arma('arco') // nível II (com a Forja já começa no II)
 		}
 		if (liberada && classe == 'bombardeiro') {
 			this.polvora_da_classe = 1 // fora das melhorias (não conta para a conquista Colecionador)

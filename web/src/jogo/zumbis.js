@@ -6,7 +6,7 @@ import * as R from '../regras.js'
 import { desbloquear } from '../conquistas.js'
 import { marcar_visto, nome_de } from '../Bestiario.js'
 import { efeito, opcoes } from '../opcoes.js'
-import { sortear, corpo } from './comum.js'
+import { sortear, corpo, de_quem } from './comum.js'
 
 export default class Zumbis {
 	// ------------------------------------------------------------------ zumbis
@@ -29,7 +29,9 @@ export default class Zumbis {
 		this.proximo_zumbi = (Math.max(35, 140 - n * 8) + entre(0, 60)) / this.dificuldade.frequencia
 
 		// às vezes vem uma fileira de zumbis juntos
-		if (this.nivel >= 3 && r() < 0.12) {
+		const sorte_fileira = r() // sorteado sempre, para a sequência não depender da fase
+		const sorte_elite = r()
+		if (this.nivel >= 3 && sorte_fileira < 0.12) {
 			const quantos = entre(3, 5)
 			const espaco = Math.min(50, (this.largura - 44) / quantos)
 			const inicio = entre(0, Math.max(0, Math.floor(this.largura - 44 - espaco * (quantos - 1))))
@@ -48,7 +50,7 @@ export default class Zumbis {
 			return
 		}
 		const zumbi = this.criar_zumbi(tipo, entre(0, Math.max(0, Math.floor(this.largura - tamanho))), -tamanho)
-		if (this.nivel >= R.ELITE.a_partir_da_fase && r() < R.ELITE.chance) {
+		if (this.nivel >= R.ELITE.a_partir_da_fase && sorte_elite < R.ELITE.chance) {
 			this.tornar_elite(zumbi)
 		}
 	}
@@ -171,7 +173,7 @@ export default class Zumbis {
 	mover_cova(cova) {
 		cova.y += R.ROLAGEM_DO_CHAO
 		cova.ninho_ha++
-		if (cova.ninho_ha % cova.regra.ninho == 0 && cova.y > -20 && cova.y < ALTURA * 0.45) {
+		if (cova.ninho_ha % cova.regra.ninho == 0 && cova.y > -20 && cova.y < ALTURA * 0.45 && !this.chefe && this.chefe_em == 0) {
 			const z = this.criar_zumbi('comum', cova.x - 2, cova.y + 6)
 			z.sprite.setAlpha(0)
 			this.tweens.add({ targets: z.sprite, alpha: 1, duration: 300 })
@@ -732,7 +734,8 @@ export default class Zumbis {
 			else if (zumbi.y > ALTURA) {
 				// passou pelo elfo e fugiu pela parte de baixo: também custa uma vida
 				zumbi.fugiu = true
-				this.perder_vida('UM ' + nome_de(zumbi.tipo) + ' PASSOU POR VOCÊ')
+				// (os chamados pelo chefão só atrapalham: passar por eles não custa vida)
+				if (!zumbi.chamado) this.perder_vida(nome_de(zumbi.tipo) + ' PASSOU POR VOCÊ')
 			}
 		}
 
@@ -811,14 +814,14 @@ export default class Zumbis {
 	}
 
 	// cospe "quantos" cuspes em leque na direção do elfo
-	cuspir(x, y, quantos, abertura) {
+	cuspir(x, y, quantos, abertura, do_chefe = false) {
 		const alvo = this.heroi_mais_perto(x, y)
 		const angulo = Math.atan2(alvo.y + 12 - y, alvo.x + 12 - x)
 		for (let i = 0; i < quantos; i++) {
 			const a = angulo + (i - (quantos - 1) / 2) * abertura
 			const sprite = this.add.sprite(x, y, 'cuspe', 0).setDepth(4.5)
 			const v = R.VELOCIDADE_CUSPE * this.dificuldade.velocidade
-			this.cuspes.push({ sprite, x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v })
+			this.cuspes.push({ sprite, x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, do_chefe })
 		}
 		efeito(this, 'cuspe', { volume: 0.5, rate: 0.9 + Math.random() * 0.2 })
 	}
@@ -831,7 +834,7 @@ export default class Zumbis {
 			}
 			if (this.encosta_em_heroi(cuspe.x - 3, cuspe.y - 3, 6, 6) && !this.intocavel) {
 				cuspe.sumiu = true
-				this.levar_dano(this.chefe ? 'ATAQUE DE ' + this.chefe.nome : 'CUSPE DE ZUMBI')
+				this.levar_dano(cuspe.do_chefe && this.chefe ? 'ATAQUE ' + de_quem(this.chefe.nome) : 'CUSPE DE ZUMBI')
 			}
 			if (cuspe.x < -10 || cuspe.x > this.largura + 10 || cuspe.y < -10 || cuspe.y > ALTURA + 10) {
 				cuspe.sumiu = true

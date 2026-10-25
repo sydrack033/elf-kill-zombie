@@ -58,5 +58,10 @@ export function sorteador(semente) {
 	}
 }
 
+// 'O REI ZUMBI' -> 'DO REI ZUMBI', 'A BRUXA' -> 'DA BRUXA' (para as frases da tela de fim)
+export function de_quem(nome) {
+	return nome.replace(/^O /, 'DO ').replace(/^A /, 'DA ')
+}
+
 // quem já jogou com toque continua com os controles na tela ao jogar de novo
 export const memoria = { usou_toque: false }
