@@ -35,10 +35,11 @@ export default class EstatisticasCena extends Phaser.Scene {
 		this.blocos = [
 			texto(this, 0, 50, 'PARTIDAS ' + e.partidas + '   ZUMBIS ' + e.zumbis.toLocaleString('pt-BR') + '   CHEFÕES ' + e.chefes, 8, '#9fd8ff'),
 			texto(this, 0, 64, 'MELHOR FASE ' + e.melhor_fase + '   TEMPO JOGADO ' + (horas ? horas + 'H ' : '') + minutos + 'MIN', 8, '#9fd8ff'),
-			texto(this, 0, 90, 'MAIS ABATIDOS', 8, '#ffd34d'),
-			texto(this, 0, 104, mais_abatidos.length ? mais_abatidos.join('   ') : 'NENHUM AINDA', 8, '#ffffff'),
-			texto(this, 0, 132, 'ÚLTIMAS PARTIDAS', 8, '#ffd34d'),
-			texto(this, 0, 146, historico.length ? historico.join('\n') : 'NENHUMA AINDA', 8, '#ffffff').setLineSpacing(4),
+			texto(this, 0, 78, 'MAIOR COMBO ' + (e.melhor_combo || 0) + '   MAIS PONTOS NUMA PARTIDA ' + (e.mais_pontos || 0).toLocaleString('pt-BR'), 8, '#9fd8ff'),
+			texto(this, 0, 100, 'MAIS ABATIDOS', 8, '#ffd34d'),
+			texto(this, 0, 114, mais_abatidos.length ? mais_abatidos.join('   ') : 'NENHUM AINDA', 8, '#ffffff'),
+			texto(this, 0, 138, 'ÚLTIMAS PARTIDAS', 8, '#ffd34d'),
+			texto(this, 0, 152, historico.length ? historico.join('\n') : 'NENHUMA AINDA', 8, '#ffffff').setLineSpacing(4),
 		].map((t) => t.setOrigin(0.5, 0))
 		this.voltar = texto(this, 0, ALTURA - 14, 'QUALQUER TECLA OU CLIQUE: VOLTAR', 8, '#cfcfcf').setOrigin(0.5)
 		ajustar_tela(this)

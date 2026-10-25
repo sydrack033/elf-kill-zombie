@@ -71,7 +71,7 @@ export default class Fim {
 		const { posicao, id } = gravar_placar(this.pontos, this.nivel, opcoes.dificuldade, opcoes.modo)
 		if (this.diario) gravar_recorde_do_dia(this.dia, this.pontos)
 		gravar_historico({ fase: this.nivel, pontos: this.pontos, dificuldade: opcoes.dificuldade, modo: opcoes.modo })
-		somar_estatisticas({ zumbis: this.stats.mortos, chefes: this.stats.chefes, segundos: Math.floor(this.stats.ticks / 100), fase: this.nivel, por_tipo: this.stats.por_tipo })
+		somar_estatisticas({ zumbis: this.stats.mortos, chefes: this.stats.chefes, segundos: Math.floor(this.stats.ticks / 100), fase: this.nivel, por_tipo: this.stats.por_tipo, combo: this.stats.melhor_combo, pontos: this.pontos })
 		const segundos = Math.floor(this.stats.ticks / 100)
 		const tempo = Math.floor(segundos / 60) + ':' + String(segundos % 60).padStart(2, '0')
 		const pontaria = this.stats.disparos ? Math.round((100 * this.stats.acertos) / this.stats.disparos) : 0
