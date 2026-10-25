@@ -3,6 +3,7 @@ import { ALTURA, ajustar_tela, texto, tecla_tela_cheia, tecla_som, ler_recorde, 
 import { tocar_musica, tecla_musica } from './musica.js'
 import { opcoes, gravar_opcoes, efeito } from './opcoes.js'
 import { ler_conquistas } from './conquistas.js'
+import { ler_loja } from './moedas.js'
 import * as R from './regras.js'
 
 // Tela de título: enquanto espera, roda uma demonstração no fundo (o elfo atirando nos zumbis).
@@ -60,7 +61,7 @@ export default class Titulo extends Phaser.Scene {
 			this, 0, 346,
 			celular
 				? 'ARRASTE NA ESQUERDA: ANDAR\nO ELFO ATIRA SOZINHO\nTOQUE NA DIREITA: MIRAR\nBOTÕES NA TELA: BOMBA, ESQUIVA E PAUSA'
-				: 'WASD/SETAS: ANDAR   MOUSE: MIRAR   SHIFT: ESQUIVA\nCLIQUE: ATIRAR   CLIQUE DIREITO: BOMBA\nP: PAUSA  F: TELA CHEIA  M: SOM  N: MÚSICA\nX: MODO   C: CONQUISTAS   B: BESTIÁRIO   H: HISTÓRIA',
+				: 'WASD/SETAS: ANDAR   MOUSE: MIRAR   SHIFT: ESQUIVA\nCLIQUE: ATIRAR   CLIQUE DIREITO: BOMBA\nP: PAUSA  F: TELA CHEIA  M: SOM  N: MÚSICA\nX: MODO  L: LOJA  C: CONQUISTAS  B: BESTIÁRIO  H: HISTÓRIA',
 			8, '#cfcfcf',
 		).setOrigin(0.5).setDepth(6)
 
@@ -93,6 +94,7 @@ export default class Titulo extends Phaser.Scene {
 		this.input.keyboard.on('keydown-C', () => ir('Conquistas'))
 		this.input.keyboard.on('keydown-H', () => ir('Historia', { depois: 'Titulo' }))
 		this.input.keyboard.on('keydown-B', () => ir('Bestiario'))
+		this.input.keyboard.on('keydown-L', () => ir('Loja'))
 		this.input.keyboard.on('keydown-LEFT', () => this.mudar_dificuldade(-1))
 		this.input.keyboard.on('keydown-RIGHT', () => this.mudar_dificuldade(1))
 		this.input.keyboard.on('keydown-UP', () => this.mudar_elfo(-1))
@@ -106,7 +108,7 @@ export default class Titulo extends Phaser.Scene {
 				const acoes = {
 					12: () => this.mudar_elfo(-1), 13: () => this.mudar_elfo(1),
 					14: () => this.mudar_dificuldade(-1), 15: () => this.mudar_dificuldade(1),
-					3: () => ir('Conquistas'),
+					3: () => ir('Conquistas'), 2: () => this.mudar_modo(), 8: () => ir('Loja'),
 				}
 				;(acoes[botao.index] || comecar)()
 			})
@@ -119,12 +121,18 @@ export default class Titulo extends Phaser.Scene {
 			if (this.botao_trofeu && this.botao_trofeu.getBounds().contains(p.worldX, p.worldY)) {
 				ir('Conquistas')
 			}
+			else if (this.botao_loja && this.botao_loja.getBounds().contains(p.worldX, p.worldY)) {
+				ir('Loja')
+			}
 			else {
 				comecar()
 			}
 		})
 		// troféu no canto (para quem joga no celular e não tem a tecla C)
 		this.botao_trofeu = this.add.sprite(0, 14, 'trofeu', 0).setScale(1.5).setDepth(6)
+		// moedas no canto esquerdo: tocar (ou L) abre a loja
+		this.moeda = this.add.sprite(12, 14, 'moeda').setScale(1.5).setDepth(6)
+		this.botao_loja = texto(this, 21, 14, ler_loja().moedas + '  LOJA', 8, '#ffd34d').setOrigin(0, 0.5).setDepth(6)
 		this.cameras.main.fadeIn(300, 0, 0, 0)
 		this.ao_redimensionar()
 	}

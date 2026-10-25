@@ -98,6 +98,13 @@ export default class Carregar extends Phaser.Scene {
 		g.fillStyle(0xe8e0c8).fillRect(3, 2, 6, 2).fillRect(1, 1, 1, 4).fillRect(10, 1, 1, 4)
 		g.fillStyle(0xffffff).fillRect(3, 2, 6, 1)
 		g.generateTexture('osso', 12, 6)
+		// moeda da loja (8x8)
+		g.clear()
+		g.fillStyle(0x6a4a10).fillRect(2, 0, 4, 8).fillRect(0, 2, 8, 4).fillRect(1, 1, 6, 6)
+		g.fillStyle(0xffd34d).fillRect(2, 1, 4, 6).fillRect(1, 2, 6, 4)
+		g.fillStyle(0xfff0a0).fillRect(2, 2, 1, 3)
+		g.fillStyle(0xc89a20).fillRect(4, 2, 1, 4)
+		g.generateTexture('moeda', 8, 8)
 		g.destroy()
 		this.scene.start('Titulo')
 	}

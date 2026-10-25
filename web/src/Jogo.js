@@ -5,6 +5,7 @@ import { tocar_musica, parar_musica, tecla_musica, atualizar_volume_musica } fro
 import { desbloquear } from './conquistas.js'
 import { marcar_visto } from './Bestiario.js'
 import { efeito, opcoes, gravar_opcoes } from './opcoes.js'
+import { ler_loja, moedas_da_partida, ganhar_moedas } from './moedas.js'
 
 // Igual à versão do Portugol, o jogo anda em "ticks" de 10 ms e cada tick roda
 // entrada() -> processamento() -> saida(). Os números de dificuldade ficam em regras.js.
@@ -222,6 +223,8 @@ export default class Jogo extends Phaser.Scene {
 			this.ligar_toque()
 		}
 
+		this.aplicar_loja()
+
 		this.modo_chefes = opcoes.modo == 'chefes'
 		if (this.modo_chefes) {
 			this.texto_da_fase = 'CHEFÃO A CAMINHO!'
@@ -237,6 +240,30 @@ export default class Jogo extends Phaser.Scene {
 
 		this.tempo_acumulado = 0
 		this.cameras.main.fadeIn(300, 0, 0, 0)
+	}
+
+	// vantagens compradas na loja valem para o começo de toda partida
+	aplicar_loja() {
+		const compras = ler_loja().compras
+		this.vidas = Math.min(this.vidas_max, this.vidas + (compras.vida || 0))
+		this.bombas = Math.min(this.bombas_max(), this.bombas + (compras.bombas || 0))
+		if (compras.furia) {
+			this.furia = 0.5
+		}
+		if (compras.ima) {
+			this.melhorias.ima = 1
+		}
+		if (compras.melhoria) {
+			const possiveis = R.MELHORIAS.filter((mel) => this.m(mel.id) < mel.maximo)
+			const mel = Phaser.Utils.Array.GetRandom(possiveis)
+			this.melhorias[mel.id] = this.m(mel.id) + 1
+			this.aplicar_melhoria(mel.id)
+		}
+		if (compras.arma) {
+			this.trocar_arma('triplo')
+		}
+		this.atualizar_hud_melhorias()
+		this.atualizar_hud()
 	}
 
 	// ------------------------------------------------------------------ HUD
@@ -2677,6 +2704,8 @@ export default class Jogo extends Phaser.Scene {
 		const tempo = Math.floor(segundos / 60) + ':' + String(segundos % 60).padStart(2, '0')
 		const pontaria = this.stats.disparos ? Math.round((100 * this.stats.acertos) / this.stats.disparos) : 0
 		if (pontaria >= 70 && this.stats.disparos >= 200) desbloquear(this, 'mira')
+		const moedas = moedas_da_partida(this.pontos, this.stats.chefes)
+		const carteira = ganhar_moedas(moedas)
 
 		this.escurecer.setVisible(true)
 		this.vermelho.setFillStyle(0xff0000, 0)
@@ -2688,7 +2717,8 @@ export default class Jogo extends Phaser.Scene {
 			(novo_recorde ? 'NOVO RECORDE!' : posicao ? posicao + 'º LUGAR NO PLACAR' : 'RECORDE: ' + this.recorde) + '\n\n' +
 			'FASE ' + this.nivel + '   TEMPO ' + tempo + '\n' +
 			'ZUMBIS ' + this.stats.mortos + '   CHEFÕES ' + this.stats.chefes + '\n' +
-			'PONTARIA ' + pontaria + '%   MAIOR COMBO ' + this.stats.melhor_combo,
+			'PONTARIA ' + pontaria + '%   MAIOR COMBO ' + this.stats.melhor_combo + '\n' +
+			'+' + moedas + ' MOEDAS  (' + carteira + ' NA CARTEIRA)',
 		)
 		this.instrucao = texto(this, this.largura / 2, ALTURA - 50, '', 8, '#cfcfcf').setOrigin(0.5).setDepth(10)
 
