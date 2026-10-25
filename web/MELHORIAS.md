@@ -30,7 +30,8 @@ git (pasta `Jogo1`), então dá para ver o histórico com `git log` e voltar qua
 - **Torreta:** caixa que monta uma torreta no chão; ela atira sozinha por 12 segundos.
 - **Poderes:** escudo, botas de velocidade e gelo (congela os zumbis).
 - **Melhorias** estilo "roguelite": a cada 2 fases escolha 1 de 3 (18 melhorias diferentes, entre
-  elas Vampiro, Ricochete, Estilhaços, Fragmentação, Segunda Pele e Ira Élfica). A pausa mostra as que você já pegou.
+  elas Vampiro, Ricochete, Estilhaços, Fragmentação, Segunda Pele e Ira Élfica). A pausa mostra as que você já pegou,
+  e uma vez por partida dá para **trocar as cartas** (tecla R).
 - **Esquiva** (Shift) e **fúria élfica** (E): barra que enche matando e solta um anel de fogo.
 - **Combos**, DUPLO!/TRIPLO!/MASSACRE!, pontos flutuando e avisos nos combos de 10, 25, 50 e 100.
 - **Eventos:** a **Horda** (na metade das fases 8, 13, 18...) manda uma enxurrada de zumbis e dá
