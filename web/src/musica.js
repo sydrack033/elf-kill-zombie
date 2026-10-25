@@ -72,6 +72,7 @@ export function parar_musica(ms = 400) {
 // N liga e desliga só a música (os efeitos continuam)
 export function tecla_musica(scene) {
 	scene.input.keyboard.on('keydown-N', () => {
+		if (scene.digitando_nome) return
 		ligada = !ligada
 		try {
 			localStorage.setItem('elf-kill-zombie-musica', ligada ? 'sim' : 'nao')

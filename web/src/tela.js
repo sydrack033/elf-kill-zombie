@@ -57,7 +57,9 @@ export function texto(scene, x, y, mensagem, tamanho = 8, cor = '#ffffff') {
 
 // F liga e desliga a tela cheia de verdade (sem a barra do navegador)
 export function tecla_tela_cheia(scene) {
-	scene.input.keyboard.on('keydown-F', () => scene.scale.toggleFullscreen())
+	scene.input.keyboard.on('keydown-F', () => {
+		if (!scene.digitando_nome) scene.scale.toggleFullscreen()
+	})
 }
 
 // M liga e desliga o som (vale para o jogo todo). O estado fica guardado aqui porque o
@@ -65,6 +67,7 @@ export function tecla_tela_cheia(scene) {
 let mudo = false
 export function tecla_som(scene) {
 	scene.input.keyboard.on('keydown-M', () => {
+		if (scene.digitando_nome) return
 		mudo = !mudo
 		scene.sound.setMute(mudo)
 	})
@@ -86,7 +89,7 @@ export function gravar_recorde(pontos) {
 	}
 }
 
-// placar com as 5 melhores partidas: [{ pontos, fase }]
+// placar com as 5 melhores partidas: [{ id, nome, pontos, fase }]
 export function ler_placar() {
 	try {
 		const placar = JSON.parse(localStorage.getItem('elf-kill-zombie-placar') || '[]')
@@ -96,19 +99,35 @@ export function ler_placar() {
 	}
 }
 
-// coloca a partida no placar e devolve a posição dela (1 a 5), ou 0 se não entrou
-export function gravar_placar(pontos, fase) {
-	if (pontos <= 0) {
-		return 0
-	}
-	const placar = ler_placar()
-	placar.push({ pontos, fase })
-	placar.sort((a, b) => b.pontos - a.pontos)
-	const posicao = placar.findIndex((p) => p.pontos == pontos && p.fase == fase) + 1
+function salvar_placar(placar) {
 	try {
 		localStorage.setItem('elf-kill-zombie-placar', JSON.stringify(placar.slice(0, 5)))
 	} catch {
 		// sem localStorage: o placar só vale até fechar a página
 	}
-	return posicao <= 5 ? posicao : 0
+}
+
+// coloca a partida no placar (com o nome provisório "ELF") e devolve { posicao, id };
+// posicao é de 1 a 5, ou 0 se não entrou
+export function gravar_placar(pontos, fase) {
+	if (pontos <= 0) {
+		return { posicao: 0, id: null }
+	}
+	const id = Date.now()
+	const placar = ler_placar()
+	placar.push({ id, nome: 'ELF', pontos, fase })
+	placar.sort((a, b) => b.pontos - a.pontos)
+	const posicao = placar.findIndex((p) => p.id == id) + 1
+	salvar_placar(placar)
+	return posicao <= 5 ? { posicao, id } : { posicao: 0, id: null }
+}
+
+// troca o nome provisório depois que o jogador digita as 3 letras
+export function renomear_no_placar(id, nome) {
+	const placar = ler_placar()
+	const linha = placar.find((p) => p.id == id)
+	if (linha) {
+		linha.nome = nome
+		salvar_placar(placar)
+	}
 }

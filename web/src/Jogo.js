@@ -1,5 +1,5 @@
 import Phaser from 'phaser'
-import { ALTURA, ajustar_tela, texto, tecla_tela_cheia, tecla_som, ler_recorde, gravar_recorde, gravar_placar } from './tela.js'
+import { ALTURA, ajustar_tela, texto, tecla_tela_cheia, tecla_som, ler_recorde, gravar_recorde, gravar_placar, renomear_no_placar } from './tela.js'
 import * as R from './regras.js'
 import { tocar_musica, parar_musica, tecla_musica } from './musica.js'
 import { desbloquear } from './conquistas.js'
@@ -52,6 +52,7 @@ export default class Jogo extends Phaser.Scene {
 		this.hud_pontos = null
 		this.botao_bomba = null
 		this.objetos_escolha = []
+		this.digitando_nome = false
 
 		this.chao = this.add.tileSprite(0, 0, 10, ALTURA, 'chao').setOrigin(0)
 		ajustar_tela(this)
@@ -92,6 +93,7 @@ export default class Jogo extends Phaser.Scene {
 		this.bombas = R.BOMBAS_NO_COMECO
 		this.poderes = { escudo: 0, velocidade: 0, congelar: 0 } // ticks que faltam de cada poder
 		this.mouse_mexeu = false // até mexer o mouse, o elfo mira para cima
+		this.andou = false // para as dicas da primeira partida
 
 		this.tiros = [] // { sprite, x, y, vx, vy, arma, acertou: Set }
 		this.espera_tiro = 0
@@ -122,6 +124,7 @@ export default class Jogo extends Phaser.Scene {
 		this.estado = 'jogando' // 'jogando', 'pausado', 'escolhendo' (melhoria) ou 'fim'
 
 		this.criar_hud()
+		this.criar_dicas()
 		this.ao_redimensionar()
 		this.anunciar('FASE 1')
 		this.pintar_noite()
@@ -249,6 +252,55 @@ export default class Jogo extends Phaser.Scene {
 		const arma = R.ARMAS[this.arma]
 		this.hud_arma.setText(this.municao == Infinity ? arma.nome : arma.nome + ' ' + this.municao)
 		this.hud_bombas.setText('BOMBAS ' + this.bombas)
+	}
+
+	// ------------------------------------------------------------------ dicas da primeira partida
+
+	criar_dicas() {
+		this.dicas = []
+		this.dica_texto = texto(this, 0, ALTURA - 62, '', 8, '#9ff07a').setOrigin(0.5).setDepth(10)
+		let ja_viu = false
+		try {
+			ja_viu = localStorage.getItem('elf-kill-zombie-dicas') == 'sim'
+		} catch {
+			// sem localStorage: mostra as dicas
+		}
+		if (ja_viu) {
+			return
+		}
+		const disparos = () => this.stats.disparos
+		// cada dica some quando o jogador faz o que ela pede (ou depois de "maximo" ticks)
+		this.dicas = [
+			{ teclado: 'WASD OU SETAS PARA ANDAR', toque: 'ARRASTE O DEDO NA ESQUERDA PARA ANDAR', feita: () => this.andou, maximo: 600 },
+			{ teclado: 'MIRE COM O MOUSE E CLIQUE PARA ATIRAR', toque: 'O ELFO ATIRA SOZINHO; TOQUE NA DIREITA PARA MIRAR', feita: () => disparos() >= 5, maximo: 700 },
+			{ teclado: 'CLIQUE DIREITO JOGA UMA BOMBA NA MIRA', toque: 'O BOTÃO DA BOMBA FICA EMBAIXO À DIREITA', feita: () => this.bombas < R.BOMBAS_NO_COMECO, maximo: 600 },
+			{ teclado: 'PEGUE AS CAIXAS QUE CAEM: ARMAS E PODERES', toque: 'PEGUE AS CAIXAS QUE CAEM: ARMAS E PODERES', feita: () => this.arma != 'pistola', maximo: 500 },
+		]
+		this.dica_ha = 0
+	}
+
+	mostrar_dicas() {
+		const dica = this.dicas[0]
+		if (!dica) {
+			this.dica_texto.setVisible(false)
+			return
+		}
+		this.dica_ha++
+		if (dica.feita() || this.dica_ha > dica.maximo) {
+			this.dicas.shift()
+			this.dica_ha = 0
+			if (this.dicas.length == 0) {
+				try {
+					localStorage.setItem('elf-kill-zombie-dicas', 'sim')
+				} catch {
+					// sem localStorage: mostra de novo na próxima vez
+				}
+			}
+			return
+		}
+		this.dica_texto.setText(this.modo_toque ? dica.toque : dica.teclado)
+		this.dica_texto.setPosition(this.largura / 2, ALTURA - 62)
+		this.dica_texto.setVisible(Math.floor(this.dica_ha / 40) % 4 != 3) // pisca de leve
 	}
 
 	// ------------------------------------------------------------------ melhorias
@@ -597,6 +649,7 @@ export default class Jogo extends Phaser.Scene {
 		this.mover_itens()
 		this.mover_manchas()
 		this.mover_chuva()
+		this.mostrar_dicas()
 		this.contar_tempos()
 
 		this.chao.tilePositionY -= R.ROLAGEM_DO_CHAO // o chão rola para dar a impressão de que o elfo avança
@@ -713,6 +766,9 @@ export default class Jogo extends Phaser.Scene {
 		}
 		this.heroi_x = Phaser.Math.Clamp(this.heroi_x, 0, this.largura - 25)
 		this.heroi_y = Phaser.Math.Clamp(this.heroi_y, ALTURA * 0.55, ALTURA - 27)
+		if (this.esq_on || this.dir_on || this.cima_on || this.baixo_on) {
+			this.andou = true
+		}
 	}
 
 	// o elfo olha para o lado da mira (o lado em que ela está mais longe)
@@ -1567,7 +1623,7 @@ export default class Jogo extends Phaser.Scene {
 			this.recorde = this.pontos
 			gravar_recorde(this.pontos)
 		}
-		const posicao = gravar_placar(this.pontos, this.nivel)
+		const { posicao, id } = gravar_placar(this.pontos, this.nivel)
 		const segundos = Math.floor(this.stats.ticks / 100)
 		const tempo = Math.floor(segundos / 60) + ':' + String(segundos % 60).padStart(2, '0')
 		const pontaria = this.stats.disparos ? Math.round((100 * this.stats.acertos) / this.stats.disparos) : 0
@@ -1583,9 +1639,53 @@ export default class Jogo extends Phaser.Scene {
 			(novo_recorde ? 'NOVO RECORDE!' : posicao ? posicao + 'º LUGAR NO PLACAR' : 'RECORDE: ' + this.recorde) + '\n\n' +
 			'FASE ' + this.nivel + '   TEMPO ' + tempo + '\n' +
 			'ZUMBIS ' + this.stats.mortos + '   CHEFÕES ' + this.stats.chefes + '\n' +
-			'PONTARIA ' + pontaria + '%   MAIOR COMBO ' + this.stats.melhor_combo + '\n\n' +
-			'CLIQUE OU ESPAÇO: JOGAR DE NOVO\nESC: MENU',
+			'PONTARIA ' + pontaria + '%   MAIOR COMBO ' + this.stats.melhor_combo,
 		)
+		this.instrucao = texto(this, this.largura / 2, ALTURA - 50, '', 8, '#cfcfcf').setOrigin(0.5).setDepth(10)
+
+		// entrou no placar e tem teclado: pede as 3 letras do nome, como nos fliperamas
+		if (posicao && !this.modo_toque) {
+			this.pedir_nome(id)
+		}
+		else {
+			this.liberar_reinicio()
+		}
+	}
+
+	pedir_nome(id) {
+		let nome = ''
+		this.digitando_nome = true // enquanto isso, F, M e N viram letras em vez de atalhos
+		const desenhar = () => {
+			const cursor = Math.floor(this.time.now / 300) % 2 ? '_' : ' '
+			this.instrucao.setText('SEU NOME: ' + (nome + cursor + '___').slice(0, 3) + '\nDIGITE 3 LETRAS E APERTE ENTER')
+		}
+		desenhar()
+		const piscar = this.time.addEvent({ delay: 150, loop: true, callback: desenhar })
+		const ao_digitar = (evento) => {
+			if (evento.key == 'Enter') {
+				this.input.keyboard.off('keydown', ao_digitar)
+				this.digitando_nome = false
+				piscar.remove()
+				renomear_no_placar(id, nome || 'ELF')
+				this.sound.play('item', { volume: 0.6 })
+				this.liberar_reinicio()
+				return
+			}
+			if (evento.key == 'Backspace') {
+				nome = nome.slice(0, -1)
+			}
+			else if (/^[a-zA-Z0-9]$/.test(evento.key) && nome.length < 3) {
+				nome += evento.key.toUpperCase()
+				this.sound.play('combo', { volume: 0.4 })
+			}
+			desenhar()
+		}
+		// espera um pouco para não pegar a tecla que estava apertada na hora de morrer
+		this.time.delayedCall(500, () => this.input.keyboard.on('keydown', ao_digitar))
+	}
+
+	liberar_reinicio() {
+		this.instrucao.setText(this.modo_toque ? 'TOQUE PARA JOGAR DE NOVO' : 'CLIQUE OU ESPAÇO: JOGAR DE NOVO\nESC: MENU')
 		// espera um pouco para quem está atirando não reiniciar sem querer
 		this.time.delayedCall(1000, () => {
 			const reiniciar = () => this.scene.restart()

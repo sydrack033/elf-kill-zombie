@@ -31,7 +31,7 @@ export default class Titulo extends Phaser.Scene {
 		// placar dos 5 melhores
 		const placar = ler_placar()
 		const linhas = placar.length
-			? ['MELHORES'].concat(placar.map((p, i) => i + 1 + '. ' + String(p.pontos).padStart(6, ' ') + '  FASE ' + p.fase))
+			? ['MELHORES'].concat(placar.map((p, i) => i + 1 + '. ' + (p.nome || 'ELF').padEnd(3, ' ') + '  ' + String(p.pontos).padStart(6, ' ') + '  FASE ' + p.fase))
 			: ['RECORDE: ' + ler_recorde()]
 		this.placar = texto(this, 0, 240, placar.length || ler_recorde() ? linhas.join('\n') : '', 8, '#ffffff').setOrigin(0.5).setDepth(6)
 
