@@ -36,9 +36,14 @@ export default class Titulo extends Phaser.Scene {
 			this.criar_seletor(134, 'DIFICULDADE', () => this.mudar_dificuldade(-1), () => this.mudar_dificuldade(1)),
 			this.criar_seletor(149, 'ELFO', () => this.mudar_elfo(-1), () => this.mudar_elfo(1)),
 		]
+		// 2 jogadores só no computador (o segundo usa as setas ou um controle)
+		this.computador = this.sys.game.device.os.desktop
+		if (this.computador) {
+			this.seletores.push(this.criar_seletor(164, 'JOGADORES', () => this.mudar_jogadores(), () => this.mudar_jogadores()))
+		}
 		this.atualizar_seletores()
 
-		this.comecar = texto(this, 0, 180, 'CLIQUE OU\nAPERTE ESPAÇO', 10, '#ffd34d').setOrigin(0.5).setDepth(6)
+		this.comecar = texto(this, 0, 194, 'CLIQUE OU\nAPERTE ESPAÇO', 10, '#ffd34d').setOrigin(0.5).setDepth(6)
 
 		// placar dos 5 melhores
 		const placar = ler_placar()
@@ -46,12 +51,12 @@ export default class Titulo extends Phaser.Scene {
 		const linhas = placar.length
 			? ['MELHORES'].concat(placar.map((p, i) => i + 1 + '. ' + (p.nome || 'ELF').padEnd(3, ' ') + '  ' + String(p.pontos).padStart(6, ' ') + '  FASE ' + p.fase + (letra[p.dificuldade] || '')))
 			: ['RECORDE: ' + ler_recorde()]
-		this.placar = texto(this, 0, 244, placar.length || ler_recorde() ? linhas.join('\n') : '', 8, '#ffffff').setOrigin(0.5).setDepth(6)
+		this.placar = texto(this, 0, 254, placar.length || ler_recorde() ? linhas.join('\n') : '', 8, '#ffffff').setOrigin(0.5).setDepth(6)
 
 		// no celular/tablet as instruções são de toque
 		const celular = !this.sys.game.device.os.desktop
 		this.controles = texto(
-			this, 0, 330,
+			this, 0, 340,
 			celular
 				? 'ARRASTE NA ESQUERDA: ANDAR\nO ELFO ATIRA SOZINHO\nTOQUE NA DIREITA: MIRAR\nBOTÕES NA TELA: BOMBA, ESQUIVA E PAUSA'
 				: 'WASD/SETAS: ANDAR   MOUSE: MIRAR   SHIFT: ESQUIVA\nCLIQUE: ATIRAR   CLIQUE DIREITO: BOMBA\nP: PAUSA  F: TELA CHEIA  M: SOM  N: MÚSICA\nC: CONQUISTAS   SETAS AQUI: DIFICULDADE E ELFO',
@@ -82,6 +87,8 @@ export default class Titulo extends Phaser.Scene {
 		this.input.keyboard.on('keydown-RIGHT', () => this.mudar_dificuldade(1))
 		this.input.keyboard.on('keydown-UP', () => this.mudar_elfo(-1))
 		this.input.keyboard.on('keydown-DOWN', () => this.mudar_elfo(1))
+		this.input.keyboard.on('keydown-TWO', () => this.mudar_jogadores())
+		this.input.keyboard.on('keydown-ONE', () => this.mudar_jogadores())
 		// controle: direcional escolhe, Y abre as conquistas, os outros botões começam
 		if (this.input.gamepad) {
 			this.input.gamepad.on('down', (pad, botao) => {
@@ -143,6 +150,16 @@ export default class Titulo extends Phaser.Scene {
 		this.atualizar_seletores()
 	}
 
+	mudar_jogadores() {
+		if (!this.computador) {
+			return
+		}
+		opcoes.jogadores = opcoes.jogadores == 2 ? 1 : 2
+		gravar_opcoes()
+		efeito(this, 'combo', { volume: 0.4, rate: 0.9 })
+		this.atualizar_seletores()
+	}
+
 	atualizar_seletores() {
 		const dificuldade = R.DIFICULDADES[opcoes.dificuldade] || R.DIFICULDADES.normal
 		const cores = { facil: '#9ff07a', normal: '#ffffff', dificil: '#ff6a6a' }
@@ -151,6 +168,10 @@ export default class Titulo extends Phaser.Scene {
 		// mostra quantas cores já foram liberadas
 		const liberados = R.ELFOS.filter((e) => this.conquistas_feitas >= e.conquistas).length
 		this.seletores[1].valor.setText(elfo.nome + '  ' + liberados + '/' + R.ELFOS.length)
+		if (this.seletores[2]) {
+			const controle = this.input.gamepad && this.input.gamepad.total > 0
+			this.seletores[2].valor.setText(opcoes.jogadores == 2 ? '2  (P2: ' + (controle ? 'CONTROLE' : 'SETAS') + ')' : '1')
+		}
 		if (elfo.cor) {
 			this.demo_heroi.setTint(elfo.cor)
 		}

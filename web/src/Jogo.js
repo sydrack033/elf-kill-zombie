@@ -26,6 +26,9 @@ function sortear(lista, peso) {
 	return lista[lista.length - 1]
 }
 
+// cor do segundo elfo (modo 2 jogadores)
+const COR_P2 = 0xd0a0ff
+
 // o pedaço da tela que o corpo do zumbi ocupa (a imagem tem sobra transparente em volta)
 function corpo(zumbi) {
 	const proprio = zumbi.regra.corpo // o corvo tem um corpo próprio, sem escala
@@ -212,6 +215,12 @@ export default class Jogo extends Phaser.Scene {
 		}
 		this.game.events.on(Phaser.Core.Events.BLUR, ao_perder_foco)
 		this.events.once('shutdown', () => this.game.events.off(Phaser.Core.Events.BLUR, ao_perder_foco))
+
+		// modo 2 jogadores (só no computador)
+		this.p2 = null
+		if (opcoes.jogadores == 2 && this.sys.game.device.os.desktop) {
+			this.criar_p2()
+		}
 
 		this.tempo_acumulado = 0
 		this.cameras.main.fadeIn(300, 0, 0, 0)
@@ -646,10 +655,12 @@ export default class Jogo extends Phaser.Scene {
 	entrada() {
 		const t = this.teclas
 		const mouse = this.input.activePointer
-		this.esq_on = t.esquerda.isDown || t.a.isDown
-		this.dir_on = t.direita.isDown || t.d.isDown
-		this.cima_on = t.acima.isDown || t.w.isDown
-		this.baixo_on = t.abaixo.isDown || t.s.isDown
+		const controle_ligado = this.input.gamepad && this.input.gamepad.total > 0
+		const setas = !this.p2 || controle_ligado // com o P2 no teclado, as setas são dele
+		this.esq_on = (setas && t.esquerda.isDown) || t.a.isDown
+		this.dir_on = (setas && t.direita.isDown) || t.d.isDown
+		this.cima_on = (setas && t.acima.isDown) || t.w.isDown
+		this.baixo_on = (setas && t.abaixo.isDown) || t.s.isDown
 		this.atirar_on = t.espaco.isDown || (mouse.leftButtonDown() && !mouse.wasTouch)
 		this.bomba_on = t.q.isDown || (mouse.rightButtonDown() && !mouse.wasTouch)
 		this.esquiva_on = t.shift.isDown
@@ -672,8 +683,11 @@ export default class Jogo extends Phaser.Scene {
 			this.ler_toque()
 		}
 		const controle = this.input.gamepad && this.input.gamepad.total ? this.input.gamepad.getPad(0) : null
-		if (controle) {
+		if (controle && !this.p2) {
 			this.ler_controle(controle)
+		}
+		if (this.p2) {
+			this.entrada_p2()
 		}
 	}
 
@@ -887,6 +901,9 @@ export default class Jogo extends Phaser.Scene {
 	processamento() {
 		this.stats.ticks++
 		this.mover_heroi()
+		if (this.p2) {
+			this.processar_p2()
+		}
 		this.mirar()
 		this.atirar()
 		this.soltar_furia()
@@ -1071,6 +1088,135 @@ export default class Jogo extends Phaser.Scene {
 		}
 		this.heroi_x = Phaser.Math.Clamp(this.heroi_x, 0, this.largura - 25)
 		this.heroi_y = Phaser.Math.Clamp(this.heroi_y, ALTURA * 0.55, ALTURA - 27)
+	}
+
+	// ------------------------------------------------------------------ 2 jogadores
+
+	// os elfos em jogo (posição do canto de cima à esquerda, como heroi_x/heroi_y)
+	herois() {
+		const lista = [{ x: this.heroi_x, y: this.heroi_y }]
+		if (this.p2) {
+			lista.push({ x: this.p2.x, y: this.p2.y })
+		}
+		return lista
+	}
+
+	// o elfo mais perto de um ponto (os zumbis perseguem o mais perto)
+	heroi_mais_perto(x, y) {
+		let melhor = null
+		for (const h of this.herois()) {
+			const d = Phaser.Math.Distance.Between(x, y, h.x + 12, h.y + 12)
+			if (!melhor || d < melhor.d) melhor = { ...h, d }
+		}
+		return melhor
+	}
+
+	// algum elfo encosta neste retângulo? (corpo do elfo: um pouco menor que a imagem de 25x25)
+	encosta_em_heroi(x, y, l, a) {
+		return this.herois().some((h) => encostou(x, y, l, a, h.x + 4, h.y + 2, 17, 22))
+	}
+
+	// segundo elfo: anda com as setas (ou com o controle, se tiver um ligado) e mira e atira sozinho
+	criar_p2() {
+		const p2 = { x: this.largura / 2 + 20, y: ALTURA - 50, xi: 0, direcao: 'cima', angulo: -Math.PI / 2, espera_tiro: 0 }
+		p2.sprite = this.add.sprite(p2.x, p2.y, 'heroi_parado_cima').setOrigin(0).setDepth(5).setTint(COR_P2)
+		p2.arma = this.add.sprite(0, 0, 'armas', 0).setOrigin(3 / 16, 4 / 8).setDepth(6)
+		p2.rotulo = texto(this, 0, 0, 'P2', 8, '#d0a0ff').setOrigin(0.5).setDepth(6)
+		this.p2 = p2
+	}
+
+	entrada_p2() {
+		const p2 = this.p2
+		const controle = this.input.gamepad && this.input.gamepad.total ? this.input.gamepad.getPad(0) : null
+		let vx = 0
+		let vy = 0
+		p2.mira = null
+		if (controle) {
+			const zona = 0.22
+			vx = Math.abs(controle.leftStick.x) > zona ? controle.leftStick.x : (controle.right ? 1 : 0) - (controle.left ? 1 : 0)
+			vy = Math.abs(controle.leftStick.y) > zona ? controle.leftStick.y : (controle.down ? 1 : 0) - (controle.up ? 1 : 0)
+			const rx = controle.rightStick.x
+			const ry = controle.rightStick.y
+			if (Math.hypot(rx, ry) > 0.35) {
+				p2.mira = { x: p2.x + 12 + rx * 120, y: p2.y + 15 + ry * 120 }
+			}
+		}
+		else {
+			const t = this.teclas
+			vx = (t.direita.isDown ? 1 : 0) - (t.esquerda.isDown ? 1 : 0)
+			vy = (t.abaixo.isDown ? 1 : 0) - (t.acima.isDown ? 1 : 0)
+		}
+		p2.vx = Phaser.Math.Clamp(vx, -1, 1)
+		p2.vy = Phaser.Math.Clamp(vy, -1, 1)
+	}
+
+	processar_p2() {
+		const p2 = this.p2
+		const v = (this.poderes.velocidade > 0 ? R.VELOCIDADE_HEROI_RAPIDO : R.VELOCIDADE_HEROI) * (1 + 0.12 * this.m('velocidade'))
+		p2.x = Phaser.Math.Clamp(p2.x + p2.vx * v, 0, this.largura - 25)
+		p2.y = Phaser.Math.Clamp(p2.y + p2.vy * v, ALTURA * 0.55, ALTURA - 27)
+
+		// mira: o analógico direito do controle ou, sem ele, o inimigo mais perto
+		let alvo = p2.mira
+		if (!alvo) {
+			const guardado = { x: this.heroi_x, y: this.heroi_y }
+			this.heroi_x = p2.x
+			this.heroi_y = p2.y
+			alvo = this.inimigo_mais_perto()
+			this.heroi_x = guardado.x
+			this.heroi_y = guardado.y
+		}
+		const mao_x = p2.x + 12
+		const mao_y = p2.y + 15
+		if (alvo) {
+			p2.angulo = Math.atan2(alvo.y - mao_y, alvo.x - mao_x)
+		}
+		const dx = Math.cos(p2.angulo)
+		const dy = Math.sin(p2.angulo)
+		p2.direcao = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'direita' : 'esquerda') : dy > 0 ? 'baixo' : 'cima'
+
+		// atira com a pistola (com as melhorias de dano, cadência e perfuração)
+		if (p2.espera_tiro > 0) {
+			p2.espera_tiro--
+		}
+		else if (alvo) {
+			const pistola = R.ARMAS.pistola
+			const x = mao_x + dx * 14
+			const y = mao_y + dy * 14
+			const sprite = this.add.sprite(x, y, 'tiro', 0).setRotation(p2.angulo).setDepth(4).setTint(COR_P2)
+			this.tiros.push({
+				sprite, x, y, arma: pistola, ha: 0,
+				vx: dx * pistola.velocidade, vy: dy * pistola.velocidade,
+				dano: pistola.dano + this.m('dano'), perfura: this.m('perfura'), acertou: new Set(),
+			})
+			this.stats.disparos++
+			p2.espera_tiro = Math.round(pistola.espera * Math.pow(0.85, this.m('cadencia')))
+			efeito(this, 'tiro', { volume: 0.35, rate: 1.15 })
+		}
+	}
+
+	desenhar_p2() {
+		const p2 = this.p2
+		const andando = p2.vx || p2.vy
+		if (andando) {
+			p2.sprite.setTexture('heroi_' + p2.direcao, p2.xi)
+			if (this.quadro_atual % 5 == 0)
+				p2.xi = (p2.xi + 1) % 10
+		}
+		else {
+			p2.sprite.setTexture('heroi_parado_' + p2.direcao)
+		}
+		const visivel = this.invencivel == 0 || Math.floor(this.invencivel / 8) % 2 == 0
+		p2.sprite.setPosition(Math.round(p2.x), Math.round(p2.y)).setVisible(visivel)
+		if (this.vermelho_heroi > 0) {
+			p2.sprite.setTint(0xff3030).setTintMode(Phaser.TintModes.FILL)
+		}
+		else {
+			p2.sprite.setTint(COR_P2).setTintMode(Phaser.TintModes.MULTIPLY)
+		}
+		p2.arma.setPosition(Math.round(p2.x + 12), Math.round(p2.y + 15)).setRotation(p2.angulo)
+		p2.arma.setFlipY(Math.abs(p2.angulo) > Math.PI / 2).setVisible(visivel)
+		p2.rotulo.setPosition(Math.round(p2.x + 12), Math.round(p2.y - 6))
 	}
 
 	// "fantasma" do elfo que fica para trás durante a esquiva
@@ -1350,7 +1496,7 @@ export default class Jogo extends Phaser.Scene {
 		if (com_som) {
 			efeito(this, 'explosao', { volume: 0.8, rate: raio < R.RAIO_DA_EXPLOSAO ? 1.25 : 1 })
 		}
-		if (fere_heroi && Phaser.Math.Distance.Between(x, y, this.heroi_x + 12, this.heroi_y + 12) < raio * 0.8) {
+		if (fere_heroi && this.herois().some((h) => Phaser.Math.Distance.Between(x, y, h.x + 12, h.y + 12) < raio * 0.8)) {
 			this.levar_dano()
 		}
 		const mortos_antes = this.stats.mortos
@@ -1644,7 +1790,6 @@ export default class Jogo extends Phaser.Scene {
 	}
 
 	mover_zumbis() {
-		const meio_heroi = this.heroi_x + 12
 
 		for (const zumbi of this.zumbis) {
 			if (zumbi.flash > 0)
@@ -1708,13 +1853,14 @@ export default class Jogo extends Phaser.Scene {
 			}
 
 			const meio_zumbi = zumbi.x + 22 * zumbi.escala
+			const meio_heroi = this.heroi_mais_perto(meio_zumbi, zumbi.y).x + 12
 			if (meio_zumbi < meio_heroi - 2)
 				zumbi.x += zumbi.vx
 			else if (meio_zumbi > meio_heroi + 2)
 				zumbi.x -= zumbi.vx
 
 			const c = corpo(zumbi)
-			const mordeu = encostou(c.x, c.y, c.l, c.a, this.heroi_x + 4, this.heroi_y + 2, 17, 22)
+			const mordeu = this.encosta_em_heroi(c.x, c.y, c.l, c.a)
 			if (mordeu && !this.intocavel) {
 				// o zumbi que mordeu se desfaz (o brutamontes aguenta e continua)
 				if (zumbi.tipo != 'brutamontes') {
@@ -1777,7 +1923,7 @@ export default class Jogo extends Phaser.Scene {
 		corvo.x += corvo.vx
 		corvo.y += corvo.vy + Math.sin(corvo.voo / 12) * 0.6 // voo ondulado
 		const c = corpo(corvo)
-		if (!this.intocavel && encostou(c.x, c.y, c.l, c.a, this.heroi_x + 4, this.heroi_y + 2, 17, 22)) {
+		if (!this.intocavel && this.encosta_em_heroi(c.x, c.y, c.l, c.a)) {
 			corvo.morrendo = true
 			corvo.morto_ha = 75
 			this.espirrar_sangue(c.x + c.l / 2, c.y + c.a / 2)
@@ -1792,7 +1938,8 @@ export default class Jogo extends Phaser.Scene {
 
 	// cospe "quantos" cuspes em leque na direção do elfo
 	cuspir(x, y, quantos, abertura) {
-		const angulo = Math.atan2(this.heroi_y + 12 - y, this.heroi_x + 12 - x)
+		const alvo = this.heroi_mais_perto(x, y)
+		const angulo = Math.atan2(alvo.y + 12 - y, alvo.x + 12 - x)
 		for (let i = 0; i < quantos; i++) {
 			const a = angulo + (i - (quantos - 1) / 2) * abertura
 			const sprite = this.add.sprite(x, y, 'cuspe', 0).setDepth(4.5)
@@ -1807,7 +1954,7 @@ export default class Jogo extends Phaser.Scene {
 				cuspe.x += cuspe.vx
 				cuspe.y += cuspe.vy
 			}
-			if (encostou(cuspe.x - 3, cuspe.y - 3, 6, 6, this.heroi_x + 5, this.heroi_y + 3, 15, 20) && !this.intocavel) {
+			if (this.encosta_em_heroi(cuspe.x - 3, cuspe.y - 3, 6, 6) && !this.intocavel) {
 				cuspe.sumiu = true
 				this.levar_dano()
 			}
@@ -1943,7 +2090,7 @@ export default class Jogo extends Phaser.Scene {
 			chefe.atacando--
 
 		const c = corpo_chefe(chefe)
-		if (encostou(c.x, c.y, c.l, c.a, this.heroi_x + 4, this.heroi_y + 2, 17, 22)) {
+		if (this.encosta_em_heroi(c.x, c.y, c.l, c.a)) {
 			this.levar_dano()
 		}
 	}
@@ -1999,7 +2146,7 @@ export default class Jogo extends Phaser.Scene {
 			// cuspe caindo do céu em lugares sorteados (um deles sempre em cima do elfo)
 			const quantos = 5 + chefe.numero
 			for (let i = 0; i < quantos; i++) {
-				const x = i == 0 ? this.heroi_x + 12 : Math.random() * this.largura
+				const x = i < this.herois().length ? this.herois()[i].x + 12 : Math.random() * this.largura
 				const sprite = this.add.sprite(x, -10 - Math.random() * 120, 'cuspe', 0).setDepth(4.5)
 				this.cuspes.push({ sprite, x, y: sprite.y, vx: 0, vy: R.VELOCIDADE_CUSPE * 1.1 })
 			}
@@ -2025,7 +2172,8 @@ export default class Jogo extends Phaser.Scene {
 			if (inv.ha >= 70) {
 				inv.etapa = 'descendo'
 				// mira onde o elfo está agora
-				inv.alvo_x = Phaser.Math.Clamp(this.heroi_x + 12 - tamanho / 2, 0, this.largura - tamanho)
+				const alvo = Phaser.Utils.Array.GetRandom(this.herois())
+				inv.alvo_x = Phaser.Math.Clamp(alvo.x + 12 - tamanho / 2, 0, this.largura - tamanho)
 				inv.alvo_y = ALTURA - tamanho - 10
 				this.cameras.main.shake(300, 0.006)
 			}
@@ -2088,7 +2236,7 @@ export default class Jogo extends Phaser.Scene {
 		for (const item of this.itens) {
 			item.y += 0.5
 			this.puxar(item, 8)
-			if (encostou(item.x, item.y, 16, 16, this.heroi_x, this.heroi_y, 25, 25)) {
+			if (this.herois().some((h) => encostou(item.x, item.y, 16, 16, h.x, h.y, 25, 25))) {
 				item.pegou = true
 				this.pegar(item.tipo)
 			}
@@ -2135,7 +2283,7 @@ export default class Jogo extends Phaser.Scene {
 		for (const coracao of this.coracoes) {
 			coracao.y += 0.6
 			this.puxar(coracao, 7)
-			if (encostou(coracao.x, coracao.y, 14, 12, this.heroi_x, this.heroi_y, 25, 25)) {
+			if (this.herois().some((h) => encostou(coracao.x, coracao.y, 14, 12, h.x, h.y, 25, 25))) {
 				coracao.pegou = true
 				efeito(this, 'item', { volume: 0.6, rate: 1.25 })
 				if (this.vidas < this.vidas_max) {
@@ -2179,6 +2327,16 @@ export default class Jogo extends Phaser.Scene {
 		this.cameras.main.shake(400, 0.012)
 		this.tweens.add({ targets: this.heroi, angle: 90, duration: 500, ease: 'Bounce.Out' })
 		this.tweens.add({ targets: this.heroi, alpha: 0.35, delay: 400, duration: 600 })
+		if (this.p2) {
+			// o segundo elfo cai junto
+			const p2 = this.p2
+			p2.arma.setVisible(false)
+			p2.rotulo.setVisible(false)
+			p2.sprite.setVisible(true).setTint(0xff3030).setTintMode(Phaser.TintModes.FILL)
+			p2.sprite.setOrigin(0.5, 1).setPosition(p2.x + 12, p2.y + 25)
+			this.tweens.add({ targets: p2.sprite, angle: -90, duration: 500, ease: 'Bounce.Out' })
+			this.tweens.add({ targets: p2.sprite, alpha: 0.35, delay: 400, duration: 600 })
+		}
 		this.time.delayedCall(1100, () => this.mostrar_fim())
 	}
 
@@ -2266,6 +2424,9 @@ export default class Jogo extends Phaser.Scene {
 
 	saida() {
 		this.desenhar_heroi()
+		if (this.p2) {
+			this.desenhar_p2()
+		}
 		this.desenhar_zumbis()
 		this.desenhar_chefe()
 		this.desenhar_resto()
@@ -2525,7 +2686,9 @@ export default class Jogo extends Phaser.Scene {
 		const g = this.sombras
 		g.clear()
 		g.fillStyle(0x000000, 0.28)
-		g.fillEllipse(this.heroi_x + 12.5, this.heroi_y + 25, 18, 6)
+		for (const h of this.herois()) {
+			g.fillEllipse(h.x + 12.5, h.y + 25, 18, 6)
+		}
 		for (const zumbi of this.zumbis) {
 			if (zumbi.morrendo) {
 				continue

@@ -42,6 +42,15 @@ const erros = []
 try {
 	const pagina = await navegador.newPage()
 	pagina.on('pageerror', (e) => erros.push('pageerror: ' + e.message))
+	// --local '{"chave": "valor"}' grava no localStorage antes do jogo carregar (opções, placar...)
+	const local = opcao('local', null)
+	if (local) {
+		await pagina.evaluateOnNewDocument((itens) => {
+			for (const [chave, valor] of Object.entries(JSON.parse(itens))) {
+				localStorage.setItem(chave, typeof valor == 'string' ? valor : JSON.stringify(valor))
+			}
+		}, local)
+	}
 	pagina.on('console', (m) => {
 		if (m.type() == 'error') erros.push('console: ' + m.text())
 	})
