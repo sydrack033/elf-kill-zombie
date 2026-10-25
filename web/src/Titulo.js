@@ -4,6 +4,7 @@ import { tocar_musica, tecla_musica } from './musica.js'
 import { opcoes, gravar_opcoes, efeito } from './opcoes.js'
 import { ler_conquistas } from './conquistas.js'
 import { ler_loja } from './moedas.js'
+import { desafios_de_hoje } from './desafios.js'
 import * as R from './regras.js'
 
 // Tela de título: enquanto espera, roda uma demonstração no fundo (o elfo atirando nos zumbis).
@@ -61,7 +62,7 @@ export default class Titulo extends Phaser.Scene {
 			this, 0, 346,
 			celular
 				? 'ARRASTE NA ESQUERDA: ANDAR\nO ELFO ATIRA SOZINHO\nTOQUE NA DIREITA: MIRAR\nBOTÕES NA TELA: BOMBA, ESQUIVA E PAUSA'
-				: 'WASD/SETAS: ANDAR   MOUSE: MIRAR   SHIFT: ESQUIVA\nCLIQUE: ATIRAR   CLIQUE DIREITO: BOMBA\nP: PAUSA  F: TELA CHEIA  M: SOM  N: MÚSICA\nX: MODO  L: LOJA  C: CONQUISTAS  B: BESTIÁRIO  H: HISTÓRIA',
+				: 'WASD/SETAS: ANDAR   MOUSE: MIRAR   SHIFT: ESQUIVA\nCLIQUE: ATIRAR   CLIQUE DIREITO: BOMBA\nP: PAUSA  F: TELA CHEIA  M: SOM  N: MÚSICA\nX: MODO  L: LOJA  D: DESAFIOS  C: CONQUISTAS  B: BESTIÁRIO  H: HISTÓRIA',
 			8, '#cfcfcf',
 		).setOrigin(0.5).setDepth(6)
 
@@ -95,6 +96,7 @@ export default class Titulo extends Phaser.Scene {
 		this.input.keyboard.on('keydown-H', () => ir('Historia', { depois: 'Titulo' }))
 		this.input.keyboard.on('keydown-B', () => ir('Bestiario'))
 		this.input.keyboard.on('keydown-L', () => ir('Loja'))
+		this.input.keyboard.on('keydown-D', () => ir('Desafios'))
 		this.input.keyboard.on('keydown-LEFT', () => this.mudar_dificuldade(-1))
 		this.input.keyboard.on('keydown-RIGHT', () => this.mudar_dificuldade(1))
 		this.input.keyboard.on('keydown-UP', () => this.mudar_elfo(-1))
@@ -124,6 +126,9 @@ export default class Titulo extends Phaser.Scene {
 			else if (this.botao_loja && this.botao_loja.getBounds().contains(p.worldX, p.worldY)) {
 				ir('Loja')
 			}
+			else if (this.botao_desafios && this.botao_desafios.getBounds().contains(p.worldX, p.worldY)) {
+				ir('Desafios')
+			}
 			else {
 				comecar()
 			}
@@ -133,6 +138,10 @@ export default class Titulo extends Phaser.Scene {
 		// moedas no canto esquerdo: tocar (ou L) abre a loja
 		this.moeda = this.add.sprite(12, 14, 'moeda').setScale(1.5).setDepth(6)
 		this.botao_loja = texto(this, 21, 14, ler_loja().moedas + '  LOJA', 8, '#ffd34d').setOrigin(0, 0.5).setDepth(6)
+		// desafios do dia: quantos já foram feitos hoje (tocar ou D abre a lista)
+		const desafios = desafios_de_hoje()
+		const feitos = desafios.filter((d) => d.feita).length
+		this.botao_desafios = texto(this, 6, 30, 'DESAFIOS ' + feitos + '/' + desafios.length, 8, feitos == desafios.length ? '#9ff07a' : '#9fd8ff').setOrigin(0, 0.5).setDepth(6)
 		this.cameras.main.fadeIn(300, 0, 0, 0)
 		this.ao_redimensionar()
 	}

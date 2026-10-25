@@ -6,6 +6,7 @@ import { desbloquear } from './conquistas.js'
 import { marcar_visto } from './Bestiario.js'
 import { efeito, opcoes, gravar_opcoes } from './opcoes.js'
 import { ler_loja, moedas_da_partida, ganhar_moedas } from './moedas.js'
+import { conferir_desafios, PREMIO } from './desafios.js'
 
 // Igual à versão do Portugol, o jogo anda em "ticks" de 10 ms e cada tick roda
 // entrada() -> processamento() -> saida(). Os números de dificuldade ficam em regras.js.
@@ -106,7 +107,7 @@ export default class Jogo extends Phaser.Scene {
 		this.multiplicador = 1
 
 		// números para a tela de fim de jogo
-		this.stats = { mortos: 0, disparos: 0, acertos: 0, ticks: 0, melhor_combo: 0, chefes: 0 }
+		this.stats = { mortos: 0, disparos: 0, acertos: 0, ticks: 0, melhor_combo: 0, chefes: 0, por_tipo: {}, elites: 0, hordas: 0, por_explosao: 0 }
 
 		this.arma = 'pistola'
 		this.municao = Infinity
@@ -1653,6 +1654,7 @@ export default class Jogo extends Phaser.Scene {
 		if (this.stats.mortos - mortos_antes >= 5) {
 			desbloquear(this, 'bomba5')
 		}
+		this.stats.por_explosao += this.stats.mortos - mortos_antes
 		if (this.chefe && this.chefe.fase != 'morrendo' && !this.chefe.intangivel) {
 			const c = corpo_chefe(this.chefe)
 			if (Phaser.Math.Distance.Between(x, y, c.x + c.l / 2, c.y + c.a / 2) <= raio + c.l / 2) {
@@ -1874,6 +1876,7 @@ export default class Jogo extends Phaser.Scene {
 		}
 		if (h.ha >= R.HORDA.duracao && h.zumbis.every((z) => z.morrendo || z.fugiu || !this.zumbis.includes(z))) {
 			this.horda = null
+			this.stats.hordas++
 			this.anunciar('HORDA DERROTADA!', 220, '#9ff07a')
 			efeito(this, 'combo', { volume: 0.7, rate: 0.8 })
 			// prêmio: duas caixas, um coração e moedas
@@ -2013,6 +2016,8 @@ export default class Jogo extends Phaser.Scene {
 		zumbi.morrendo = true
 		zumbi.morto_ha = 0
 		this.stats.mortos++
+		this.stats.por_tipo[zumbi.tipo] = (this.stats.por_tipo[zumbi.tipo] || 0) + 1
+		if (zumbi.elite) this.stats.elites++
 		// cada zumbi geme num tom um pouco diferente (os grandes mais grave)
 		efeito(this, 'zumbi_morre', { volume: 0.6, rate: (0.85 + Math.random() * 0.3) / zumbi.escala })
 
@@ -2910,7 +2915,9 @@ export default class Jogo extends Phaser.Scene {
 		const tempo = Math.floor(segundos / 60) + ':' + String(segundos % 60).padStart(2, '0')
 		const pontaria = this.stats.disparos ? Math.round((100 * this.stats.acertos) / this.stats.disparos) : 0
 		if (pontaria >= 70 && this.stats.disparos >= 200) desbloquear(this, 'mira')
-		const moedas = moedas_da_partida(this.pontos, this.stats.chefes) + this.moedas_extras
+		// desafios do dia cumpridos nesta partida
+		const cumpridos = conferir_desafios({ ...this.stats, fase: this.nivel, pontos: this.pontos, lapides: this.lapides_quebradas })
+		const moedas = moedas_da_partida(this.pontos, this.stats.chefes) + this.moedas_extras + cumpridos.length * PREMIO
 		const carteira = ganhar_moedas(moedas)
 
 		this.escurecer.setVisible(true)
@@ -2924,7 +2931,8 @@ export default class Jogo extends Phaser.Scene {
 			'FASE ' + this.nivel + '   TEMPO ' + tempo + '\n' +
 			'ZUMBIS ' + this.stats.mortos + '   CHEFÕES ' + this.stats.chefes + '\n' +
 			'PONTARIA ' + pontaria + '%   MAIOR COMBO ' + this.stats.melhor_combo + '\n' +
-			'+' + moedas + ' MOEDAS  (' + carteira + ' NA CARTEIRA)',
+			'+' + moedas + ' MOEDAS  (' + carteira + ' NA CARTEIRA)' +
+			cumpridos.map((m) => '\nDESAFIO CUMPRIDO: ' + m.texto).join(''),
 		)
 		this.instrucao = texto(this, this.largura / 2, ALTURA - 50, '', 8, '#cfcfcf').setOrigin(0.5).setDepth(10)
 		if (novo_recorde && this.pontos > 0) {
