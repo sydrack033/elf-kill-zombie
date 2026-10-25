@@ -41,6 +41,8 @@ funciona **sem internet** depois da primeira visita.
 | Loja (no título) | L | moeda no canto | Select |
 | Modo de jogo (no título) | X | setas na tela | X |
 | Bestiário / história (no título) | B / H | | |
+| Desafios do dia (no título) | D | "DESAFIOS" no canto | |
+| Recomeçar (na pausa) | R | botão na pausa | |
 | Sair para o menu (na pausa) | T | botão na pausa | Select |
 | Jogador 2 (no computador) | setas para andar, mira e tiro automáticos | | segundo controle |
 
@@ -52,19 +54,23 @@ funciona **sem internet** depois da primeira visita.
   bumerangue), bombas, torreta (atira sozinha por 12 segundos) e poderes (escudo, botas, gelo).
   Quando a munição acaba, o elfo volta para a pistola.
 - A cada 2 fases (e depois de cada chefão) você escolhe **1 de 3 melhorias**.
-- A cada 5 fases vem um **chefão**: Rei Zumbi, Carniceiro, Podre, Bruxa e Necromante (depois eles
-  voltam mais fortes e com todos os ataques).
+- A cada 5 fases vem um **chefão**: Rei Zumbi, Carniceiro, Podre, Bruxa, Necromante e Demônio
+  (depois eles voltam mais fortes e com todos os ataques). Com metade da vida eles enfurecem.
 - **Zumbis**: comum, corredor, brutamontes, cuspidor, bombado (explode), fantasma (fica transparente),
   escavador (sai da terra), coveiro (lápide como escudo) e corvos em bando. Às vezes vem um de
   **elite**, dourado e mais forte, que dá moedas e uma caixa.
-- A cada 10 fases o **cenário** muda: cemitério, pântano, cidade em ruínas e inferno.
+- A cada 10 fases o **cenário** muda: cemitério, pântano (lodo que deixa lento), cidade em ruínas
+  (escombros caindo), inferno (meteoros) e Terra Gelada (granizo e neve).
 - Mortes emendadas fazem **combo** (até x5 nos pontos). Matar enche a **fúria élfica**.
 - **Eventos**: a **Horda** (fases 8, 13, 18...) manda uma enxurrada de zumbis e dá prêmio a quem
   sobrevive; a **Lua de Sangue** deixa uma fase com zumbis mais rápidos e pontos em dobro.
 - **Modo Chefões**: só as lutas contra chefões, com uma melhoria entre cada uma.
-- **Moedas**: cada partida rende moedas (pontos, chefões, elites e hordas). Na **loja** elas compram
-  vantagens para o começo de todas as partidas (bombas, corações, triplo, fúria, ímã, melhoria).
-- **2 jogadores** no mesmo computador: o segundo elfo anda com as setas (ou um controle) e atira sozinho.
+- **Moedas**: cada partida rende moedas (pontos, chefões, elites, hordas, desafios e as que caem dos
+  zumbis). Na **loja** elas compram vantagens para o começo de todas as partidas (bombas, corações,
+  triplo, fúria, ímã, melhoria, segunda chance).
+- **Desafios do dia**: 3 missões que mudam todo dia; cada uma vale 25 moedas.
+- **2 jogadores** no mesmo computador: o segundo elfo anda com as setas (ou um controle), atira
+  sozinho e usa as armas que pegar.
 - **Conquistas** liberam cores novas para o elfo. O **bestiário** guarda os inimigos já vistos.
 
 ## Onde está cada coisa
@@ -75,6 +81,7 @@ funciona **sem internet** depois da primeira visita.
 - `src/Titulo.js`: tela de título com a demonstração, placar e escolhas.
 - `src/ConquistasCena.js` e `src/conquistas.js`: conquistas (e as estatísticas de todas as partidas).
 - `src/LojaCena.js` e `src/moedas.js`: loja e moedas.
+- `src/DesafiosCena.js` e `src/desafios.js`: desafios do dia.
 - `src/Bestiario.js` e `src/Historia.js`: galeria dos inimigos e a história do começo.
 - `src/Carregar.js`: carrega imagens e sons (com barra de carregamento).
 - `src/tela.js`: ajuste da tela cheia, textos, recorde e placar.

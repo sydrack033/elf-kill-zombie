@@ -11,28 +11,36 @@ git (pasta `Jogo1`), então dá para ver o histórico com `git log` e voltar qua
   revoadas de corvos.
 - **Zumbis de elite:** de vez em quando um vem dourado, maior e bem mais forte; vale mais pontos,
   sempre solta uma caixa e dá moedas.
-- **5 chefões a cada 5 fases**, cada um com ataques próprios: O Rei Zumbi (cuspe em leque e chama
+- **6 chefões a cada 5 fases**, cada um com ataques próprios: O Rei Zumbi (cuspe em leque e chama
   ajudantes), O Carniceiro (investida em cima do elfo), O Podre (chuva de cuspe), A Bruxa (some e
-  aparece, chama fantasmas) e O Necromante (escudo de ossos girando e mortos levantando das manchas
-  de sangue). Depois eles voltam com tudo junto. Entrada de cinema com o nome do chefão.
+  aparece, chama fantasmas), O Necromante (escudo de ossos girando e mortos levantando das manchas
+  de sangue) e O Demônio (chuva de meteoros e labareda). Com metade da vida eles **enfurecem**
+  (do 2º em diante). Depois voltam com tudo junto. Entrada de cinema com o nome do chefão.
 - **Armas:** triplo, metralhadora, laser (atravessa), bazuca (explode), lança-chamas, raio (pula de
   zumbi em zumbi) e bumerangue (vai, faz a curva e volta). A arma aparece na mão do elfo.
 - **Torreta:** caixa que monta uma torreta no chão; ela atira sozinha por 12 segundos.
 - **Poderes:** escudo, botas de velocidade e gelo (congela os zumbis).
-- **Melhorias** estilo "roguelite": a cada 2 fases escolha 1 de 3 (12 melhorias diferentes).
+- **Melhorias** estilo "roguelite": a cada 2 fases escolha 1 de 3 (15 melhorias diferentes, entre
+  elas Vampiro, Ricochete e Estilhaços). A pausa mostra as que você já pegou.
 - **Esquiva** (Shift) e **fúria élfica** (E): barra que enche matando e solta um anel de fogo.
 - **Combos**, DUPLO!/TRIPLO!/MASSACRE!, pontos flutuando.
 - **Eventos:** a **Horda** (na metade das fases 8, 13, 18...) manda uma enxurrada de zumbis e dá
   prêmio a quem sobrevive; a **Lua de Sangue** deixa uma fase vermelha, com zumbis mais rápidos e
   pontos em dobro.
-- **Cenários** a cada 10 fases: cemitério, pântano (com neblina), cidade em ruínas e inferno; cada
-  um com sua música. A noite cai ao longo das fases, com chuva, raios e (no inferno) brasas subindo.
+- **Cenários** a cada 10 fases: cemitério, pântano (neblina e poças de lodo que deixam o elfo lento),
+  cidade em ruínas (escombros caindo), inferno (meteoros) e, da fase 40 em diante, a **Terra Gelada**
+  (neve e granizo). Cada um com sua música. O que cai do céu avisa antes com uma sombra no chão.
+  A noite cai ao longo das fases, com chuva, raios e (no inferno) brasas subindo.
 - **Modos:** Aventura (o normal) e **Só Chefões** (uma luta atrás da outra, com melhoria entre elas),
-  e **2 jogadores** no mesmo computador (o segundo elfo anda com as setas ou um controle).
-- **Loja do elfo:** cada partida rende moedas, que compram vantagens permanentes para o começo do
-  jogo (bombas, corações, começar com o triplo, com meia fúria, com o ímã ou com uma melhoria).
+  e **2 jogadores** no mesmo computador (o segundo elfo anda com as setas ou um controle, mira
+  sozinho e usa as armas que pegar).
+- **Loja do elfo:** cada partida rende moedas (pontos, chefões, elites, hordas e moedas que caem dos
+  zumbis), que compram vantagens permanentes para o começo do jogo (bombas, corações, começar com o
+  triplo, com meia fúria, com o ímã, com uma melhoria) e a **Segunda Chance** (volta uma vez ao morrer).
+- **Desafios do dia:** 3 missões que mudam todo dia (tecla D no título), cada uma vale 25 moedas.
 - **Dificuldade** fácil / normal / difícil e **cores do elfo** liberadas por conquistas.
-- **18 conquistas** com aviso na tela, tela própria e estatísticas de todas as partidas.
+- **22 conquistas** com aviso na tela, tela própria e estatísticas de todas as partidas.
+- Na primeira vez que aparece cada **inimigo** ou **caixa**, o jogo explica o que ele faz.
 - **Placar** com os 5 melhores e nome de 3 letras, estilo fliperama (com a marca do modo).
 - **Bestiário** com os inimigos já encontrados e uma **história** de abertura na primeira partida.
 
@@ -42,7 +50,7 @@ git (pasta `Jogo1`), então dá para ver o histórico com `git log` e voltar qua
 - Sombras, manchas de sangue que ficam no chão, zumbi piscando ao levar tiro, clarão do tiro,
   tela tremendo (dá para desligar na pausa), parada de impacto em golpes fortes, vinheta nas bordas,
   neblina rolando no pântano, lua vermelha na Lua de Sangue.
-- 6 músicas chiptune (título, uma por cenário e chefão) e uns 20 efeitos sonoros, todos gerados por
+- 7 músicas chiptune (título, uma por cenário e chefão) e uns 20 efeitos sonoros, todos gerados por
   `ferramentas/gerar_sons.mjs` (dá para mudar as notas lá e gerar de novo).
 - Todas as imagens novas foram desenhadas em pixel art por scripts.
 
@@ -50,7 +58,9 @@ git (pasta `Jogo1`), então dá para ver o histórico com `git log` e voltar qua
 
 - Tela de título com demonstração rodando no fundo, placar e escolhas (dificuldade, cor do elfo,
   modo, jogadores), moedas e atalhos para loja, conquistas, bestiário e história.
-- Pausa com opções de volume (música e efeitos) e tremor, guardadas no navegador, e saída para o menu.
+- Pausa com opções de volume (música e efeitos) e tremor, guardadas no navegador, recomeçar e saída
+  para o menu. O controle de videogame vibra quando o elfo apanha e nas explosões.
+- Confete quando bate o recorde.
 - Dicas na primeira partida.
 - **Celular:** joystick na tela, tiro automático, botões de bomba, esquiva, fúria e pausa.
 - **Controle de videogame** (Xbox/PlayStation): dois analógicos, como nos jogos de tiro modernos.
@@ -64,7 +74,7 @@ git (pasta `Jogo1`), então dá para ver o histórico com `git log` e voltar qua
   com toque simulado, controle simulado, cada chefão, cada arma, pausa, placar, loja, modo offline.
 - `ferramentas/cenas/verificar.js` é uma bateria de verificações das regras (OK/FALHOU), rodada
   depois de cada mudança.
-- Duas revisões de código procurando bugs; o que elas acharam foi corrigido.
+- Revisões de código procurando bugs a cada leva de novidades; o que elas acharam foi corrigido.
 - Desempenho: 60 quadros por segundo com 80 zumbis, chuva e metralhadora na tela.
 
 ## O que eu não consegui verificar
