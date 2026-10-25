@@ -371,6 +371,15 @@ export default class Desenho {
 				continue
 			}
 			const c = corpo(zumbi)
+			if (zumbi.regra.ninho) {
+				// cova aberta: buraco escuro de terra na frente da lápide
+				g.fillStyle(0x2a1a10, 0.95)
+				g.fillEllipse(c.x + c.l / 2, c.y + c.a + 4, c.l + 6, 14)
+				g.fillStyle(0x000000, 0.9)
+				g.fillEllipse(c.x + c.l / 2, c.y + c.a + 4, c.l - 6, 8)
+				g.fillStyle(0x000000, 0.28)
+				continue
+			}
 			if (zumbi.cavando > 0) {
 				// terra tremendo onde o escavador vai sair (treme mais quando está quase saindo)
 				const tremor = zumbi.cavando < 40 ? 2 : 1
