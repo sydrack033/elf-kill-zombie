@@ -91,7 +91,8 @@ export default class OpcoesCena extends Phaser.Scene {
 			this.scale.toggleFullscreen()
 		}
 		else if (linha.acao == 'dicas') {
-			// a próxima partida mostra as dicas, e as caixas e inimigos voltam a ser explicados
+			// a próxima partida mostra as dicas, e as caixas voltam a ser explicadas
+			// (os inimigos não: o bestiário continua com os que já foram vistos)
 			try {
 				localStorage.removeItem('elf-kill-zombie-dicas')
 				localStorage.removeItem('elf-kill-zombie-itens')
