@@ -204,6 +204,7 @@ export default class Jogo extends Phaser.Scene {
 			this.input.keyboard.on('keydown-' + tecla, () => this.tecla_no_menu(direcoes[tecla]))
 		}
 		this.input.keyboard.on('keydown-T', () => this.sair_para_menu())
+		this.input.keyboard.on('keydown-R', () => this.reiniciar_da_pausa())
 
 		// botões do controle que não são "segurar": Start pausa, e A/direcional servem nos menus
 		this.mira_controle = null
@@ -633,6 +634,14 @@ export default class Jogo extends Phaser.Scene {
 		}
 	}
 
+	// da pausa, começa uma partida nova do zero
+	reiniciar_da_pausa() {
+		if (this.estado == 'pausado') {
+			this.sound.resumeAll()
+			this.scene.restart()
+		}
+	}
+
 	// a tela só treme se o jogador não desligou isso nas opções
 	tremer(duracao, intensidade) {
 		if (opcoes.tremor) {
@@ -693,14 +702,17 @@ export default class Jogo extends Phaser.Scene {
 		})
 		const ajuda = this.modo_toque
 			? 'TOQUE FORA PARA CONTINUAR'
-			: 'SETAS: AJUSTAR\nP OU ESC: CONTINUAR   T: SAIR PARA O MENU'
+			: 'SETAS: AJUSTAR\nP OU ESC: CONTINUAR   R: RECOMEÇAR   T: SAIR PARA O MENU'
 		objetos.push(texto(this, meio, ALTURA / 2 + 50, ajuda, 8, '#cfcfcf').setOrigin(0.5, 0).setDepth(11))
 		// no celular não tem tecla T: um botão para sair
 		if (this.modo_toque) {
 			const sair = texto(this, meio, ALTURA / 2 + 80, '[ SAIR PARA O MENU ]', 8, '#ff9a9a').setOrigin(0.5).setDepth(11)
 				.setInteractive({ useHandCursor: true })
 			sair.on('pointerdown', (p, x, y, ev) => { ev.stopPropagation(); this.sair_para_menu() })
-			objetos.push(sair)
+			const recomecar = texto(this, meio, ALTURA / 2 + 100, '[ RECOMEÇAR ]', 8, '#ffd34d').setOrigin(0.5).setDepth(11)
+				.setInteractive({ useHandCursor: true })
+			recomecar.on('pointerdown', (p, x, y, ev) => { ev.stopPropagation(); this.reiniciar_da_pausa() })
+			objetos.push(sair, recomecar)
 		}
 		this.menu_pausa = objetos
 		this.linha_escolhida = 0
