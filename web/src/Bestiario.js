@@ -1,5 +1,5 @@
 import Phaser from 'phaser'
-import { ALTURA, ajustar_tela, texto } from './tela.js'
+import { ALTURA, ajustar_tela, texto, ler_estatisticas } from './tela.js'
 import { ZUMBIS, CHEFES } from './regras.js'
 
 // Galeria dos inimigos que o jogador já encontrou (tecla B na tela de título).
@@ -50,6 +50,7 @@ export default class Bestiario extends Phaser.Scene {
 	create() {
 		this.chao = this.add.tileSprite(0, 0, 10, ALTURA, 'chao').setOrigin(0).setTint(0x505868)
 		const vistos = ler_vistos()
+		const abatidos = ler_estatisticas().por_tipo || {}
 		this.titulo = texto(this, 0, 14, 'BESTIÁRIO  ' + FICHAS.filter((f) => vistos.has(f.tipo)).length + '/' + FICHAS.length, 16, '#ffd34d').setOrigin(0.5, 0)
 		this.cartas = FICHAS.map((ficha) => {
 			const visto = vistos.has(ficha.tipo)
@@ -72,8 +73,11 @@ export default class Bestiario extends Phaser.Scene {
 				figura.setTint(0x000000).setTintMode(Phaser.TintModes.FILL).setAlpha(0.6)
 			}
 			const nome = texto(this, 0, 0, visto ? ficha.nome : '???', 8, visto ? '#ffffff' : '#6a6a70').setOrigin(0.5)
+			const n = abatidos[ficha.tipo] || 0
 			const desc = texto(this, 0, 0, visto ? ficha.texto : '', 8, '#9fbf8a').setOrigin(0.5, 0).setLineSpacing(1).setScale(0.75)
-			return { fundo, figura, nome, desc, ficha, base: figura.scaleX }
+			// quantos já foram abatidos em todas as partidas, no canto de cima da carta
+			const conta = texto(this, 0, 0, visto && !ficha.chefe ? 'x' + n.toLocaleString('pt-BR') : '', 8, '#ffd34d').setOrigin(1, 0)
+			return { fundo, figura, nome, desc, conta, ficha, base: figura.scaleX }
 		})
 		this.voltar = texto(this, 0, ALTURA - 12, 'ESC, ESPAÇO OU CLIQUE: VOLTAR', 8, '#cfcfcf').setOrigin(0.5)
 		ajustar_tela(this)
@@ -105,6 +109,7 @@ export default class Bestiario extends Phaser.Scene {
 			c.figura.setPosition(x, y - 18 * escala).setScale(c.base * escala)
 			c.nome.setPosition(x, y + 12 * escala).setScale(escala)
 			c.desc.setPosition(x, y + 20 * escala).setScale(0.75 * escala)
+			c.conta.setPosition(x + 43 * escala, y - 39 * escala).setScale(0.75 * escala)
 		})
 	}
 

@@ -124,7 +124,7 @@ export function gravar_placar(pontos, fase, dificuldade = 'normal', modo = 'aven
 
 // estatísticas de todas as partidas somadas
 export function ler_estatisticas() {
-	const vazio = { partidas: 0, zumbis: 0, chefes: 0, melhor_fase: 0, segundos: 0 }
+	const vazio = { partidas: 0, zumbis: 0, chefes: 0, melhor_fase: 0, segundos: 0, por_tipo: {} }
 	try {
 		return { ...vazio, ...JSON.parse(localStorage.getItem('elf-kill-zombie-estatisticas') || '{}') }
 	} catch {
@@ -139,6 +139,11 @@ export function somar_estatisticas(partida) {
 	total.chefes += partida.chefes
 	total.segundos += partida.segundos
 	total.melhor_fase = Math.max(total.melhor_fase, partida.fase)
+	// abatidos de cada tipo (para o bestiário)
+	total.por_tipo = { ...total.por_tipo }
+	for (const [tipo, n] of Object.entries(partida.por_tipo || {})) {
+		total.por_tipo[tipo] = (total.por_tipo[tipo] || 0) + n
+	}
 	try {
 		localStorage.setItem('elf-kill-zombie-estatisticas', JSON.stringify(total))
 	} catch {
