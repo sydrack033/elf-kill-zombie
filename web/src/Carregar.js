@@ -106,6 +106,26 @@ export default class Carregar extends Phaser.Scene {
 		g.fillStyle(0xc89a20).fillRect(4, 2, 1, 4)
 		g.generateTexture('moeda', 8, 8)
 		g.destroy()
+
+		// neblina: manchas brancas bem suaves, que emendam nas bordas (para rolar sem costura)
+		const neblina = this.textures.createCanvas('neblina', 256, 128)
+		const ctx = neblina.getContext()
+		for (let i = 0; i < 26; i++) {
+			const x = Math.random() * 256
+			const y = Math.random() * 128
+			const r = 24 + Math.random() * 40
+			for (const dx of [-256, 0, 256]) {
+				for (const dy of [-128, 0, 128]) {
+					const grad = ctx.createRadialGradient(x + dx, y + dy, 0, x + dx, y + dy, r)
+					grad.addColorStop(0, 'rgba(220,235,225,0.22)')
+					grad.addColorStop(1, 'rgba(220,235,225,0)')
+					ctx.fillStyle = grad
+					ctx.fillRect(x + dx - r, y + dy - r, r * 2, r * 2)
+				}
+			}
+		}
+		neblina.refresh()
+		neblina.setFilter(Phaser.Textures.FilterMode.LINEAR)
 		this.scene.start('Titulo')
 	}
 }

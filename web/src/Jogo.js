@@ -151,6 +151,8 @@ export default class Jogo extends Phaser.Scene {
 		this.gotas = []
 		this.relampago = this.add.rectangle(0, 0, 10, ALTURA, 0xe8f0ff, 0).setOrigin(0).setDepth(8.6)
 		this.vinheta = this.add.image(0, 0, 'vinheta').setOrigin(0).setDepth(8.4)
+		// neblina de alguns cenários (pântano, ruínas): entra e sai devagar
+		this.neblina = this.add.tileSprite(0, 0, 10, ALTURA, 'neblina').setOrigin(0).setDepth(8.3).setAlpha(0).setTileScale(2)
 		this.relampago_ha = 0
 		this.proximo_trovao = 900
 
@@ -320,6 +322,7 @@ export default class Jogo extends Phaser.Scene {
 		this.escurecer.setSize(this.largura, ALTURA)
 		this.relampago.setSize(this.largura, ALTURA)
 		this.vinheta.setDisplaySize(this.largura, ALTURA)
+		this.neblina.setSize(this.largura, ALTURA)
 		this.aviso.x = meio
 		this.mensagem.x = meio
 		this.barra_fundo.x = meio
@@ -2820,6 +2823,10 @@ export default class Jogo extends Phaser.Scene {
 	}
 
 	desenhar_clima() {
+		const alvo = this.cenario().neblina || 0
+		this.neblina.alpha += (alvo - this.neblina.alpha) * 0.01
+		this.neblina.tilePositionX += 0.12
+		this.neblina.tilePositionY -= R.ROLAGEM_DO_CHAO * 0.4
 		const g = this.chuva
 		g.clear()
 		if (this.gotas.length && this.clima == 'brasas') {

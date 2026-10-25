@@ -41,8 +41,8 @@ export const FASE_DA_CHUVA = 6 // dentro de cada cenário, a partir desta fase c
 // o cenário muda a cada 10 fases; clima = o que cai do céu (chuva) ou sobe do chão (brasas)
 export const CENARIOS = [
 	{ a_partir_da_fase: 1, textura: 'chao', nome: 'CEMITÉRIO', clima: 'chuva', musica: 'musica_jogo' },
-	{ a_partir_da_fase: 10, textura: 'chao_pantano', nome: 'PÂNTANO', clima: 'chuva', musica: 'musica_pantano' },
-	{ a_partir_da_fase: 20, textura: 'chao_ruinas', nome: 'CIDADE EM RUÍNAS', clima: 'chuva', musica: 'musica_ruinas' },
+	{ a_partir_da_fase: 10, textura: 'chao_pantano', nome: 'PÂNTANO', clima: 'chuva', musica: 'musica_pantano', neblina: 0.4 },
+	{ a_partir_da_fase: 20, textura: 'chao_ruinas', nome: 'CIDADE EM RUÍNAS', clima: 'chuva', musica: 'musica_ruinas', neblina: 0.2 },
 	{ a_partir_da_fase: 30, textura: 'chao_inferno', nome: 'INFERNO', clima: 'brasas', musica: 'musica_inferno' },
 ]
 export const COMBO_MAXIMO = 5 // multiplicador máximo de pontos
