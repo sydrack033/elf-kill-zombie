@@ -22,6 +22,9 @@ export const CONQUISTAS = [
 	{ id: 'mira', nome: 'OLHO DE ÁGUIA', texto: 'TERMINE COM 70% DE PONTARIA (200+ TIROS)' },
 	{ id: 'rico', nome: 'MILIONÁRIO', texto: 'FAÇA 50.000 PONTOS' },
 	{ id: 'pedreiro', nome: 'QUEBRA-PEDRA', texto: 'QUEBRE 10 LÁPIDES NUMA PARTIDA' },
+	{ id: 'horda', nome: 'MURALHA', texto: 'DERROTE UMA HORDA' },
+	{ id: 'lua', nome: 'NOITE VERMELHA', texto: 'PASSE UMA FASE DE LUA DE SANGUE' },
+	{ id: 'loja', nome: 'FREGUÊS', texto: 'COMPRE TUDO NA LOJA' },
 ]
 
 const CHAVE = 'elf-kill-zombie-conquistas'

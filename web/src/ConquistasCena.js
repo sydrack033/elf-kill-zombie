@@ -50,13 +50,30 @@ export default class ConquistasCena extends Phaser.Scene {
 		this.input.keyboard.once('keydown-ESC', voltar)
 		this.input.keyboard.once('keydown-SPACE', voltar)
 		this.input.keyboard.once('keydown-C', voltar)
-		this.input.once('pointerdown', voltar)
+		// numa coluna só a lista pode passar da tela: arrastar, roda do mouse ou setas rolam;
+		// um toque sem arrastar volta para o título
+		this.rolagem = 0
+		let inicio = null
+		this.input.on('pointerdown', (p) => (inicio = { y: p.y, rolagem: this.rolagem, mexeu: false }))
+		this.input.on('pointermove', (p) => {
+			if (!inicio || !p.isDown) return
+			if (Math.abs(p.y - inicio.y) > 6) inicio.mexeu = true
+			this.rolar(inicio.rolagem - (p.y - inicio.y) / (this.zoom || 1), true)
+		})
+		this.input.on('pointerup', () => {
+			if (inicio && !inicio.mexeu) voltar()
+			inicio = null
+		})
+		this.input.on('wheel', (p, objetos, dx, dy) => this.rolar(this.rolagem + dy * 0.3, true))
+		this.input.keyboard.on('keydown-DOWN', () => this.rolar(this.rolagem + 20, true))
+		this.input.keyboard.on('keydown-UP', () => this.rolar(this.rolagem - 20, true))
 		if (this.input.gamepad) {
 			this.input.gamepad.once('down', voltar)
 		}
 	}
 
 	ao_redimensionar() {
+		this.rolagem = this.rolagem || 0
 		this.chao.setSize(this.largura, ALTURA)
 		this.titulo.x = this.largura / 2
 		this.voltar.x = this.largura / 2
@@ -67,19 +84,30 @@ export default class ConquistasCena extends Phaser.Scene {
 		const largura_item = Math.max(...this.objetos.map((o) => Math.max(o.nome.width, o.desc.width))) + 18
 		const colunas = this.largura >= largura_item * 2 + 24 ? 2 : 1
 		const linhas = Math.ceil(this.objetos.length / colunas)
-		const espaco = Math.min(24, (ALTURA - 42 - 56) / linhas)
-		// numa coluna só, num celular, a letra encolhe um pouco para caber tudo
-		const escala = Math.min(1, espaco / 19, (this.largura - 8) / largura_item)
+		// em duas colunas tudo cabe; numa coluna só a lista rola (espaço mínimo de 21)
+		const espaco = Math.max(colunas == 1 ? 21 : 0, Math.min(24, (ALTURA - 42 - 56) / linhas))
+		const escala = Math.min(1, (this.largura - 8) / largura_item)
+		this.rolagem_max = Math.max(0, linhas * espaco - (ALTURA - 40 - 58))
 		const largura_total = (largura_item * escala) * colunas + 16 * (colunas - 1)
 		const x0 = Math.max(4, (this.largura - largura_total) / 2)
 		this.objetos.forEach((o, i) => {
 			const coluna = Math.floor(i / linhas)
-			const y = 40 + (i % linhas) * espaco
+			const y = 40 + (i % linhas) * espaco - this.rolagem
+			// fora da faixa da lista: escondido (por cima do título ou do rodapé)
+			const visivel = y >= 34 && y <= ALTURA - 66
+			o.trofeu.setVisible(visivel)
+			o.nome.setVisible(visivel)
+			o.desc.setVisible(visivel)
 			const x = x0 + coluna * (largura_item * escala + 16)
 			o.trofeu.setPosition(x + 6 * escala, y + 6 * escala).setScale(escala)
 			o.nome.setPosition(x + 16 * escala, y).setScale(escala)
 			o.desc.setPosition(x + 16 * escala, y + 10 * escala).setScale(escala)
 		})
+	}
+
+	rolar(valor, redesenhar) {
+		this.rolagem = Phaser.Math.Clamp(valor, 0, this.rolagem_max || 0)
+		if (redesenhar) this.ao_redimensionar()
 	}
 
 	update() {

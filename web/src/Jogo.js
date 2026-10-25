@@ -1892,6 +1892,7 @@ export default class Jogo extends Phaser.Scene {
 				return
 			}
 			this.stats.hordas++
+			desbloquear(this, 'horda')
 			this.anunciar('HORDA DERROTADA!', 220, '#9ff07a')
 			efeito(this, 'combo', { volume: 0.7, rate: 0.8 })
 			// prêmio: duas caixas, um coração e moedas
@@ -2158,6 +2159,7 @@ export default class Jogo extends Phaser.Scene {
 		if (this.m('anjo')) {
 			this.poderes.escudo = Math.max(this.poderes.escudo, 500)
 		}
+		if (this.lua_de_sangue) desbloquear(this, 'lua') // passou a fase da lua de sangue
 		// sorteia a lua de sangue para a fase nova (nunca duas seguidas, nem em fase de chefão)
 		const lua = R.LUA_DE_SANGUE
 		this.lua_de_sangue = !fase_de_chefao && !this.lua_de_sangue && !this.modo_chefes &&

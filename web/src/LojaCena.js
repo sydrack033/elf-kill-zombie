@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 import { ALTURA, ajustar_tela, texto } from './tela.js'
 import { efeito } from './opcoes.js'
 import { PRODUTOS, ler_loja, preco, comprar } from './moedas.js'
+import { desbloquear } from './conquistas.js'
 
 // Loja (tecla L no título): gasta as moedas das partidas em vantagens para o começo do jogo.
 export default class Loja extends Phaser.Scene {
@@ -76,6 +77,8 @@ export default class Loja extends Phaser.Scene {
 			efeito(this, 'moeda', { volume: 0.7 })
 			this.cameras.main.flash(150, 255, 220, 120)
 			this.tweens.add({ targets: [linha.nome], scale: 1.15, duration: 90, yoyo: true })
+			const loja = ler_loja()
+			if (PRODUTOS.every((p) => preco(loja, p) == null)) desbloquear(this, 'loja')
 		}
 		else {
 			efeito(this, 'acerto', { volume: 0.5, rate: 0.6 })
