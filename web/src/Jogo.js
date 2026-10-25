@@ -2637,6 +2637,12 @@ export default class Jogo extends Phaser.Scene {
 			this.flutuar(chefe.x + 64, chefe.y + 20, '+' + ganho, '#ff9a3c')
 			efeito(this, 'rugido', { volume: 1, rate: 0.75 })
 			this.vibrar(1, 600)
+			// zoom rápido na câmera e volta: o golpe final pesa
+			if (opcoes.tremor) {
+				const cam = this.cameras.main
+				cam.once('camerazoomcomplete', () => cam.zoomTo(this.zoom, 500, 'Sine.easeInOut', true))
+				cam.zoomTo(this.zoom * 1.12, 180, 'Sine.easeOut', true)
+			}
 			this.atualizar_hud()
 		}
 	}
