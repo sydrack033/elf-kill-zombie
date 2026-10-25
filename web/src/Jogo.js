@@ -56,6 +56,7 @@ export default class Jogo extends Phaser.Scene {
 		// a cena é reaproveitada quando o jogo recomeça: esquece os objetos da partida anterior
 		this.hud_pontos = null
 		this.botao_bomba = null
+		this.botao_furia = null
 		this.objetos_escolha = []
 		this.menu_pausa = []
 		this.cartas = []
@@ -129,6 +130,7 @@ export default class Jogo extends Phaser.Scene {
 		this.dano_ha = 0 // tela vermelha quando o elfo apanha
 		this.vermelho_heroi = 0 // elfo pintado de vermelho logo depois de apanhar
 		this.parada = 0 // ticks de parada de impacto
+		this.furia = 0 // barra da fúria élfica, de 0 a 1
 		this.mortes_recentes = [] // ticks das últimas mortes, para o DUPLO! TRIPLO!
 		this.raios = [] // raios na tela: { pontos: [[x, y]...], ha }
 		this.desenho_raios = this.add.graphics().setDepth(7.5)
@@ -163,6 +165,7 @@ export default class Jogo extends Phaser.Scene {
 			espaco: 'SPACE',
 			q: 'Q',
 			shift: 'SHIFT',
+			e: 'E',
 		})
 		tecla_tela_cheia(this)
 		tecla_som(this)
@@ -230,6 +233,10 @@ export default class Jogo extends Phaser.Scene {
 		this.hud_progresso = this.add.rectangle(8, 32, 0, 2, 0x9ff07a).setOrigin(0).setDepth(10)
 		this.hud_arma = texto(this, 8, ALTURA - 24, '', 8, '#ffd34d').setDepth(10)
 		this.hud_bombas = texto(this, 8, ALTURA - 12, '', 8).setDepth(10)
+		// barra da fúria élfica (acima do nome da arma)
+		this.hud_furia_fundo = this.add.rectangle(8, ALTURA - 32, 50, 3, 0x000000, 0.6).setOrigin(0).setDepth(10)
+		this.hud_furia = this.add.rectangle(8, ALTURA - 32, 0, 3, 0xff9aff).setOrigin(0).setDepth(10)
+		this.hud_furia_texto = texto(this, 62, ALTURA - 35, '', 8, '#ff9aff').setDepth(10)
 		this.hud_poderes = texto(this, 0, ALTURA - 12, '', 8, '#9fd8ff').setOrigin(1, 0).setDepth(10)
 
 		// barra de vida do chefão
@@ -646,6 +653,7 @@ export default class Jogo extends Phaser.Scene {
 		this.atirar_on = t.espaco.isDown || (mouse.leftButtonDown() && !mouse.wasTouch)
 		this.bomba_on = t.q.isDown || (mouse.rightButtonDown() && !mouse.wasTouch)
 		this.esquiva_on = t.shift.isDown
+		this.furia_on = t.e.isDown || mouse.middleButtonDown()
 		this.toque_vx = 0
 		this.toque_vy = 0
 
@@ -696,6 +704,7 @@ export default class Jogo extends Phaser.Scene {
 		if (pad.R2 > 0.3 || pad.R1 || pad.A) this.atirar_on = true
 		if (pad.L2 > 0.3 || pad.L1 || pad.X) this.bomba_on = true
 		if (pad.B) this.esquiva_on = true
+		if (pad.Y) this.furia_on = true
 	}
 
 	// índices padrão: 0 = A, 9 = Start, 14 = esquerda, 15 = direita no direcional
@@ -751,6 +760,8 @@ export default class Jogo extends Phaser.Scene {
 		this.icone_bomba = this.add.image(0, 0, 'bomba').setScale(1.4).setDepth(11)
 		this.botao_esquiva = fundo(14)
 		this.icone_esquiva = texto(this, 0, 0, '>>', 8).setOrigin(0.5).setDepth(11)
+		this.botao_furia = fundo(14)
+		this.icone_furia = texto(this, 0, 0, 'F', 8, '#ff9aff').setOrigin(0.5).setDepth(11)
 		this.botao_pausa = fundo(11)
 		this.icone_pausa = texto(this, 0, 0, 'II', 8).setOrigin(0.5).setDepth(11)
 		this.posicionar_botoes()
@@ -761,6 +772,8 @@ export default class Jogo extends Phaser.Scene {
 		this.icone_bomba.setPosition(this.largura - 24, ALTURA - 58)
 		this.botao_esquiva.setPosition(this.largura - 58, ALTURA - 36)
 		this.icone_esquiva.setPosition(this.largura - 58, ALTURA - 36)
+		this.botao_furia.setPosition(this.largura - 24, ALTURA - 96)
+		this.icone_furia.setPosition(this.largura - 24, ALTURA - 96)
 		this.botao_pausa.setPosition(this.largura / 2, 14)
 		this.icone_pausa.setPosition(this.largura / 2, 14)
 	}
@@ -785,6 +798,9 @@ export default class Jogo extends Phaser.Scene {
 			}
 			else if (Phaser.Math.Distance.Between(inicio.x, inicio.y, this.botao_esquiva.x, this.botao_esquiva.y) < 18) {
 				esquiva = true
+			}
+			else if (Phaser.Math.Distance.Between(inicio.x, inicio.y, this.botao_furia.x, this.botao_furia.y) < 18) {
+				this.furia_on = true
 			}
 			else if (Phaser.Math.Distance.Between(inicio.x, inicio.y, this.botao_pausa.x, this.botao_pausa.y) < 16) {
 				continue
@@ -873,6 +889,7 @@ export default class Jogo extends Phaser.Scene {
 		this.mover_heroi()
 		this.mirar()
 		this.atirar()
+		this.soltar_furia()
 		this.jogar_bomba()
 		this.criar_zumbis()
 		this.chamar_chefe()
@@ -1134,6 +1151,41 @@ export default class Jogo extends Phaser.Scene {
 			}
 			this.atualizar_hud()
 		}
+	}
+
+	encher_furia(quanto) {
+		const antes = this.furia
+		this.furia = Math.min(1, this.furia + quanto)
+		if (antes < 1 && this.furia >= 1) {
+			this.flutuar(this.heroi_x + 12, this.heroi_y - 10, 'FÚRIA PRONTA!', '#ff9aff')
+			efeito(this, 'poder', { volume: 0.5, rate: 1.3 })
+		}
+	}
+
+	// fúria élfica: anel de fogo em todas as direções, que atravessa tudo
+	soltar_furia() {
+		if (!this.furia_on || this.furia < 1) {
+			return
+		}
+		this.furia = 0
+		const arma = { projetil: 'tiro', dano: R.FURIA.dano + this.m('dano'), empurra: 4, atravessa: true }
+		for (let i = 0; i < R.FURIA.tiros; i++) {
+			const angulo = (i / R.FURIA.tiros) * Math.PI * 2
+			const x = this.heroi_x + 12 + Math.cos(angulo) * 10
+			const y = this.heroi_y + 12 + Math.sin(angulo) * 10
+			const sprite = this.add.sprite(x, y, 'tiro', 0).setRotation(angulo).setScale(1.3).setTint(0xff9aff).setDepth(4)
+			this.tiros.push({
+				sprite, x, y, arma, ha: 0,
+				vx: Math.cos(angulo) * R.FURIA.velocidade,
+				vy: Math.sin(angulo) * R.FURIA.velocidade,
+				dano: arma.dano, perfura: Infinity, acertou: new Set(),
+			})
+		}
+		this.invencivel = Math.max(this.invencivel, 80)
+		this.cameras.main.flash(250, 255, 160, 255)
+		this.cameras.main.shake(250, 0.008)
+		efeito(this, 'explosao', { volume: 0.7, rate: 1.4 })
+		efeito(this, 'poder', { volume: 0.6, rate: 0.7 })
 	}
 
 	// raio: acerta o inimigo mais perto da mira e vai pulando para os vizinhos
@@ -1440,6 +1492,10 @@ export default class Jogo extends Phaser.Scene {
 		const tipos = Object.keys(R.ZUMBIS)
 		const tipo = sortear(tipos, (t) => R.ZUMBIS[t].peso(this.nivel))
 		const tamanho = 44 * R.ZUMBIS[tipo].escala
+		if (R.ZUMBIS[tipo].cava) {
+			this.criar_escavador()
+			return
+		}
 		this.criar_zumbi(tipo, Phaser.Math.Between(0, Math.max(0, Math.floor(this.largura - tamanho))), -tamanho)
 	}
 
@@ -1511,6 +1567,7 @@ export default class Jogo extends Phaser.Scene {
 		}
 		this.stats.melhor_combo = Math.max(this.stats.melhor_combo, this.combo)
 		desbloquear(this, 'primeiro')
+		this.encher_furia(R.FURIA.por_morte)
 		if (this.stats.mortos >= 100) desbloquear(this, 'cem')
 		if (this.combo >= 20) desbloquear(this, 'combo20')
 
@@ -1611,6 +1668,19 @@ export default class Jogo extends Phaser.Scene {
 				continue
 			}
 
+			if (zumbi.cavando > 0) {
+				zumbi.cavando--
+				if (zumbi.cavando == 0) {
+					// saiu da terra
+					zumbi.intangivel = false
+					zumbi.sprite.setVisible(true).setAlpha(0)
+					this.tweens.add({ targets: zumbi.sprite, alpha: 1, duration: 300 })
+					efeito(this, 'cuspe', { volume: 0.5, rate: 0.45 })
+					this.cameras.main.shake(120, 0.004)
+				}
+				continue
+			}
+
 			if (zumbi.regra.fantasma) {
 				zumbi.ciclo = (zumbi.ciclo + 1) % 320
 				const estava = zumbi.intangivel
@@ -1667,6 +1737,17 @@ export default class Jogo extends Phaser.Scene {
 			}
 		}
 		this.zumbis = this.zumbis.filter((zumbi) => !zumbi.fugiu && !(zumbi.morrendo && zumbi.morto_ha >= 75))
+	}
+
+	// escavador: a terra treme perto do elfo e, um tempo depois, o zumbi sai de baixo dela
+	criar_escavador() {
+		const x = Phaser.Math.Clamp(this.heroi_x - 10 + Phaser.Math.Between(-110, 110), 0, this.largura - 44)
+		const y = Phaser.Math.Between(Math.round(ALTURA * 0.42), Math.round(ALTURA * 0.6)) - 44
+		const zumbi = this.criar_zumbi('escavador', x, y)
+		zumbi.cavando = 110
+		zumbi.intangivel = true
+		zumbi.vx = 0.35 + (this.nivel - 1) * 0.02 // persegue o elfo
+		zumbi.sprite.setVisible(false)
 	}
 
 	// revoada: um bando de corvos entra por um canto de cima e atravessa a tela em diagonal
@@ -1791,6 +1872,7 @@ export default class Jogo extends Phaser.Scene {
 		const chefe = this.chefe
 		chefe.vida -= dano
 		chefe.flash = 5
+		this.encher_furia(R.FURIA.por_acerto_no_chefe)
 		this.espirrar_sangue(x, y)
 		if (chefe.vida <= 0) {
 			chefe.fase = 'morrendo'
@@ -2449,7 +2531,20 @@ export default class Jogo extends Phaser.Scene {
 				continue
 			}
 			const c = corpo(zumbi)
-			if (zumbi.regra.voa) {
+			if (zumbi.cavando > 0) {
+				// terra tremendo onde o escavador vai sair (treme mais quando está quase saindo)
+				const tremor = zumbi.cavando < 40 ? 2 : 1
+				const tx = c.x + c.l / 2 + (Math.random() * 2 - 1) * tremor
+				const ty = c.y + c.a + (Math.random() * 2 - 1) * tremor
+				g.fillStyle(0x4a3424, 0.9)
+				g.fillEllipse(tx, ty, 20 + (110 - zumbi.cavando) * 0.08, 8)
+				g.fillStyle(0x7a5a3a, 1)
+				for (let k = 0; k < 4; k++) {
+					g.fillRect(Math.round(tx - 8 + k * 5 + Math.random() * 2), Math.round(ty - 2 - Math.random() * 4), 2, 2)
+				}
+				g.fillStyle(0x000000, 0.28)
+			}
+			else if (zumbi.regra.voa) {
 				// voando alto: a sombra fica bem abaixo dele
 				g.fillEllipse(c.x + c.l / 2, c.y + c.a + 24, 10, 3)
 			}
@@ -2469,6 +2564,16 @@ export default class Jogo extends Phaser.Scene {
 	desenhar_hud_do_tick() {
 		this.vermelho.setFillStyle(0xff0000, this.dano_ha > 0 ? (this.dano_ha / 30) * 0.35 : 0)
 		this.hud_combo.setText(this.multiplicador > 1 ? 'COMBO x' + this.multiplicador : '')
+
+		// fúria: a barra pisca quando está cheia
+		const cheia = this.furia >= 1
+		this.hud_furia.setSize(50 * this.furia, 3)
+		this.hud_furia.setFillStyle(cheia && Math.floor(this.quadro_atual / 15) % 2 ? 0xffffff : 0xff9aff)
+		this.hud_furia_texto.setText(cheia ? (this.modo_toque ? 'FÚRIA!' : 'E: FÚRIA!') : '')
+		if (this.botao_furia) {
+			this.botao_furia.setAlpha(cheia ? 1 : 0.3)
+			this.icone_furia.setAlpha(cheia ? 1 : 0.3)
+		}
 
 		// poderes ativos com os segundos que faltam
 		const ativos = []

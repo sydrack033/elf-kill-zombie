@@ -87,6 +87,9 @@ export const ARMAS = {
 	},
 }
 
+// ---------- fúria élfica (tecla E): a barra enche matando e solta um anel de fogo ----------
+export const FURIA = { por_morte: 0.04, por_acerto_no_chefe: 0.01, tiros: 32, velocidade: 4.5, dano: 4 }
+
 // ---------- bombas ----------
 export const BOMBAS_NO_COMECO = 2
 export const BOMBAS_NO_MAXIMO = 9
@@ -148,6 +151,11 @@ export const ZUMBIS = {
 	fantasma: {
 		escala: 1, cor: 0xc8d8ff, vida: 2, vy: 0.36, pontos: 30, empurravel: true, fantasma: true,
 		peso: (nivel) => (nivel >= 6 ? 1 + nivel * 0.3 : 0),
+	},
+	// escavador: sai de baixo da terra perto do elfo (a terra treme antes, dá tempo de fugir)
+	escavador: {
+		escala: 1, cor: 0xc8a070, vida: 3, vy: 0.2, pontos: 35, empurravel: true, cava: true,
+		peso: (nivel) => (nivel >= 7 ? 1 + nivel * 0.25 : 0),
 	},
 	// corvo: não aparece sozinho, vem em revoadas (ver CORVOS); voa em diagonal e não custa vida se passar
 	corvo: {
