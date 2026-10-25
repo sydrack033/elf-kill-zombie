@@ -1,6 +1,7 @@
 // Conquistas: desafios que ficam guardados no navegador para sempre.
 // O jogo chama desbloquear(cena, id) quando o jogador cumpre o desafio.
 import { texto } from './tela.js'
+import { efeito } from './opcoes.js'
 
 export const CONQUISTAS = [
 	{ id: 'primeiro', nome: 'PRIMEIRO SANGUE', texto: 'MATE O PRIMEIRO ZUMBI' },
@@ -81,7 +82,7 @@ function proximo(scene) {
 	const nome = texto(scene, x - 64, y + 1, conquista.nome, 8, '#ffffff').setDepth(13)
 	const objetos = [fundo, trofeu, titulo, nome]
 	for (const o of objetos) o.setAlpha(0)
-	scene.sound.play('item', { volume: 0.5, rate: 1.5 })
+	efeito(scene, 'item', { volume: 0.5, rate: 1.5 })
 	scene.tweens.add({ targets: objetos, alpha: 1, duration: 200 })
 	scene.time.delayedCall(2600, () => {
 		scene.tweens.add({

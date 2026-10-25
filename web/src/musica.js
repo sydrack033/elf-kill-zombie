@@ -1,7 +1,9 @@
 // Música de fundo: uma de cada vez, trocando com um "fade" (abaixa uma e sobe a outra).
 // Fica fora das cenas para continuar tocando quando a cena muda.
+import { opcoes } from './opcoes.js'
 
-const VOLUME = 0.35
+const VOLUME = 0.35 // volume da música com o controle de volume no máximo
+const volume = () => (ligada ? VOLUME * opcoes.musica : 0)
 let atual = null // a música tocando agora
 let ligada = true
 
@@ -50,7 +52,7 @@ export function tocar_musica(scene, chave) {
 			return // trocaram de música antes do som destravar
 		}
 		musica.play()
-		fade(musica, ligada ? VOLUME : 0, 600)
+		fade(musica, volume(), 600)
 	}
 	// o navegador só deixa tocar som depois do primeiro clique ou tecla
 	if (scene.sound.locked) {
@@ -69,6 +71,13 @@ export function parar_musica(ms = 400) {
 	}
 }
 
+// chamado quando o volume da música muda nas opções
+export function atualizar_volume_musica() {
+	if (atual) {
+		fade(atual, volume(), 150)
+	}
+}
+
 // N liga e desliga só a música (os efeitos continuam)
 export function tecla_musica(scene) {
 	scene.input.keyboard.on('keydown-N', () => {
@@ -81,7 +90,7 @@ export function tecla_musica(scene) {
 			// sem localStorage: vale só até fechar a página
 		}
 		if (atual) {
-			fade(atual, ligada ? VOLUME : 0, 300)
+			fade(atual, volume(), 300)
 		}
 	})
 }

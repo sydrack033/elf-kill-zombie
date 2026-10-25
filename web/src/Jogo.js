@@ -1,8 +1,9 @@
 import Phaser from 'phaser'
 import { ALTURA, ajustar_tela, texto, tecla_tela_cheia, tecla_som, ler_recorde, gravar_recorde, gravar_placar, renomear_no_placar } from './tela.js'
 import * as R from './regras.js'
-import { tocar_musica, parar_musica, tecla_musica } from './musica.js'
+import { tocar_musica, parar_musica, tecla_musica, atualizar_volume_musica } from './musica.js'
 import { desbloquear } from './conquistas.js'
+import { efeito, opcoes, gravar_opcoes } from './opcoes.js'
 
 // Igual à versão do Portugol, o jogo anda em "ticks" de 10 ms e cada tick roda
 // entrada() -> processamento() -> saida(). Os números de dificuldade ficam em regras.js.
@@ -56,6 +57,7 @@ export default class Jogo extends Phaser.Scene {
 		this.hud_pontos = null
 		this.botao_bomba = null
 		this.objetos_escolha = []
+		this.menu_pausa = []
 		this.cartas = []
 		this.digitando_nome = false
 		this.pode_reiniciar = false
@@ -162,6 +164,11 @@ export default class Jogo extends Phaser.Scene {
 		tocar_musica(this, 'musica_jogo')
 		this.input.keyboard.on('keydown-P', () => this.pausar())
 		this.input.keyboard.on('keydown-ESC', () => this.pausar())
+		// setas e WASD também mexem no menu da pausa
+		const direcoes = { UP: 'cima', W: 'cima', DOWN: 'baixo', S: 'baixo', LEFT: 'esquerda', A: 'esquerda', RIGHT: 'direita', D: 'direita' }
+		for (const tecla in direcoes) {
+			this.input.keyboard.on('keydown-' + tecla, () => this.tecla_no_menu(direcoes[tecla]))
+		}
 		this.input.keyboard.on('keydown-T', () => {
 			if (this.estado == 'pausado') {
 				this.sound.resumeAll()
@@ -378,7 +385,7 @@ export default class Jogo extends Phaser.Scene {
 		this.input.keyboard.once('keydown-ONE', () => this.escolher(0))
 		this.input.keyboard.once('keydown-TWO', () => this.escolher(1))
 		this.input.keyboard.once('keydown-THREE', () => this.escolher(2))
-		this.sound.play('poder', { volume: 0.5, rate: 0.7 })
+		efeito(this, 'poder', { volume: 0.5, rate: 0.7 })
 	}
 
 	// a carta destacada fica com a borda amarela (mouse em cima ou direcional do controle)
@@ -405,7 +412,7 @@ export default class Jogo extends Phaser.Scene {
 		this.escurecer.setVisible(false)
 		this.estado = 'jogando'
 		this.tempo_acumulado = 0
-		this.sound.play('item', { volume: 0.6, rate: 0.8 })
+		efeito(this, 'item', { volume: 0.6, rate: 0.8 })
 		this.flutuar(this.heroi_x + 12, this.heroi_y - 8, mel.nome + '!', '#c08aff')
 		this.anunciar(this.texto_da_fase || 'FASE ' + this.nivel, 250)
 		this.atualizar_hud_melhorias()
@@ -507,14 +514,93 @@ export default class Jogo extends Phaser.Scene {
 		if (this.estado == 'jogando') {
 			this.estado = 'pausado'
 			this.escurecer.setVisible(true)
-			this.mensagem.setText(this.modo_toque ? 'PAUSADO\n\nTOQUE PARA CONTINUAR' : 'PAUSADO\n\nP OU ESC: CONTINUAR\nT: SAIR PARA O MENU')
 			this.sound.pauseAll()
+			// o aviso de fase e a dica ficam escondidos atrás do menu
+			this.aviso.setAlpha(0)
+			this.dica_texto.setAlpha(0)
+			this.mostrar_menu_pausa()
 		}
 		else if (this.estado == 'pausado') {
 			this.estado = 'jogando'
 			this.escurecer.setVisible(false)
-			this.mensagem.setText('')
 			this.sound.resumeAll()
+			this.aviso.setAlpha(1)
+			this.dica_texto.setAlpha(1)
+			for (const objeto of this.menu_pausa) {
+				objeto.destroy()
+			}
+			this.menu_pausa = []
+		}
+	}
+
+	// menu da pausa: volume da música e dos efeitos (setas, mouse, toque ou controle)
+	mostrar_menu_pausa() {
+		const meio = this.largura / 2
+		const objetos = []
+		objetos.push(texto(this, meio, ALTURA / 2 - 70, 'PAUSADO', 16, '#ffd34d').setOrigin(0.5).setDepth(11))
+		this.linhas_menu = []
+		const linhas = [
+			{ rotulo: 'MÚSICA', chave: 'musica' },
+			{ rotulo: 'EFEITOS', chave: 'efeitos' },
+		]
+		linhas.forEach((linha, i) => {
+			const y = ALTURA / 2 - 30 + i * 22
+			const rotulo = texto(this, meio - 50, y, linha.rotulo, 8).setOrigin(1, 0.5).setDepth(11)
+			const menos = texto(this, meio - 38, y, '<', 8).setOrigin(0.5).setDepth(11).setInteractive({ useHandCursor: true })
+			const mais = texto(this, meio + 62, y, '>', 8).setOrigin(0.5).setDepth(11).setInteractive({ useHandCursor: true })
+			const barras = []
+			for (let b = 0; b < 10; b++) {
+				barras.push(this.add.rectangle(meio - 28 + b * 9, y, 7, 6, 0xffffff).setDepth(11))
+			}
+			// stopPropagation: o toque na seta não conta como "toque para continuar"
+			menos.on('pointerdown', (p, x, y2, ev) => { ev.stopPropagation(); this.mudar_volume(i, -0.1) })
+			mais.on('pointerdown', (p, x, y2, ev) => { ev.stopPropagation(); this.mudar_volume(i, 0.1) })
+			objetos.push(rotulo, menos, mais, ...barras)
+			this.linhas_menu.push({ ...linha, rotulo, barras })
+		})
+		const ajuda = this.modo_toque
+			? 'TOQUE FORA PARA CONTINUAR'
+			: 'SETAS: AJUSTAR\nP OU ESC: CONTINUAR   T: SAIR PARA O MENU'
+		objetos.push(texto(this, meio, ALTURA / 2 + 40, ajuda, 8, '#cfcfcf').setOrigin(0.5, 0).setDepth(11))
+		this.menu_pausa = objetos
+		this.linha_escolhida = 0
+		this.desenhar_menu_pausa()
+	}
+
+	desenhar_menu_pausa() {
+		this.linhas_menu.forEach((linha, i) => {
+			const valor = Math.round(opcoes[linha.chave] * 10)
+			linha.rotulo.setColor(i == this.linha_escolhida ? '#ffd34d' : '#ffffff')
+			linha.barras.forEach((barra, b) => barra.setFillStyle(b < valor ? 0x9ff07a : 0x3a3a44))
+		})
+	}
+
+	mudar_volume(i, quanto) {
+		const linha = this.linhas_menu[i]
+		this.linha_escolhida = i
+		opcoes[linha.chave] = Math.round(Phaser.Math.Clamp(opcoes[linha.chave] + quanto, 0, 1) * 10) / 10
+		gravar_opcoes()
+		if (linha.chave == 'musica') {
+			atualizar_volume_musica()
+		}
+		else {
+			// a pausa congela os sons; este "plim" é tocado de propósito para ouvir o volume novo
+			efeito(this, 'combo', { volume: 0.6 })
+		}
+		this.desenhar_menu_pausa()
+	}
+
+	// setas do teclado (ou do controle) no menu da pausa
+	tecla_no_menu(direcao) {
+		if (this.estado != 'pausado' || !this.linhas_menu) {
+			return
+		}
+		if (direcao == 'cima' || direcao == 'baixo') {
+			this.linha_escolhida = (this.linha_escolhida + (direcao == 'baixo' ? 1 : this.linhas_menu.length - 1)) % this.linhas_menu.length
+			this.desenhar_menu_pausa()
+		}
+		else {
+			this.mudar_volume(this.linha_escolhida, direcao == 'direita' ? 0.1 : -0.1)
 		}
 	}
 
@@ -605,6 +691,9 @@ export default class Jogo extends Phaser.Scene {
 		}
 		else if (this.estado == 'pausado' && indice == 0) {
 			this.pausar()
+		}
+		else if (this.estado == 'pausado' && indice >= 12 && indice <= 15) {
+			this.tecla_no_menu(['cima', 'baixo', 'esquerda', 'direita'][indice - 12])
 		}
 		else if (this.estado == 'escolhendo') {
 			if (indice == 14 || indice == 15) {
@@ -861,7 +950,7 @@ export default class Jogo extends Phaser.Scene {
 			if (this.proximo_trovao <= 0) {
 				this.proximo_trovao = Phaser.Math.Between(1200, 2600)
 				this.relampago_ha = 40
-				this.sound.play('trovao', { volume: 0.55 })
+				efeito(this, 'trovao', { volume: 0.55 })
 			}
 		}
 	}
@@ -935,7 +1024,7 @@ export default class Jogo extends Phaser.Scene {
 			this.esquiva_ha = R.ESQUIVA.duracao
 			this.esquiva_espera = R.ESQUIVA.espera
 			this.esquiva_direcao = this.ultima_direcao
-			this.sound.play('arremesso', { volume: 0.5, rate: 1.6 })
+			efeito(this, 'arremesso', { volume: 0.5, rate: 1.6 })
 		}
 		if (this.esquiva_ha > 0) {
 			this.esquiva_ha--
@@ -1012,7 +1101,7 @@ export default class Jogo extends Phaser.Scene {
 			}
 		}
 		this.espera_tiro = Math.round(arma.espera * Math.pow(0.85, this.m('cadencia')))
-		this.sound.play(arma.som.chave, arma.som)
+		efeito(this, arma.som.chave, arma.som)
 
 		this.clarao_ha = 4
 		this.clarao.setPosition(this.mao_x + Math.cos(this.angulo) * 15, this.mao_y + Math.sin(this.angulo) * 15)
@@ -1045,7 +1134,7 @@ export default class Jogo extends Phaser.Scene {
 			this.poderes.escudo = 0
 			this.invencivel = 60
 			this.flutuar(this.heroi_x + 12, this.heroi_y - 6, 'ESCUDO!', '#9fd8ff')
-			this.sound.play('escudo_quebra', { volume: 0.7 })
+			efeito(this, 'escudo_quebra', { volume: 0.7 })
 			return
 		}
 		this.perder_vida()
@@ -1067,7 +1156,7 @@ export default class Jogo extends Phaser.Scene {
 		this.combo_ha = 0
 		this.multiplicador = 1
 		this.cameras.main.shake(200, 0.01)
-		this.sound.play('perder_vida', { volume: 0.7 })
+		efeito(this, 'perder_vida', { volume: 0.7 })
 		this.atualizar_hud()
 		if (this.vidas == 0) {
 			this.fim_de_jogo()
@@ -1101,7 +1190,7 @@ export default class Jogo extends Phaser.Scene {
 		})
 		this.bombas--
 		this.espera_bomba = 40
-		this.sound.play('arremesso', { volume: 0.5 })
+		efeito(this, 'arremesso', { volume: 0.5 })
 		this.atualizar_hud()
 	}
 
@@ -1133,7 +1222,7 @@ export default class Jogo extends Phaser.Scene {
 		this.explosoes.push({ sprite, ha: 0 })
 		this.cameras.main.shake(150, 0.004 + raio / 10000)
 		if (com_som) {
-			this.sound.play('explosao', { volume: 0.8, rate: raio < R.RAIO_DA_EXPLOSAO ? 1.25 : 1 })
+			efeito(this, 'explosao', { volume: 0.8, rate: raio < R.RAIO_DA_EXPLOSAO ? 1.25 : 1 })
 		}
 		if (fere_heroi && Phaser.Math.Distance.Between(x, y, this.heroi_x + 12, this.heroi_y + 12) < raio * 0.8) {
 			this.levar_dano()
@@ -1222,7 +1311,7 @@ export default class Jogo extends Phaser.Scene {
 			this.stats.acertos++
 		}
 		this.espirrar_sangue(x, y)
-		this.sound.play('acerto', { volume: 0.5 })
+		efeito(this, 'acerto', { volume: 0.5 })
 		if (tiro.arma.explode) {
 			tiro.sumiu = true
 			this.explodir(x, y, tiro.arma.explode * this.tamanho_explosao(), tiro.dano)
@@ -1330,7 +1419,7 @@ export default class Jogo extends Phaser.Scene {
 		zumbi.morto_ha = 0
 		this.stats.mortos++
 		// cada zumbi geme num tom um pouco diferente (os grandes mais grave)
-		this.sound.play('zumbi_morre', { volume: 0.6, rate: (0.85 + Math.random() * 0.3) / zumbi.escala })
+		efeito(this, 'zumbi_morre', { volume: 0.6, rate: (0.85 + Math.random() * 0.3) / zumbi.escala })
 
 		// combo: mortes emendadas multiplicam os pontos
 		this.combo = this.combo_ha > 0 ? this.combo + 1 : 1
@@ -1338,7 +1427,7 @@ export default class Jogo extends Phaser.Scene {
 		const antes = this.multiplicador
 		this.multiplicador = Math.min(R.COMBO_MAXIMO, 1 + Math.floor((this.combo - 1) / 4))
 		if (this.multiplicador > antes) {
-			this.sound.play('combo', { volume: 0.5, rate: 0.8 + this.multiplicador * 0.15 })
+			efeito(this, 'combo', { volume: 0.5, rate: 0.8 + this.multiplicador * 0.15 })
 		}
 		this.stats.melhor_combo = Math.max(this.stats.melhor_combo, this.combo)
 		desbloquear(this, 'primeiro')
@@ -1408,7 +1497,7 @@ export default class Jogo extends Phaser.Scene {
 		else {
 			this.texto_da_fase = cenario != cenario_antes ? cenario.nome + '\nFASE ' + this.nivel : 'FASE ' + this.nivel
 			this.anunciar(this.texto_da_fase, cenario != cenario_antes ? 300 : 200)
-			this.sound.play('fase', { volume: 0.6 })
+			efeito(this, 'fase', { volume: 0.6 })
 			// a cada 2 fases, e sempre depois de vencer um chefão, escolhe uma melhoria
 			if (venceu_chefe || this.nivel % 2 == 0) {
 				this.oferecer_melhorias()
@@ -1447,7 +1536,7 @@ export default class Jogo extends Phaser.Scene {
 				const estava = zumbi.intangivel
 				zumbi.intangivel = zumbi.ciclo >= 200
 				if (zumbi.intangivel && !estava && zumbi.y > 0) {
-					this.sound.play('fantasma', { volume: 0.25, rate: 0.9 + Math.random() * 0.2 })
+					efeito(this, 'fantasma', { volume: 0.25, rate: 0.9 + Math.random() * 0.2 })
 				}
 			}
 
@@ -1519,7 +1608,7 @@ export default class Jogo extends Phaser.Scene {
 			corvo.vy = 0.5 + Math.random() * 0.25
 			corvo.voo = Math.random() * 100
 		}
-		this.sound.play('fantasma', { volume: 0.2, rate: 1.8 }) // grasnado
+		efeito(this, 'fantasma', { volume: 0.2, rate: 1.8 }) // grasnado
 	}
 
 	voar(corvo) {
@@ -1548,7 +1637,7 @@ export default class Jogo extends Phaser.Scene {
 			const sprite = this.add.sprite(x, y, 'cuspe', 0).setDepth(4.5)
 			this.cuspes.push({ sprite, x, y, vx: Math.cos(a) * R.VELOCIDADE_CUSPE, vy: Math.sin(a) * R.VELOCIDADE_CUSPE })
 		}
-		this.sound.play('cuspe', { volume: 0.5, rate: 0.9 + Math.random() * 0.2 })
+		efeito(this, 'cuspe', { volume: 0.5, rate: 0.9 + Math.random() * 0.2 })
 	}
 
 	mover_cuspes() {
@@ -1611,7 +1700,7 @@ export default class Jogo extends Phaser.Scene {
 		}
 		this.chefe.sprite = this.add.sprite(this.chefe.x, this.chefe.y, 'chefe', 0).setOrigin(0).setScale(R.CHEFE.escala).setDepth(3)
 		this.barra_nome.setText(this.chefe.nome)
-		this.sound.play('rugido', { volume: 0.9 })
+		efeito(this, 'rugido', { volume: 0.9 })
 		tocar_musica(this, 'musica_chefe')
 		this.cameras.main.shake(400, 0.008)
 	}
@@ -1629,7 +1718,7 @@ export default class Jogo extends Phaser.Scene {
 			const ganho = R.CHEFE.pontos * chefe.numero
 			this.pontos += ganho
 			this.flutuar(chefe.x + 64, chefe.y + 20, '+' + ganho, '#ff9a3c')
-			this.sound.play('rugido', { volume: 1, rate: 0.75 })
+			efeito(this, 'rugido', { volume: 1, rate: 0.75 })
 			this.atualizar_hud()
 		}
 	}
@@ -1725,7 +1814,7 @@ export default class Jogo extends Phaser.Scene {
 				const sprite = this.add.sprite(x, -10 - Math.random() * 120, 'cuspe', 0).setDepth(4.5)
 				this.cuspes.push({ sprite, x, y: sprite.y, vx: 0, vy: R.VELOCIDADE_CUSPE * 1.1 })
 			}
-			this.sound.play('cuspe', { volume: 0.6, rate: 0.7 })
+			efeito(this, 'cuspe', { volume: 0.6, rate: 0.7 })
 			chefe.atacando = 40
 			chefe.espera_chuva = Math.max(220, 380 - chefe.numero * 20)
 		}
@@ -1734,7 +1823,7 @@ export default class Jogo extends Phaser.Scene {
 		if (tem('investida') && chefe.espera_investida <= 0) {
 			chefe.investida = { etapa: 'aviso', ha: 0 }
 			chefe.espera_investida = Math.max(300, 520 - chefe.numero * 30)
-			this.sound.play('rugido', { volume: 0.7, rate: 1.3 })
+			efeito(this, 'rugido', { volume: 0.7, rate: 1.3 })
 		}
 	}
 
@@ -1837,7 +1926,7 @@ export default class Jogo extends Phaser.Scene {
 	}
 
 	pegar(tipo) {
-		this.sound.play(R.PODERES[tipo] ? 'poder' : 'item', { volume: 0.6 })
+		efeito(this, R.PODERES[tipo] ? 'poder' : 'item', { volume: 0.6 })
 		if (tipo == 'bomba') {
 			this.bombas = Math.min(this.bombas_max(), this.bombas + R.BOMBAS_POR_CAIXA)
 			this.anunciar('+' + R.BOMBAS_POR_CAIXA + ' BOMBAS', 100)
@@ -1859,7 +1948,7 @@ export default class Jogo extends Phaser.Scene {
 			this.puxar(coracao, 7)
 			if (encostou(coracao.x, coracao.y, 14, 12, this.heroi_x, this.heroi_y, 25, 25)) {
 				coracao.pegou = true
-				this.sound.play('item', { volume: 0.6, rate: 1.25 })
+				efeito(this, 'item', { volume: 0.6, rate: 1.25 })
 				if (this.vidas < this.vidas_max) {
 					this.vidas++
 				}
@@ -1886,7 +1975,7 @@ export default class Jogo extends Phaser.Scene {
 	fim_de_jogo() {
 		this.estado = 'fim'
 		parar_musica(300)
-		this.sound.play('fim', { volume: 0.7 })
+		efeito(this, 'fim', { volume: 0.7 })
 
 		// o elfo cai: fica vermelho, tomba de lado e vai sumindo; depois aparece o placar
 		this.dica_texto.setVisible(false)
@@ -1955,7 +2044,7 @@ export default class Jogo extends Phaser.Scene {
 				this.digitando_nome = false
 				piscar.remove()
 				renomear_no_placar(id, nome || 'ELF')
-				this.sound.play('item', { volume: 0.6 })
+				efeito(this, 'item', { volume: 0.6 })
 				this.liberar_reinicio()
 				return
 			}
@@ -1964,7 +2053,7 @@ export default class Jogo extends Phaser.Scene {
 			}
 			else if (/^[a-zA-Z0-9]$/.test(evento.key) && nome.length < 3) {
 				nome += evento.key.toUpperCase()
-				this.sound.play('combo', { volume: 0.4 })
+				efeito(this, 'combo', { volume: 0.4 })
 			}
 			desenhar()
 		}
