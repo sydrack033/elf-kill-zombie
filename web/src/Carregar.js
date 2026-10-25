@@ -43,11 +43,13 @@ export default class Carregar extends Phaser.Scene {
 
 		this.load.image('chao', PASTA + 'chao.png')
 		this.load.spritesheet('melhorias', PASTA + 'melhorias.png', { frameWidth: 16, frameHeight: 16 })
+		// manchas de sangue que ficam no chão: 3 quadros de 24x14
+		this.load.spritesheet('mancha', PASTA + 'mancha.png', { frameWidth: 24, frameHeight: 14 })
 
 		// efeitos e músicas são gerados por ferramentas/gerar_sons.mjs
 		const sons = [
 			'tiro', 'laser', 'foguete', 'acerto', 'explosao', 'zumbi_morre', 'rugido', 'cuspe', 'item', 'poder',
-			'escudo_quebra', 'perder_vida', 'arremesso', 'combo', 'fase', 'fim',
+			'escudo_quebra', 'perder_vida', 'arremesso', 'combo', 'fase', 'fim', 'trovao', 'fantasma',
 			'musica_titulo', 'musica_jogo', 'musica_chefe',
 		]
 		for (const som of sons) {

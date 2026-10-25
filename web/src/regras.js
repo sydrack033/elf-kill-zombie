@@ -15,6 +15,8 @@ export const MORTES_POR_NIVEL = (nivel) => 10 + nivel * 2 // fase 1: 12, fase 5:
 export const ACELERACAO_POR_NIVEL = 0.08 // quanto os zumbis ficam mais rápidos a cada fase (8%)
 export const NIVEIS_ENTRE_CHEFOES = 5 // nível 5, 10, 15... tem chefão
 export const COMBO_TEMPO = 150 // ticks para emendar a próxima morte no combo
+export const ROLAGEM_DO_CHAO = 0.3 // o chão desce esta quantidade por tick
+export const FASE_DA_CHUVA = 6 // a partir desta fase chove e caem raios
 export const COMBO_MAXIMO = 5 // multiplicador máximo de pontos
 
 // ---------- armas ----------
@@ -94,6 +96,16 @@ export const ZUMBIS = {
 	cuspidor: {
 		escala: 1, cor: 0x9cff7a, vida: 3, vy: 0.3, pontos: 25, empurravel: true, cospe: true,
 		peso: (nivel) => (nivel >= 4 ? 1.5 + nivel * 0.4 : 0),
+	},
+	// explode quando morre: machuca os zumbis em volta (e o elfo, se estiver perto)
+	bombado: {
+		escala: 1.15, cor: 0xff9a50, vida: 2, vy: 0.26, pontos: 20, empurravel: true, explode: 42,
+		peso: (nivel) => (nivel >= 3 ? 1 + nivel * 0.3 : 0),
+	},
+	// de tempos em tempos fica transparente e os tiros passam por ele
+	fantasma: {
+		escala: 1, cor: 0xc8d8ff, vida: 2, vy: 0.36, pontos: 30, empurravel: true, fantasma: true,
+		peso: (nivel) => (nivel >= 6 ? 1 + nivel * 0.3 : 0),
 	},
 }
 export const VELOCIDADE_CUSPE = 1.7

@@ -106,6 +106,14 @@ export default class Jogo extends Phaser.Scene {
 		this.proximo_item = 500
 		this.textos = [] // pontos e avisos que sobem e somem: { obj, ha }
 		this.dano_ha = 0 // tela vermelha quando o elfo apanha
+		this.manchas = [] // sangue que fica no chão: { sprite, y, ha }
+
+		// chuva e relâmpagos quando a noite chega
+		this.chuva = this.add.graphics().setDepth(8.5)
+		this.gotas = []
+		this.relampago = this.add.rectangle(0, 0, 10, ALTURA, 0xe8f0ff, 0).setOrigin(0).setDepth(8.6)
+		this.relampago_ha = 0
+		this.proximo_trovao = 900
 
 		this.quadro_atual = 0
 		this.estado = 'jogando' // 'jogando', 'pausado', 'escolhendo' (melhoria) ou 'fim'
@@ -209,6 +217,7 @@ export default class Jogo extends Phaser.Scene {
 		this.hud_poderes.x = this.largura - 8
 		this.vermelho.setSize(this.largura, ALTURA)
 		this.escurecer.setSize(this.largura, ALTURA)
+		this.relampago.setSize(this.largura, ALTURA)
 		this.aviso.x = meio
 		this.mensagem.x = meio
 		this.barra_fundo.x = meio
@@ -554,7 +563,7 @@ export default class Jogo extends Phaser.Scene {
 			}
 		}
 		for (const zumbi of this.zumbis) {
-			if (!zumbi.morrendo) {
+			if (!zumbi.morrendo && !zumbi.intangivel) {
 				const c = corpo(zumbi)
 				considerar(c.x + c.l / 2, c.y + c.a / 2)
 			}
@@ -582,9 +591,63 @@ export default class Jogo extends Phaser.Scene {
 		this.mover_chefe()
 		this.mover_coracoes()
 		this.mover_itens()
+		this.mover_manchas()
+		this.mover_chuva()
 		this.contar_tempos()
 
-		this.chao.tilePositionY -= 0.3 // o chão rola para dar a impressão de que o elfo avança
+		this.chao.tilePositionY -= R.ROLAGEM_DO_CHAO // o chão rola para dar a impressão de que o elfo avança
+	}
+
+	// ------------------------------------------------------------------ manchas, chuva e relâmpagos
+
+	deixar_mancha(x, y) {
+		if (this.manchas.length >= 40) {
+			this.manchas.shift().sprite.destroy() // limite: some a mais antiga
+		}
+		const sprite = this.add.sprite(x, y, 'mancha', Phaser.Math.Between(0, 2)).setDepth(1.2).setFlipX(Math.random() < 0.5)
+		this.manchas.push({ sprite, y, ha: 0 })
+	}
+
+	// as manchas andam junto com o chão e vão sumindo
+	mover_manchas() {
+		for (const mancha of this.manchas) {
+			mancha.y += R.ROLAGEM_DO_CHAO
+			mancha.ha++
+			if (mancha.ha > 900 || mancha.y > ALTURA + 10) {
+				mancha.sprite.destroy()
+				mancha.sumiu = true
+			}
+		}
+		this.manchas = this.manchas.filter((mancha) => !mancha.sumiu)
+	}
+
+	// da fase 6 em diante chove, e cada vez mais forte; de vez em quando cai um raio
+	mover_chuva() {
+		const quantas = this.nivel >= R.FASE_DA_CHUVA ? Math.min(140, 40 + (this.nivel - R.FASE_DA_CHUVA) * 15) : 0
+		while (this.gotas.length < quantas) {
+			this.gotas.push({ x: Math.random() * (this.largura + 60), y: Math.random() * ALTURA, v: 5 + Math.random() * 3 })
+		}
+		this.gotas.length = Math.min(this.gotas.length, quantas)
+		for (const gota of this.gotas) {
+			gota.y += gota.v
+			gota.x -= gota.v * 0.25 // vento leve
+			if (gota.y > ALTURA) {
+				gota.y = -10
+				gota.x = Math.random() * (this.largura + 60)
+			}
+		}
+
+		if (this.relampago_ha > 0) {
+			this.relampago_ha--
+		}
+		if (quantas > 0) {
+			this.proximo_trovao--
+			if (this.proximo_trovao <= 0) {
+				this.proximo_trovao = Phaser.Math.Between(1200, 2600)
+				this.relampago_ha = 40
+				this.sound.play('trovao', { volume: 0.55 })
+			}
+		}
 	}
 
 	contar_tempos() {
@@ -802,13 +865,17 @@ export default class Jogo extends Phaser.Scene {
 		this.explosoes = this.explosoes.filter((explosao) => explosao.ha < 7 * 5)
 	}
 
-	// explosão em (x, y): machuca todo zumbi dentro do raio e desfaz os cuspes
-	explodir(x, y, raio, dano, com_som = true) {
+	// explosão em (x, y): machuca todo zumbi dentro do raio e desfaz os cuspes;
+	// a do zumbi bombado também machuca o elfo (fere_heroi)
+	explodir(x, y, raio, dano, com_som = true, fere_heroi = false) {
 		const sprite = this.add.sprite(x, y, 'explosao', 0).setDepth(7).setScale(raio / R.RAIO_DA_EXPLOSAO)
 		this.explosoes.push({ sprite, ha: 0 })
 		this.cameras.main.shake(150, 0.004 + raio / 10000)
 		if (com_som) {
 			this.sound.play('explosao', { volume: 0.8, rate: raio < R.RAIO_DA_EXPLOSAO ? 1.25 : 1 })
+		}
+		if (fere_heroi && Phaser.Math.Distance.Between(x, y, this.heroi_x + 12, this.heroi_y + 12) < raio * 0.8) {
+			this.levar_dano()
 		}
 
 		for (const zumbi of this.zumbis) {
@@ -848,7 +915,8 @@ export default class Jogo extends Phaser.Scene {
 			}
 
 			for (const zumbi of this.zumbis) {
-				if (zumbi.morrendo || tiro.acertou.has(zumbi)) {
+				// fantasma transparente: o tiro passa direto
+				if (zumbi.morrendo || zumbi.intangivel || tiro.acertou.has(zumbi)) {
 					continue
 				}
 				const c = corpo(zumbi)
@@ -961,6 +1029,9 @@ export default class Jogo extends Phaser.Scene {
 			// o cuspidor para numa altura da parte de cima e fica cuspindo
 			parar_em: regra.cospe ? Phaser.Math.Between(40, 130) : null,
 			espera_cuspe: Phaser.Math.Between(80, 160),
+			// o fantasma alterna: visível por 200 ticks, transparente por 120
+			ciclo: Phaser.Math.Between(0, 200),
+			intangivel: false,
 		}
 		zumbi.vida_max = zumbi.vida
 		zumbi.sprite = this.add.sprite(x, y, 'zumbi', zumbi.xi).setOrigin(0).setScale(regra.escala).setDepth(2)
@@ -1003,6 +1074,9 @@ export default class Jogo extends Phaser.Scene {
 		this.pontos += ganho
 		const c = corpo(zumbi)
 		this.flutuar(c.x + c.l / 2, c.y, '+' + ganho, this.multiplicador > 1 ? '#ff9a3c' : '#ffffff')
+		if (!zumbi.regra.fantasma) {
+			this.deixar_mancha(c.x + c.l / 2, c.y + c.a - 2)
+		}
 
 		const sorte = 1 + this.m('sorte')
 		if (Math.random() < R.CHANCE_DE_CORACAO * sorte) {
@@ -1052,10 +1126,25 @@ export default class Jogo extends Phaser.Scene {
 				zumbi.flash--
 			if (zumbi.morrendo) {
 				zumbi.morto_ha++
+				// o bombado estoura logo depois de cair (dá tempo de ver o começo da animação)
+				if (zumbi.regra.explode && zumbi.morto_ha == 10 && !zumbi.estourou) {
+					zumbi.estourou = true
+					const c = corpo(zumbi)
+					this.explodir(c.x + c.l / 2, c.y + c.a / 2, zumbi.regra.explode * this.tamanho_explosao(), 3, true, true)
+				}
 				continue
 			}
 			if (this.congelado) {
 				continue
+			}
+
+			if (zumbi.regra.fantasma) {
+				zumbi.ciclo = (zumbi.ciclo + 1) % 320
+				const estava = zumbi.intangivel
+				zumbi.intangivel = zumbi.ciclo >= 200
+				if (zumbi.intangivel && !estava && zumbi.y > 0) {
+					this.sound.play('fantasma', { volume: 0.25, rate: 0.9 + Math.random() * 0.2 })
+				}
 			}
 
 			if (zumbi.parar_em == null || zumbi.y < zumbi.parar_em) {
@@ -1408,8 +1497,28 @@ export default class Jogo extends Phaser.Scene {
 		this.desenhar_chefe()
 		this.desenhar_resto()
 		this.desenhar_sombras()
+		this.desenhar_clima()
 		this.desenhar_hud_do_tick()
 		this.quadro_atual++
+	}
+
+	desenhar_clima() {
+		const g = this.chuva
+		g.clear()
+		if (this.gotas.length) {
+			g.lineStyle(1, 0xa8c0ff, 0.45)
+			for (const gota of this.gotas) {
+				g.lineBetween(gota.x, gota.y, gota.x + 2, gota.y - 7)
+			}
+		}
+		// relâmpago: um clarão forte, um apagão rápido e um segundo clarão mais fraco
+		const t = this.relampago_ha
+		const brilho = t > 32 ? 0.55 : t > 26 ? 0 : t > 18 ? 0.35 : t > 0 ? (t / 18) * 0.15 : 0
+		this.relampago.setFillStyle(0xe8f0ff, brilho)
+		for (const mancha of this.manchas) {
+			mancha.sprite.setY(Math.round(mancha.y))
+			mancha.sprite.setAlpha(mancha.ha < 600 ? 0.9 : 0.9 * (1 - (mancha.ha - 600) / 300))
+		}
 	}
 
 	desenhar_heroi() {
@@ -1459,6 +1568,18 @@ export default class Jogo extends Phaser.Scene {
 				s.setPosition(Math.round(zumbi.x + (22 - 30) * e), Math.round(zumbi.y + (44 - 71) * e))
 			}
 			this.pintar(s, zumbi.flash, zumbi.regra.cor)
+
+			// fantasma: some e aparece aos poucos
+			if (zumbi.regra.fantasma && !zumbi.morrendo) {
+				const c = zumbi.ciclo
+				const alvo = zumbi.intangivel ? 0.18 : 0.85
+				const transicao = c >= 200 ? Math.min(1, (c - 200) / 20) : c < 20 ? c / 20 : 1
+				s.setAlpha(zumbi.intangivel ? 0.85 - (0.85 - alvo) * transicao : 0.18 + (alvo - 0.18) * transicao)
+			}
+			// bombado: incha e desincha
+			if (zumbi.regra.explode && !zumbi.morrendo) {
+				s.setScale(zumbi.escala * (1 + Math.sin(this.quadro_atual / 8) * 0.04))
+			}
 		}
 	}
 

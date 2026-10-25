@@ -313,5 +313,19 @@ salvar('perder_vida', gerar(0.55, (t, p, osc) => quadrada(osc(520 - 380 * p + Ma
 // bomba arremessada: assobio descendo
 salvar('arremesso', gerar(0.25, (t, p, osc) => Math.sin(osc(1400 - 700 * p) * 2 * Math.PI) * 0.25 * Math.sin(p * Math.PI)))
 
+// trovão: estalo seco seguido de um ronco grave que vai sumindo
+anterior = 0
+let anterior2 = 0
+salvar('trovao', gerar(2.6, (t, p) => {
+	anterior = anterior * 0.96 + ruido() * 0.04 // ruído bem grave (ronco)
+	anterior2 = anterior2 * 0.5 + ruido() * 0.5 // ruído agudo (estalo)
+	const estalo = t < 0.25 ? anterior2 * (1 - t / 0.25) * 0.6 : 0
+	const ronco = anterior * 9 * Math.min(1, t * 6) * Math.pow(1 - p, 1.4) * (0.8 + 0.2 * Math.sin(t * 13))
+	return estalo + ronco
+}))
+
+// fantasma: uivo que sobe e desce
+salvar('fantasma', gerar(0.6, (t, p, osc) => Math.sin(osc(380 + Math.sin(p * Math.PI * 2) * 120) * 2 * Math.PI) * 0.25 * Math.sin(p * Math.PI)))
+
 // combo: plim curto (toca mais agudo conforme o multiplicador)
 salvar('combo', gerar(0.12, (t, p, osc) => ONDAS.fina(osc(1320)) * 0.2 * (1 - p)))
