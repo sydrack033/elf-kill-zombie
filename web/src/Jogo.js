@@ -134,6 +134,7 @@ export default class Jogo extends Phaser.Scene {
 		this.coracoes = [] // corações caindo para pegar: { sprite, x, y }
 		this.itens = [] // caixas: { sprite, tipo, x, y }
 		this.lapides_quebradas = 0
+		this.moedas_extras = 0 // moedas dos zumbis de elite, somadas no fim
 		this.torretas = [] // torretas montadas: { x, y, base, cano, barra, ha, espera }
 		this.proximo_item = 500
 		this.textos = [] // pontos e avisos que sobem e somem: { obj, ha }
@@ -1800,7 +1801,21 @@ export default class Jogo extends Phaser.Scene {
 			this.criar_escavador()
 			return
 		}
-		this.criar_zumbi(tipo, Phaser.Math.Between(0, Math.max(0, Math.floor(this.largura - tamanho))), -tamanho)
+		const zumbi = this.criar_zumbi(tipo, Phaser.Math.Between(0, Math.max(0, Math.floor(this.largura - tamanho))), -tamanho)
+		if (this.nivel >= R.ELITE.a_partir_da_fase && Math.random() < R.ELITE.chance) {
+			this.tornar_elite(zumbi)
+		}
+	}
+
+	tornar_elite(zumbi) {
+		zumbi.elite = true
+		zumbi.vida = zumbi.vida_max = zumbi.vida * R.ELITE.vida
+		zumbi.escala *= R.ELITE.escala
+		zumbi.sprite.setScale(zumbi.escala)
+		zumbi.vy *= 0.85
+		if (zumbi.escudo) {
+			zumbi.escudo = zumbi.escudo_max = zumbi.escudo * 2
+		}
 	}
 
 	criar_zumbi(tipo, x, y) {
@@ -1932,7 +1947,16 @@ export default class Jogo extends Phaser.Scene {
 			this.pontos += 25 * juntas * this.nivel
 		}
 		const lua = this.lua_de_sangue ? R.LUA_DE_SANGUE.pontos : 1
-		const ganho = Math.round(zumbi.regra.pontos * this.nivel * this.multiplicador * this.dificuldade.pontos * lua)
+		const elite = zumbi.elite ? R.ELITE.pontos : 1
+		const ganho = Math.round(zumbi.regra.pontos * this.nivel * this.multiplicador * this.dificuldade.pontos * lua * elite)
+		if (zumbi.elite) {
+			// elite: caixa garantida e moedas para a loja
+			const ce = corpo(zumbi)
+			this.soltar_item(ce.x + ce.l / 2 - 8, ce.y + ce.a / 2)
+			this.moedas_extras += R.ELITE.moedas
+			this.flutuar(ce.x + ce.l / 2, ce.y - 22, '+' + R.ELITE.moedas + ' MOEDAS', '#ffd34d')
+			efeito(this, 'item', { volume: 0.6, rate: 0.7 })
+		}
 		this.pontos += ganho
 		if (this.pontos >= 50000) desbloquear(this, 'rico')
 		const c = corpo(zumbi)
@@ -2755,7 +2779,7 @@ export default class Jogo extends Phaser.Scene {
 		const tempo = Math.floor(segundos / 60) + ':' + String(segundos % 60).padStart(2, '0')
 		const pontaria = this.stats.disparos ? Math.round((100 * this.stats.acertos) / this.stats.disparos) : 0
 		if (pontaria >= 70 && this.stats.disparos >= 200) desbloquear(this, 'mira')
-		const moedas = moedas_da_partida(this.pontos, this.stats.chefes)
+		const moedas = moedas_da_partida(this.pontos, this.stats.chefes) + this.moedas_extras
 		const carteira = ganhar_moedas(moedas)
 
 		this.escurecer.setVisible(true)
@@ -2971,6 +2995,17 @@ export default class Jogo extends Phaser.Scene {
 				s.setPosition(Math.round(zumbi.x + (22 - 30) * e), Math.round(zumbi.y + (44 - 71) * e))
 			}
 			this.pintar(s, zumbi.flash, zumbi.regra.cor)
+			// elite: pisca dourado e solta faíscas
+			if (zumbi.elite && !zumbi.morrendo && zumbi.flash == 0 && !this.congelado) {
+				if (Math.floor(this.quadro_atual / 8) % 2 == 0) {
+					s.setTint(0xffe070).setTintMode(Phaser.TintModes.MULTIPLY)
+				}
+				if (this.quadro_atual % 9 == 0) {
+					const c = corpo(zumbi)
+					const faisca = this.add.rectangle(c.x + Math.random() * c.l, c.y + Math.random() * c.a, 2, 2, 0xffe070).setDepth(4)
+					this.tweens.add({ targets: faisca, y: faisca.y - 12, alpha: 0, duration: 500, onComplete: () => faisca.destroy() })
+				}
+			}
 
 			// coveiro: a lápide vai na frente, nas mãos dele
 			if (zumbi.lapide) {

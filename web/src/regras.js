@@ -185,6 +185,9 @@ export const ZUMBIS = {
 	},
 }
 
+// elite: às vezes um zumbi vem dourado, maior e bem mais forte; vale mais pontos, sempre solta uma caixa e dá moedas
+export const ELITE = { a_partir_da_fase: 4, chance: 0.04, vida: 4, escala: 1.2, pontos: 5, moedas: 5 }
+
 // revoadas de corvos atravessando a tela
 export const CORVOS = { a_partir_da_fase: 2, a_cada: [1100, 1900], quantos: [3, 5], velocidade: 1.3 }
 export const VELOCIDADE_CUSPE = 1.7
