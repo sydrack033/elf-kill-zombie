@@ -8,7 +8,7 @@ import { desafios_de_hoje, dia_de_hoje } from './desafios.js'
 import * as R from './regras.js'
 
 // versão das novidades: troque quando quiser mostrar o painel de novidades de novo
-const VERSAO = '2026-10-25'
+const VERSAO = '2026-10-25b'
 
 // Tela de título: enquanto espera, roda uma demonstração no fundo (o elfo atirando nos zumbis).
 export default class Titulo extends Phaser.Scene {
@@ -222,10 +222,11 @@ export default class Titulo extends Phaser.Scene {
 			'',
 			'6 CHEFÕES E UM CHEFÃO FINAL NA FASE 50 (COM FINAL DA HISTÓRIA)',
 			'CENÁRIO NOVO: TERRA GELADA. EVENTOS: HORDA, LUA DE SANGUE, ECLIPSE',
-			'ZUMBIS NOVOS: COVEIRO, GOSMA, TAMBORZEIRO, MORCEGOS E OS DE ELITE',
+			'ZUMBIS NOVOS: COVEIRO, GOSMA, TAMBORZEIRO, MORCEGOS, ELITE E SAQUEADOR',
 			'ARMAS NOVAS: BUMERANGUE, ESPINGARDA E ARCO ÉLFICO (E NÍVEIS DE ARMA)',
 			'LOJA COM MOEDAS, CHAPÉUS, FADA, DESAFIOS DO DIA E OPÇÕES',
 			'MODO SÓ CHEFÕES, 2 JOGADORES, CLASSES, MODIFICADORES E CAPÍTULOS',
+			'ACERTOS CRÍTICOS E PRESENTES NOS COMBOS DE 10, 25, 50 E 100',
 			'',
 			'VEJA TUDO NO BESTIÁRIO (TECLA B)',
 			'',
