@@ -5,6 +5,7 @@ import Carregar from './Carregar.js'
 import Titulo from './Titulo.js'
 import Jogo from './Jogo.js'
 import ConquistasCena from './ConquistasCena.js'
+import Historia from './Historia.js'
 
 // espera a fonte carregar antes de criar o jogo, senão os textos saem com a fonte padrão
 Promise.all([document.fonts.load('8px Silkscreen'), document.fonts.load('bold 8px Silkscreen')]).finally(() => {
@@ -21,7 +22,7 @@ Promise.all([document.fonts.load('8px Silkscreen'), document.fonts.load('bold 8p
 			height: window.innerHeight,
 		},
 		input: { gamepad: true }, // controle de videogame (Xbox, PlayStation...)
-		scene: [Carregar, Titulo, Jogo, ConquistasCena],
+		scene: [Carregar, Titulo, Jogo, ConquistasCena, Historia],
 	})
 
 	// na versão publicada (npm run build), registra o service worker para funcionar sem internet
