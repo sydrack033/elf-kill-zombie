@@ -123,6 +123,7 @@ export default class Jogo extends Phaser.Scene {
 		this.faixas = 0
 		this.explicacao = null
 		this.capitulo_pendente = null
+		this.desafios_avisados = new Set()
 		this.ja_trocou = false // troca de cartas de melhoria (uma por partida)
 		this.tecla_trocar = null
 		// setinhas vermelhas no pé da tela marcando zumbis perto de passar (passar custa vida)

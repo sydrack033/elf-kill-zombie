@@ -4,6 +4,7 @@ import Phaser from 'phaser'
 import { ALTURA } from '../tela.js'
 import * as R from '../regras.js'
 import { efeito } from '../opcoes.js'
+import { progresso_de_hoje } from '../desafios.js'
 
 export default class Clima {
 	// ------------------------------------------------------------------ manchas, chuva e relâmpagos
@@ -95,6 +96,16 @@ export default class Clima {
 	}
 
 	contar_tempos() {
+		// a cada segundo confere os desafios do dia: o que acabou de ser cumprido ganha um aviso
+		if (this.stats.ticks % 100 == 0) {
+			for (const d of progresso_de_hoje(this.dia, this.resumo_da_partida())) {
+				if (!d.feita && d.atual >= d.meta && !this.desafios_avisados.has(d.texto)) {
+					this.desafios_avisados.add(d.texto)
+					this.anunciar('DESAFIO CUMPRIDO!\n' + d.texto, 220, '#9ff07a')
+					efeito(this, 'moeda', { volume: 0.6 })
+				}
+			}
+		}
 		if (this.invencivel > 0)
 			this.invencivel--
 		if (this.clarao_ha > 0)
