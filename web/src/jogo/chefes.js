@@ -138,6 +138,7 @@ export default class Chefes {
 				if (this.treino) {
 					// treino vencido: volta para o bestiário
 					this.anunciar('TREINO VENCIDO!', 300, '#9ff07a')
+					desbloquear(this, 'treino')
 					efeito(this, 'fase', { volume: 0.7 })
 					this.estado = 'fim'
 					this.time.delayedCall(2200, () => this.scene.start('Bestiario'))

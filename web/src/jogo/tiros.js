@@ -3,6 +3,7 @@
 import Phaser from 'phaser'
 import { ALTURA } from '../tela.js'
 import { efeito } from '../opcoes.js'
+import { desbloquear } from '../conquistas.js'
 import { encostou, corpo, corpo_chefe } from './comum.js'
 
 export default class Tiros {
@@ -42,6 +43,11 @@ export default class Tiros {
 					this.acertar(tiro, Phaser.Math.Clamp(tiro.x, c.x, c.x + c.l), Phaser.Math.Clamp(tiro.y, c.y, c.y + c.a))
 					this.ferir_zumbi(zumbi, tiro.dano, tiro.arma.empurra)
 					tiro.acertou.add(zumbi)
+					// flecha que já matou 5
+					if (tiro.arma.carrega && zumbi.morrendo) {
+						tiro.mortes = (tiro.mortes || 0) + 1
+						if (tiro.mortes >= 5) desbloquear(this, 'flecha5')
+					}
 					if (tiro.sumiu) {
 						break
 					}

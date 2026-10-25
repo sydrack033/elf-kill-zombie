@@ -464,6 +464,8 @@ export default class Zumbis {
 		}
 		// cova quebrada: some na hora (poeira) e solta moedas
 		if (zumbi.regra.ninho) {
+			this.covas_quebradas = (this.covas_quebradas || 0) + 1
+			if (this.covas_quebradas >= 5 && !this.treino) desbloquear(this, 'covas5')
 			zumbi.morto_ha = 75
 			const cx = zumbi.x + 20
 			const cy = zumbi.y + 22

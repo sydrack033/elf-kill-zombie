@@ -27,6 +27,9 @@ export const CONQUISTAS = [
 	{ id: 'horda', nome: 'MURALHA', texto: 'DERROTE UMA HORDA' },
 	{ id: 'lua', nome: 'NOITE VERMELHA', texto: 'PASSE UMA FASE DE LUA DE SANGUE' },
 	{ id: 'loja', nome: 'FREGUÊS', texto: 'COMPRE TUDO NA LOJA' },
+	{ id: 'flecha5', nome: 'FLECHA CERTEIRA', texto: 'MATE 5 ZUMBIS COM UMA FLECHA SÓ' },
+	{ id: 'covas5', nome: 'FECHA-COVAS', texto: 'QUEBRE 5 COVAS ABERTAS NUMA PARTIDA' },
+	{ id: 'treino', nome: 'TREINADO', texto: 'VENÇA UM TREINO DE CHEFÃO NO BESTIÁRIO' },
 	{ id: 'vidro10', nome: 'VIDRO BLINDADO', texto: 'CHEGUE À FASE 10 COMO ELFO DE VIDRO' },
 ]
 

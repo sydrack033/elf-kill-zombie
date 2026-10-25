@@ -137,6 +137,7 @@ export default class Jogo extends Phaser.Scene {
 		this.polvora_da_classe = 0
 		this.causa_do_golpe = null
 		this.avisou_recorde = false
+		this.covas_quebradas = 0
 		this.forja = false // (a loja liga, se comprada)
 		this.proxima_cova = undefined // a primeira cova vem depois de um tempo
 		this.ja_trocou = false // troca de cartas de melhoria (uma por partida)
