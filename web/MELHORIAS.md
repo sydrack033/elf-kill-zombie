@@ -16,6 +16,9 @@ git (pasta `Jogo1`), então dá para ver o histórico com `git log` e voltar qua
   aparece, chama fantasmas), O Necromante (escudo de ossos girando e mortos levantando das manchas
   de sangue) e O Demônio (chuva de meteoros e labareda). Com metade da vida eles **enfurecem**
   (do 2º em diante). Depois voltam com tudo junto. Entrada de cinema com o nome do chefão.
+- **Começar adiantado:** depois de chegar à fase 11, 21, 31 ou 41, dá para começar a partida lá
+  (escolha "COMEÇAR NA" no título), já com as melhorias que teria pego no caminho. O título mostra
+  a melhor fase alcançada rumo ao final.
 - **Final do jogo:** na fase 50 vem o chefão final, **O Senhor dos Mortos** (maior e com todos os
   ataques). Vencendo, a história termina e dá para continuar no **modo infinito** ou encerrar.
 - **Armas:** triplo, metralhadora, laser (atravessa), bazuca (explode), lança-chamas, raio (pula de
