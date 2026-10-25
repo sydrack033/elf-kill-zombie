@@ -3,7 +3,7 @@ import { ALTURA, ajustar_tela, texto, tecla_tela_cheia, tecla_som, ler_recorde, 
 import { tocar_musica, tecla_musica } from './musica.js'
 import { opcoes, gravar_opcoes, efeito } from './opcoes.js'
 import { ler_conquistas } from './conquistas.js'
-import { ler_loja } from './moedas.js'
+import { ler_loja, presente_de_halloween } from './moedas.js'
 import { desafios_de_hoje, dia_de_hoje } from './desafios.js'
 import * as R from './regras.js'
 
@@ -25,6 +25,12 @@ export default class Titulo extends Phaser.Scene {
 		this.demo_sangues = []
 		this.demo_heroi = this.add.sprite(0, ALTURA - 45, 'heroi_parado_cima').setOrigin(0.5, 0).setDepth(2)
 		// o chapéu comprado na loja aparece também aqui
+		// Halloween: ganha a abóbora (e já usa, se estiver sem chapéu)
+		const halloween = presente_de_halloween()
+		if (halloween && !opcoes.chapeu) {
+			opcoes.chapeu = 'chapeu_abobora'
+			gravar_opcoes()
+		}
 		this.demo_chapeu = opcoes.chapeu && ler_loja().compras[opcoes.chapeu] ? this.add.sprite(0, ALTURA - 39, opcoes.chapeu).setOrigin(0.5, 1).setDepth(2.1) : null
 		this.demo_arma = this.add.sprite(0, 0, 'armas', 0).setOrigin(3 / 16, 4 / 8).setRotation(-Math.PI / 2).setDepth(2)
 		this.demo_x = 0
@@ -200,6 +206,10 @@ export default class Titulo extends Phaser.Scene {
 		this.botao_desafios = texto(this, 6, 30, 'DESAFIOS ' + feitos + '/' + desafios.length, 8, feitos == desafios.length ? '#9ff07a' : '#9fd8ff').setOrigin(0, 0.5).setDepth(6)
 		this.cameras.main.fadeIn(300, 0, 0, 0)
 		this.mostrar_novidades()
+		if (halloween) {
+			const aviso = texto(this, this.largura / 2, ALTURA / 2 + 65, 'FELIZ HALLOWEEN! VOCÊ GANHOU O CHAPÉU DE ABÓBORA', 8, '#ff9a3c').setOrigin(0.5).setDepth(19)
+			this.tweens.add({ targets: aviso, alpha: 0.3, yoyo: true, repeat: 9, duration: 500, onComplete: () => aviso.destroy() })
+		}
 		this.ao_redimensionar()
 	}
 
