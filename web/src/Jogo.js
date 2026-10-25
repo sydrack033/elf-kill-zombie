@@ -153,6 +153,11 @@ export default class Jogo extends Phaser.Scene {
 		this.vinheta = this.add.image(0, 0, 'vinheta').setOrigin(0).setDepth(8.4)
 		// neblina de alguns cenários (pântano, ruínas): entra e sai devagar
 		this.neblina = this.add.tileSprite(0, 0, 10, ALTURA, 'neblina').setOrigin(0).setDepth(8.3).setAlpha(0).setTileScale(2)
+		// lua de sangue: a tela fica avermelhada e uma lua vermelha aparece no canto
+		this.lua_de_sangue = false
+		this.tom_vermelho = this.add.rectangle(0, 0, 10, ALTURA, 0xb01818, 0).setOrigin(0).setDepth(8.35)
+		this.lua = this.add.circle(0, 36, 11, 0xff4a3a).setDepth(8.36).setAlpha(0)
+		this.lua_brilho = this.add.circle(0, 36, 20, 0xff4a3a).setDepth(8.35).setAlpha(0)
 		this.relampago_ha = 0
 		this.proximo_trovao = 900
 
@@ -323,6 +328,8 @@ export default class Jogo extends Phaser.Scene {
 		this.relampago.setSize(this.largura, ALTURA)
 		this.vinheta.setDisplaySize(this.largura, ALTURA)
 		this.neblina.setSize(this.largura, ALTURA)
+		this.tom_vermelho.setSize(this.largura, ALTURA)
+		this.lua.x = this.lua_brilho.x = Math.round(this.largura * 0.72)
 		this.aviso.x = meio
 		this.mensagem.x = meio
 		this.barra_fundo.x = meio
@@ -486,7 +493,7 @@ export default class Jogo extends Phaser.Scene {
 		this.tempo_acumulado = 0
 		efeito(this, 'item', { volume: 0.6, rate: 0.8 })
 		this.flutuar(this.heroi_x + 12, this.heroi_y - 8, mel.nome + '!', '#c08aff')
-		this.anunciar(this.texto_da_fase || 'FASE ' + this.nivel, 250)
+		this.anunciar(this.texto_da_fase || 'FASE ' + this.nivel, 250, this.lua_de_sangue ? '#ff5a5a' : '#ffd34d')
 		this.atualizar_hud_melhorias()
 		this.atualizar_hud()
 	}
@@ -1776,7 +1783,7 @@ export default class Jogo extends Phaser.Scene {
 			x,
 			y,
 			vx: persegue ? 0.12 + n * 0.02 : 0, // os que perseguem vão se ajeitando na direção do elfo
-			vy: regra.vy * (1 + n * R.ACELERACAO_POR_NIVEL) * (0.9 + Math.random() * 0.25) * this.dificuldade.velocidade,
+			vy: regra.vy * (1 + n * R.ACELERACAO_POR_NIVEL) * (0.9 + Math.random() * 0.25) * this.dificuldade.velocidade * (this.lua_de_sangue ? R.LUA_DE_SANGUE.velocidade : 1),
 			vida: regra.vida + Math.floor(n / 3),
 			morrendo: false,
 			morto_ha: 0,
@@ -1892,7 +1899,8 @@ export default class Jogo extends Phaser.Scene {
 			this.flutuar(c0.x + c0.l / 2, c0.y - 10, nomes[juntas] || 'MASSACRE!', '#ff5a5a')
 			this.pontos += 25 * juntas * this.nivel
 		}
-		const ganho = Math.round(zumbi.regra.pontos * this.nivel * this.multiplicador * this.dificuldade.pontos)
+		const lua = this.lua_de_sangue ? R.LUA_DE_SANGUE.pontos : 1
+		const ganho = Math.round(zumbi.regra.pontos * this.nivel * this.multiplicador * this.dificuldade.pontos * lua)
 		this.pontos += ganho
 		if (this.pontos >= 50000) desbloquear(this, 'rico')
 		const c = corpo(zumbi)
@@ -1949,6 +1957,10 @@ export default class Jogo extends Phaser.Scene {
 		if (this.m('anjo')) {
 			this.poderes.escudo = Math.max(this.poderes.escudo, 500)
 		}
+		// sorteia a lua de sangue para a fase nova (nunca duas seguidas, nem em fase de chefão)
+		const lua = R.LUA_DE_SANGUE
+		this.lua_de_sangue = !fase_de_chefao && !this.lua_de_sangue && !this.modo_chefes &&
+			this.nivel >= lua.a_partir_da_fase && Math.random() < lua.chance
 		if (fase_de_chefao) {
 			this.anunciar((cenario != cenario_antes ? cenario.nome + '\n' : '') + 'CHEFÃO A CAMINHO!', 300, '#ff5a5a')
 			// no modo chefões, cada vitória dá uma melhoria antes do próximo
@@ -1959,7 +1971,11 @@ export default class Jogo extends Phaser.Scene {
 		}
 		else {
 			this.texto_da_fase = cenario != cenario_antes ? cenario.nome + '\nFASE ' + this.nivel : 'FASE ' + this.nivel
-			this.anunciar(this.texto_da_fase, cenario != cenario_antes ? 300 : 200)
+			if (this.lua_de_sangue) {
+				this.texto_da_fase = 'FASE ' + this.nivel + '\nLUA DE SANGUE!'
+				efeito(this, 'rugido', { volume: 0.6, rate: 0.6 })
+			}
+			this.anunciar(this.texto_da_fase, cenario != cenario_antes || this.lua_de_sangue ? 300 : 200, this.lua_de_sangue ? '#ff5a5a' : '#ffd34d')
 			efeito(this, 'fase', { volume: 0.6 })
 			// a cada 2 fases, e sempre depois de vencer um chefão, escolhe uma melhoria
 			if (venceu_chefe || this.nivel % 2 == 0) {
@@ -2827,6 +2843,10 @@ export default class Jogo extends Phaser.Scene {
 		this.neblina.alpha += (alvo - this.neblina.alpha) * 0.01
 		this.neblina.tilePositionX += 0.12
 		this.neblina.tilePositionY -= R.ROLAGEM_DO_CHAO * 0.4
+		const vermelho = this.lua_de_sangue ? 1 : 0
+		this.tom_vermelho.fillAlpha += (vermelho * 0.13 - this.tom_vermelho.fillAlpha) * 0.02
+		this.lua.alpha += (vermelho * 0.9 - this.lua.alpha) * 0.02
+		this.lua_brilho.alpha = this.lua.alpha * (0.25 + 0.08 * Math.sin(this.quadro_atual / 25))
 		const g = this.chuva
 		g.clear()
 		if (this.gotas.length && this.clima == 'brasas') {

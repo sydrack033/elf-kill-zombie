@@ -36,6 +36,9 @@ export const ACELERACAO_POR_NIVEL = 0.08 // quanto os zumbis ficam mais rápidos
 export const NIVEIS_ENTRE_CHEFOES = 5 // nível 5, 10, 15... tem chefão
 export const COMBO_TEMPO = 150 // ticks para emendar a próxima morte no combo
 export const ROLAGEM_DO_CHAO = 0.3 // o chão desce esta quantidade por tick
+// lua de sangue: de vez em quando uma fase inteira com zumbis mais rápidos que valem o dobro
+export const LUA_DE_SANGUE = { a_partir_da_fase: 6, chance: 0.15, velocidade: 1.25, pontos: 2 }
+
 export const FASE_DA_CHUVA = 6 // dentro de cada cenário, a partir desta fase chove e caem raios
 
 // o cenário muda a cada 10 fases; clima = o que cai do céu (chuva) ou sobe do chão (brasas)
