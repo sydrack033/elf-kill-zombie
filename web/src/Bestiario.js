@@ -4,6 +4,7 @@ import { ZUMBIS, CHEFES, CHEFE_FINAL, ITENS, ARMAS, PODERES } from './regras.js'
 
 // Galeria dos inimigos que o jogador já encontrou (tecla B na tela de título).
 const CHAVE = 'elf-kill-zombie-vistos'
+const ABAS = ['INIMIGOS', 'CAIXAS', 'EVENTOS']
 
 const FICHAS = [
 	{ tipo: 'comum', nome: 'ZUMBI', texto: 'DESCE DEVAGAR.\nALGUNS VÃO ATRÁS DE VOCÊ.' },
@@ -22,6 +23,18 @@ const FICHAS = [
 ]
 
 // devolve a ficha do inimigo se for a primeira vez que ele aparece (senão, null)
+// eventos e perigos (aba EVENTOS): nome, cor e explicação
+const EVENTOS = [
+	{ nome: 'HORDA', cor: '#ff6a6a', texto: 'NA METADE DAS FASES 8, 13, 18... VEM UMA ENXURRADA DE ZUMBIS. SOBREVIVA E GANHE UM PRÊMIO.' },
+	{ nome: 'LUA DE SANGUE', cor: '#ff5a5a', texto: 'UMA FASE INTEIRA COM ZUMBIS MAIS RÁPIDOS, MAS QUE VALEM O DOBRO DE PONTOS.' },
+	{ nome: 'ECLIPSE', cor: '#9fd8ff', texto: 'A FASE FICA ESCURA: SÓ DÁ PARA VER EM VOLTA DO ELFO E DAS EXPLOSÕES.' },
+	{ nome: 'ZUMBI DE ELITE', cor: '#ffd34d', texto: 'DOURADO, MAIOR E MAIS FORTE. SEMPRE SOLTA UMA CAIXA E DÁ MOEDAS.' },
+	{ nome: 'LODO (PÂNTANO)', cor: '#9fbf8a', texto: 'POÇAS QUE DESCEM COM O CHÃO E DEIXAM O ELFO LENTO.' },
+	{ nome: 'ESCOMBROS, METEOROS E GRANIZO', cor: '#ff9a3c', texto: 'CAEM DO CÉU NAS RUÍNAS, NO INFERNO E NO GELO. A SOMBRA NO CHÃO AVISA ANTES.' },
+	{ nome: 'CHEFÃO ENFURECIDO', cor: '#ff8a7a', texto: 'COM METADE DA VIDA, O CHEFÃO ANDA E ATACA MAIS RÁPIDO.' },
+	{ nome: 'FASE PERFEITA', cor: '#9ff07a', texto: 'PASSE UMA FASE SEM APANHAR: PONTOS EXTRAS E UMA MOEDA.' },
+]
+
 export function marcar_visto(tipo) {
 	try {
 		const vistos = new Set(JSON.parse(localStorage.getItem(CHAVE) || '[]'))
@@ -55,11 +68,15 @@ export default class Bestiario extends Phaser.Scene {
 		const abatidos = ler_estatisticas().por_tipo || {}
 		this.titulo = texto(this, 0, 14, 'BESTIÁRIO  ' + FICHAS.filter((f) => vistos.has(f.tipo)).length + '/' + FICHAS.length, 16, '#ffd34d').setOrigin(0.5, 0)
 		// duas abas: os inimigos e as caixas (o que cada uma faz)
-		this.abas = ['INIMIGOS', 'CAIXAS'].map((nome, i) => {
+		this.abas = ABAS.map((nome, i) => {
 			const aba = texto(this, 0, 42, nome, 8, '#ffffff').setOrigin(0.5).setInteractive({ useHandCursor: true })
 			aba.on('pointerdown', () => this.mostrar_aba(i))
 			return aba
 		})
+		this.eventos = EVENTOS.map((e) => ({
+			nome: texto(this, 0, 0, e.nome, 8, e.cor),
+			desc: texto(this, 0, 0, e.texto, 8, '#cfcfcf').setAlign('left').setLineSpacing(2),
+		}))
 		this.caixas = ITENS.map((item) => {
 			const nome = ARMAS[item.tipo] ? ARMAS[item.tipo].nome : PODERES[item.tipo] ? PODERES[item.tipo].nome : item.tipo.toUpperCase()
 			return {
@@ -107,16 +124,16 @@ export default class Bestiario extends Phaser.Scene {
 		this.input.on('pointerdown', (p, alvos) => {
 			if (!alvos.length) voltar()
 		})
-		this.input.keyboard.on('keydown-LEFT', () => this.mostrar_aba(0))
-		this.input.keyboard.on('keydown-RIGHT', () => this.mostrar_aba(1))
+		this.input.keyboard.on('keydown-LEFT', () => this.mostrar_aba((this.aba + ABAS.length - 1) % ABAS.length))
+		this.input.keyboard.on('keydown-RIGHT', () => this.mostrar_aba((this.aba + 1) % ABAS.length))
 		this.input.keyboard.on('keydown-TAB', (ev) => {
 			ev.preventDefault()
-			this.mostrar_aba(1 - this.aba)
+			this.mostrar_aba((this.aba + 1) % ABAS.length)
 		})
 		if (this.input.gamepad) {
 			this.input.gamepad.on('down', (pad, botao) => {
-				if (botao.index == 14 || botao.index == 4) this.mostrar_aba(0)
-				else if (botao.index == 15 || botao.index == 5) this.mostrar_aba(1)
+				if (botao.index == 14 || botao.index == 4) this.mostrar_aba((this.aba + ABAS.length - 1) % ABAS.length)
+				else if (botao.index == 15 || botao.index == 5) this.mostrar_aba((this.aba + 1) % ABAS.length)
 				else voltar()
 			})
 		}
@@ -125,7 +142,11 @@ export default class Bestiario extends Phaser.Scene {
 
 	mostrar_aba(i) {
 		this.aba = i
-		this.abas.forEach((a, n) => a.setColor(n == i ? '#ffd34d' : '#8a8a90').setText(n == i ? '[ ' + ['INIMIGOS', 'CAIXAS'][n] + ' ]' : ['INIMIGOS', 'CAIXAS'][n]))
+		this.abas.forEach((a, n) => a.setColor(n == i ? '#ffd34d' : '#8a8a90').setText(n == i ? '[ ' + ABAS[n] + ' ]' : ABAS[n]))
+		for (const e of this.eventos) {
+			e.nome.setVisible(i == 2)
+			e.desc.setVisible(i == 2)
+		}
 		for (const c of this.cartas) {
 			for (const o of [c.fundo, c.figura, c.nome, c.desc, c.conta]) o.setVisible(i == 0)
 		}
@@ -140,7 +161,17 @@ export default class Bestiario extends Phaser.Scene {
 		this.chao.setSize(this.largura, ALTURA)
 		this.titulo.x = this.largura / 2
 		this.voltar.x = this.largura / 2
-		this.abas.forEach((a, i) => (a.x = this.largura / 2 + (i - 0.5) * 100))
+		this.abas.forEach((a, i) => (a.x = this.largura / 2 + (i - (ABAS.length - 1) / 2) * Math.min(100, this.largura / 3.2)))
+		// eventos: nome e explicação, um embaixo do outro
+		const largura_eventos = Math.min(420, this.largura - 20)
+		// em tela estreita a letra encolhe um pouco para caber tudo
+		const escala_eventos = this.largura < 420 ? 0.8 : 1
+		let y_evento = 58
+		for (const e of this.eventos) {
+			e.nome.setScale(escala_eventos).setPosition((this.largura - largura_eventos) / 2, y_evento)
+			e.desc.setScale(escala_eventos).setWordWrapWidth(largura_eventos / escala_eventos).setPosition((this.largura - largura_eventos) / 2, y_evento + 10 * escala_eventos)
+			y_evento += (14 + e.desc.height) * escala_eventos
+		}
 		// caixas: lista em uma ou duas colunas
 		const colunas_caixas = this.largura >= 520 ? 2 : 1
 		const largura_caixa = Math.min(250, (this.largura - 16) / colunas_caixas)
