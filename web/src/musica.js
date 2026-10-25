@@ -12,19 +12,30 @@ catch {
 	// sem localStorage: começa ligada
 }
 
-// muda o volume de um som aos poucos e chama "depois" quando termina
+// muda o volume de um som aos poucos e chama "depois" quando termina.
+// Um fade novo no mesmo som cancela o anterior.
+const fades = new Map()
 function fade(som, ate, ms, depois) {
+	clearInterval(fades.get(som))
 	const de = som.volume
 	const passos = Math.max(1, Math.round(ms / 30))
 	let i = 0
 	const timer = setInterval(() => {
 		i++
+		// o som pode ter sido destruído no meio do caminho
+		if (!som.manager) {
+			clearInterval(timer)
+			fades.delete(som)
+			return
+		}
 		som.volume = de + ((ate - de) * i) / passos
 		if (i >= passos) {
 			clearInterval(timer)
+			fades.delete(som)
 			if (depois) depois()
 		}
 	}, 30)
+	fades.set(som, timer)
 }
 
 export function tocar_musica(scene, chave) {

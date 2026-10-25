@@ -135,7 +135,16 @@ export default class Jogo extends Phaser.Scene {
 
 		this.input.mouse.disableContextMenu() // o botão direito joga bomba em vez de abrir o menu
 		this.input.setDefaultCursor('crosshair')
-		this.input.on('pointermove', () => (this.mouse_mexeu = true))
+		this.input.on('pointermove', (p) => {
+			if (!p.wasTouch) this.mouse_mexeu = true
+		})
+
+		// toque (celular/tablet): os controles na tela aparecem no primeiro toque
+		this.modo_toque = false
+		this.toque_vx = 0
+		this.toque_vy = 0
+		this.input.addPointer(2)
+		this.input.on('pointerdown', (p) => this.ao_tocar(p))
 
 		// se a janela perder o foco (trocou de aba, alt+tab), pausa sozinho
 		const ao_perder_foco = () => {
@@ -198,6 +207,9 @@ export default class Jogo extends Phaser.Scene {
 		this.barra_vida.x = meio - largura_barra / 2
 		this.largura_barra = largura_barra
 		this.heroi_x = Phaser.Math.Clamp(this.heroi_x, 0, this.largura - 25)
+		if (this.botao_bomba) {
+			this.posicionar_botoes()
+		}
 	}
 
 	atualizar_hud() {
@@ -238,7 +250,7 @@ export default class Jogo extends Phaser.Scene {
 		if (this.estado == 'jogando') {
 			this.estado = 'pausado'
 			this.escurecer.setVisible(true)
-			this.mensagem.setText('PAUSADO\n\nP OU ESC: CONTINUAR\nT: SAIR PARA O MENU')
+			this.mensagem.setText(this.modo_toque ? 'PAUSADO\n\nTOQUE PARA CONTINUAR' : 'PAUSADO\n\nP OU ESC: CONTINUAR\nT: SAIR PARA O MENU')
 			this.sound.pauseAll()
 		}
 		else if (this.estado == 'pausado') {
@@ -274,8 +286,8 @@ export default class Jogo extends Phaser.Scene {
 		this.dir_on = t.direita.isDown || t.d.isDown
 		this.cima_on = t.acima.isDown || t.w.isDown
 		this.baixo_on = t.abaixo.isDown || t.s.isDown
-		this.atirar_on = t.espaco.isDown || mouse.leftButtonDown()
-		this.bomba_on = t.q.isDown || mouse.rightButtonDown()
+		this.atirar_on = t.espaco.isDown || (mouse.leftButtonDown() && !mouse.wasTouch)
+		this.bomba_on = t.q.isDown || (mouse.rightButtonDown() && !mouse.wasTouch)
 
 		// para onde o elfo mira: o ponto do mouse dentro do jogo
 		if (this.mouse_mexeu) {
@@ -287,6 +299,144 @@ export default class Jogo extends Phaser.Scene {
 			this.mira_x = this.heroi_x + 12
 			this.mira_y = 0
 		}
+
+		if (this.modo_toque) {
+			this.ler_toque()
+		}
+	}
+
+	// ------------------------------------------------------------------ controles de toque
+
+	ao_tocar(p) {
+		if (!p.wasTouch) {
+			return
+		}
+		if (!this.modo_toque) {
+			this.ligar_toque()
+		}
+		if (this.estado == 'pausado') {
+			this.pausar() // tocar na tela continua o jogo
+			return
+		}
+		const ponto = this.cameras.main.getWorldPoint(p.x, p.y)
+		if (this.estado == 'jogando' && Phaser.Math.Distance.Between(ponto.x, ponto.y, this.botao_pausa.x, this.botao_pausa.y) < 16) {
+			this.pausar()
+		}
+	}
+
+	ligar_toque() {
+		this.modo_toque = true
+		this.input.setDefaultCursor('default')
+		const fundo = (raio) => this.add.circle(0, 0, raio, 0x000000, 0.35).setStrokeStyle(1, 0xffffff, 0.5).setDepth(11)
+		this.joystick_base = fundo(24).setVisible(false)
+		this.joystick_botao = this.add.circle(0, 0, 10, 0xffffff, 0.45).setDepth(11).setVisible(false)
+		this.botao_bomba = fundo(16)
+		this.icone_bomba = this.add.image(0, 0, 'bomba').setScale(1.4).setDepth(11)
+		this.botao_pausa = fundo(11)
+		this.icone_pausa = texto(this, 0, 0, 'II', 8).setOrigin(0.5).setDepth(11)
+		this.posicionar_botoes()
+	}
+
+	posicionar_botoes() {
+		this.botao_bomba.setPosition(this.largura - 24, ALTURA - 58)
+		this.icone_bomba.setPosition(this.largura - 24, ALTURA - 58)
+		this.botao_pausa.setPosition(this.largura / 2, 14)
+		this.icone_pausa.setPosition(this.largura / 2, 14)
+	}
+
+	// Dedo que começou na metade esquerda da tela = joystick para andar.
+	// Dedo na metade direita = mira (e atira). Sem dedo mirando, o elfo mira e atira sozinho
+	// no inimigo mais perto. O botão de bomba joga a bomba onde o elfo está mirando.
+	ler_toque() {
+		const camera = this.cameras.main
+		let mover = null
+		let mira = null
+		let bomba = false
+		for (const p of this.input.manager.pointers) {
+			if (!p.isDown || !p.wasTouch) {
+				continue
+			}
+			const agora = camera.getWorldPoint(p.x, p.y)
+			const inicio = camera.getWorldPoint(p.downX, p.downY)
+			if (Phaser.Math.Distance.Between(inicio.x, inicio.y, this.botao_bomba.x, this.botao_bomba.y) < 20) {
+				bomba = true
+			}
+			else if (Phaser.Math.Distance.Between(inicio.x, inicio.y, this.botao_pausa.x, this.botao_pausa.y) < 16) {
+				continue
+			}
+			else if (p.downX < this.scale.width / 2) {
+				mover = { agora, inicio }
+			}
+			else {
+				mira = agora
+			}
+		}
+
+		const RAIO = 24
+		if (mover) {
+			let dx = mover.agora.x - mover.inicio.x
+			let dy = mover.agora.y - mover.inicio.y
+			const tamanho = Math.hypot(dx, dy)
+			if (tamanho > RAIO) {
+				dx = (dx / tamanho) * RAIO
+				dy = (dy / tamanho) * RAIO
+			}
+			this.toque_vx = dx / RAIO
+			this.toque_vy = dy / RAIO
+			this.joystick_base.setPosition(mover.inicio.x, mover.inicio.y).setVisible(true)
+			this.joystick_botao.setPosition(mover.inicio.x + dx, mover.inicio.y + dy).setVisible(true)
+		}
+		else {
+			this.toque_vx = 0
+			this.toque_vy = 0
+			this.joystick_base.setVisible(false)
+			this.joystick_botao.setVisible(false)
+		}
+		// as setas "de mentira" só servem para a animação de andar
+		this.esq_on = this.toque_vx < -0.3
+		this.dir_on = this.toque_vx > 0.3
+		this.cima_on = this.toque_vy < -0.3
+		this.baixo_on = this.toque_vy > 0.3
+
+		if (mira) {
+			this.mira_x = mira.x
+			this.mira_y = mira.y
+			this.atirar_on = true
+		}
+		else {
+			const alvo = this.inimigo_mais_perto()
+			this.atirar_on = alvo != null
+			if (alvo) {
+				this.mira_x = alvo.x
+				this.mira_y = alvo.y
+			}
+		}
+		this.bomba_on = bomba
+	}
+
+	// centro do inimigo vivo mais perto do elfo que já está dentro da tela
+	inimigo_mais_perto() {
+		let melhor = null
+		let menor = Infinity
+		const considerar = (x, y) => {
+			if (y < 0) return
+			const d = Phaser.Math.Distance.Between(this.heroi_x + 12, this.heroi_y + 12, x, y)
+			if (d < menor) {
+				menor = d
+				melhor = { x, y }
+			}
+		}
+		for (const zumbi of this.zumbis) {
+			if (!zumbi.morrendo) {
+				const c = corpo(zumbi)
+				considerar(c.x + c.l / 2, c.y + c.a / 2)
+			}
+		}
+		if (this.chefe && this.chefe.fase != 'morrendo') {
+			const c = corpo_chefe(this.chefe)
+			considerar(c.x + c.l / 2, c.y + c.a / 2)
+		}
+		return melhor
 	}
 
 	processamento() {
@@ -352,14 +502,21 @@ export default class Jogo extends Phaser.Scene {
 	mover_heroi() {
 		// o elfo anda pela parte de baixo da tela
 		const v = this.poderes.velocidade > 0 ? R.VELOCIDADE_HEROI_RAPIDO : R.VELOCIDADE_HEROI
-		if (this.esq_on)
-			this.heroi_x -= v
-		if (this.dir_on)
-			this.heroi_x += v
-		if (this.cima_on)
-			this.heroi_y -= v
-		if (this.baixo_on)
-			this.heroi_y += v
+		if (this.modo_toque && (this.toque_vx || this.toque_vy)) {
+			// joystick: a velocidade acompanha o quanto o dedo foi arrastado
+			this.heroi_x += this.toque_vx * v
+			this.heroi_y += this.toque_vy * v
+		}
+		else {
+			if (this.esq_on)
+				this.heroi_x -= v
+			if (this.dir_on)
+				this.heroi_x += v
+			if (this.cima_on)
+				this.heroi_y -= v
+			if (this.baixo_on)
+				this.heroi_y += v
+		}
 		this.heroi_x = Phaser.Math.Clamp(this.heroi_x, 0, this.largura - 25)
 		this.heroi_y = Phaser.Math.Clamp(this.heroi_y, ALTURA * 0.55, ALTURA - 27)
 	}

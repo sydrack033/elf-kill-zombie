@@ -1,6 +1,9 @@
 // O jogo tem sempre 400 de altura e a largura acompanha o formato da janela.
 // A câmera dá zoom para essa área de 400 de altura ocupar a janela inteira.
+// Numa tela em pé (celular) a largura não fica menor que LARGURA_MINIMA: sobra uma faixa
+// preta em cima e embaixo, em vez de o jogo ficar estreito demais.
 export const ALTURA = 400
+export const LARGURA_MINIMA = 300
 
 export const PASTA = 'assets/imagens/'
 export const FONTE = 'Silkscreen, monospace'
@@ -8,12 +11,15 @@ export const FONTE = 'Silkscreen, monospace'
 // liga o ajuste da tela numa cena; chama scene.ao_redimensionar() sempre que a janela muda
 export function ajustar_tela(scene) {
 	const aplicar = () => {
-		const zoom = scene.scale.height / ALTURA
+		const { width, height } = scene.scale
+		const zoom = Math.min(height / ALTURA, width / LARGURA_MINIMA)
 		scene.zoom = zoom
-		scene.largura = scene.scale.width / zoom
+		scene.largura = width / zoom
 
+		// a câmera só desenha a faixa do jogo, centralizada na altura
+		const altura_na_tela = Math.ceil(ALTURA * zoom)
 		const camera = scene.cameras.main
-		camera.setSize(scene.scale.width, scene.scale.height)
+		camera.setViewport(0, Math.floor((height - altura_na_tela) / 2), width, altura_na_tela)
 		camera.setZoom(zoom)
 		camera.centerOn(scene.largura / 2, ALTURA / 2)
 

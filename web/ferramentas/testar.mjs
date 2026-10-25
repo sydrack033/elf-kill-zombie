@@ -28,11 +28,15 @@ const js = arquivo ? readFileSync(arquivo, 'utf8') : opcao('js', null)
 const foto = opcao('foto', null)
 const esperar = Number(opcao('esperar', '0'))
 
+// --celular simula um telefone com tela de toque
+const celular = args.includes('--celular')
 const navegador = await puppeteer.launch({
 	executablePath: executavel,
 	headless: true,
 	args: ['--autoplay-policy=no-user-gesture-required', '--mute-audio'],
-	defaultViewport: { width: largura, height: altura },
+	defaultViewport: celular
+		? { width: 390, height: 844, isMobile: true, hasTouch: true, deviceScaleFactor: 1 }
+		: { width: largura, height: altura },
 })
 const erros = []
 try {
