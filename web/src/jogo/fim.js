@@ -1,7 +1,7 @@
 // Parte da cena Jogo: fim de jogo: morte do elfo, placar, nome e reinício.
 // Os métodos desta classe são copiados para a cena em Jogo.js (por isso usam this como se fossem dela).
 import Phaser from 'phaser'
-import { ALTURA, texto, gravar_recorde, gravar_placar, renomear_no_placar, somar_estatisticas, gravar_historico, gravar_recorde_do_dia } from '../tela.js'
+import { ALTURA, texto, gravar_recorde, gravar_placar, renomear_no_placar, somar_estatisticas, ler_estatisticas, gravar_historico, gravar_recorde_do_dia } from '../tela.js'
 import { parar_musica } from '../musica.js'
 import { desbloquear } from '../conquistas.js'
 import { efeito, opcoes } from '../opcoes.js'
@@ -71,6 +71,8 @@ export default class Fim {
 		const { posicao, id } = gravar_placar(this.pontos, this.nivel, opcoes.dificuldade, opcoes.modo)
 		if (this.diario) gravar_recorde_do_dia(this.dia, this.pontos)
 		gravar_historico({ fase: this.nivel, pontos: this.pontos, dificuldade: opcoes.dificuldade, modo: opcoes.modo })
+		// combo maior que o de todas as partidas anteriores (conta a partir de 10)
+		const combo_recorde = this.stats.melhor_combo >= 10 && this.stats.melhor_combo > (ler_estatisticas().melhor_combo || 0)
 		somar_estatisticas({ zumbis: this.stats.mortos, chefes: this.stats.chefes, segundos: Math.floor(this.stats.ticks / 100), fase: this.nivel, por_tipo: this.stats.por_tipo, combo: this.stats.melhor_combo, pontos: this.pontos })
 		const segundos = Math.floor(this.stats.ticks / 100)
 		const tempo = Math.floor(segundos / 60) + ':' + String(segundos % 60).padStart(2, '0')
@@ -92,7 +94,7 @@ export default class Fim {
 			(novo_recorde ? 'NOVO RECORDE!' : posicao ? posicao + 'º LUGAR NO PLACAR' : 'RECORDE: ' + this.recorde) + '\n\n' +
 			'FASE ' + this.nivel + '   TEMPO ' + tempo + '\n' +
 			'ZUMBIS ' + this.stats.mortos + '   CHEFÕES ' + this.stats.chefes + '\n' +
-			'PONTARIA ' + pontaria + '%   MAIOR COMBO ' + this.stats.melhor_combo + '\n' +
+			'PONTARIA ' + pontaria + '%   MAIOR COMBO ' + this.stats.melhor_combo + (combo_recorde ? ' (RECORDE!)' : '') + '\n' +
 			'+' + moedas + ' MOEDAS  (' + carteira + ' NA CARTEIRA)' +
 			cumpridos.map((m) => m.texto).concat(this.desafios_pagos || []).map((t) => '\nDESAFIO CUMPRIDO: ' + t).join(''),
 		)
