@@ -2391,6 +2391,13 @@ export default class Jogo extends Phaser.Scene {
 		}
 		const cenario_antes = this.cenario()
 		if (!this.apanhou_na_fase && this.nivel >= 3) desbloquear(this, 'intocavel')
+		// fase perfeita (sem apanhar): pontos extras e uma moeda
+		if (!this.apanhou_na_fase && this.nivel >= 2 && this.estado == 'jogando') {
+			const bonus = 100 * this.nivel
+			this.pontos += bonus
+			this.moedas_extras++
+			this.flutuar(this.heroi_x + 12, this.heroi_y - 24, 'FASE PERFEITA! +' + bonus, '#9ff07a')
+		}
 		this.apanhou_na_fase = false
 		// modo chefões: pula direto para a próxima fase de chefão
 		if (this.modo_chefes) {
