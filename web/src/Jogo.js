@@ -1,5 +1,5 @@
 import Phaser from 'phaser'
-import { ALTURA, ajustar_tela, texto, tecla_tela_cheia, tecla_som, ler_recorde, gravar_recorde, gravar_placar, renomear_no_placar } from './tela.js'
+import { ALTURA, ajustar_tela, texto, tecla_tela_cheia, tecla_som, ler_recorde, gravar_recorde, gravar_placar, renomear_no_placar, somar_estatisticas } from './tela.js'
 import * as R from './regras.js'
 import { tocar_musica, parar_musica, tecla_musica, atualizar_volume_musica } from './musica.js'
 import { desbloquear } from './conquistas.js'
@@ -2403,6 +2403,7 @@ export default class Jogo extends Phaser.Scene {
 			gravar_recorde(this.pontos)
 		}
 		const { posicao, id } = gravar_placar(this.pontos, this.nivel, opcoes.dificuldade)
+		somar_estatisticas({ zumbis: this.stats.mortos, chefes: this.stats.chefes, segundos: Math.floor(this.stats.ticks / 100), fase: this.nivel })
 		const segundos = Math.floor(this.stats.ticks / 100)
 		const tempo = Math.floor(segundos / 60) + ':' + String(segundos % 60).padStart(2, '0')
 		const pontaria = this.stats.disparos ? Math.round((100 * this.stats.acertos) / this.stats.disparos) : 0

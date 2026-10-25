@@ -1,5 +1,5 @@
 import Phaser from 'phaser'
-import { ALTURA, ajustar_tela, texto } from './tela.js'
+import { ALTURA, ajustar_tela, texto, ler_estatisticas } from './tela.js'
 import { CONQUISTAS, ler_conquistas } from './conquistas.js'
 import { ELFOS } from './regras.js'
 
@@ -19,7 +19,7 @@ export default class ConquistasCena extends Phaser.Scene {
 
 		CONQUISTAS.forEach((c, i) => {
 			const tem = feitas.has(c.id)
-			const y = 42 + i * 21
+			const y = 42 + i * 20
 			const trofeu = this.add.sprite(0, y + 6, 'trofeu', tem ? 0 : 1)
 			const nome = texto(this, 0, y, c.nome, 8, tem ? '#ffd34d' : '#8a8a90')
 			const desc = texto(this, 0, y + 10, c.texto, 8, tem ? '#ffffff' : '#6a6a70')
@@ -29,9 +29,19 @@ export default class ConquistasCena extends Phaser.Scene {
 		// as conquistas liberam cores novas para o elfo
 		const proximo = R.ELFOS.find((e) => feitas.size < e.conquistas)
 		this.premio = texto(
-			this, 0, ALTURA - 32,
+			this, 0, ALTURA - 48,
 			proximo ? 'COM ' + proximo.conquistas + ' CONQUISTAS: ' + proximo.nome : 'TODAS AS CORES DO ELFO LIBERADAS!',
 			8, '#c08aff',
+		).setOrigin(0.5)
+		// números de todas as partidas somadas
+		const e = ler_estatisticas()
+		const horas = Math.floor(e.segundos / 3600)
+		const minutos = Math.floor((e.segundos % 3600) / 60)
+		this.estatisticas = texto(
+			this, 0, ALTURA - 32,
+			'PARTIDAS ' + e.partidas + '   ZUMBIS ' + e.zumbis.toLocaleString('pt-BR') + '   CHEFÕES ' + e.chefes +
+			'   MELHOR FASE ' + e.melhor_fase + '   TEMPO ' + (horas ? horas + 'H ' : '') + minutos + 'MIN',
+			8, '#9fd8ff',
 		).setOrigin(0.5)
 		this.cameras.main.fadeIn(250, 0, 0, 0)
 
@@ -48,6 +58,8 @@ export default class ConquistasCena extends Phaser.Scene {
 		this.titulo.x = this.largura / 2
 		this.voltar.x = this.largura / 2
 		this.premio.x = this.largura / 2
+		this.estatisticas.x = this.largura / 2
+		this.estatisticas.setScale(Math.min(1, (this.largura - 10) / this.estatisticas.width))
 		// lista alinhada à esquerda, com a coluna centralizada na tela
 		const largura_lista = Math.max(...this.objetos.map((o) => Math.max(o.nome.width, o.desc.width))) + 18
 		const x = Math.max(6, (this.largura - largura_lista) / 2)

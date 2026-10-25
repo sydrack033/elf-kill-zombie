@@ -122,6 +122,30 @@ export function gravar_placar(pontos, fase, dificuldade = 'normal') {
 	return posicao <= 5 ? { posicao, id } : { posicao: 0, id: null }
 }
 
+// estatísticas de todas as partidas somadas
+export function ler_estatisticas() {
+	const vazio = { partidas: 0, zumbis: 0, chefes: 0, melhor_fase: 0, segundos: 0 }
+	try {
+		return { ...vazio, ...JSON.parse(localStorage.getItem('elf-kill-zombie-estatisticas') || '{}') }
+	} catch {
+		return vazio
+	}
+}
+
+export function somar_estatisticas(partida) {
+	const total = ler_estatisticas()
+	total.partidas++
+	total.zumbis += partida.zumbis
+	total.chefes += partida.chefes
+	total.segundos += partida.segundos
+	total.melhor_fase = Math.max(total.melhor_fase, partida.fase)
+	try {
+		localStorage.setItem('elf-kill-zombie-estatisticas', JSON.stringify(total))
+	} catch {
+		// sem localStorage: não soma
+	}
+}
+
 // troca o nome provisório depois que o jogador digita as 3 letras
 export function renomear_no_placar(id, nome) {
 	const placar = ler_placar()
