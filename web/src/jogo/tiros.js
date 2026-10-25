@@ -43,7 +43,7 @@ export default class Tiros {
 					}
 					this.acertar(tiro, Phaser.Math.Clamp(tiro.x, c.x, c.x + c.l), Phaser.Math.Clamp(tiro.y, c.y, c.y + c.a))
 					// acerto crítico: dano dobrado (só avisa quando faz diferença)
-					const critico = !tiro.arma.furia && Math.random() < CRITICO.chance + 0.08 * this.m('olho') // Olho Clínico
+					const critico = !tiro.arma.furia && !tiro.arma.chama && Math.random() < CRITICO.chance + 0.08 * this.m('olho') // Olho Clínico
 					if (critico && zumbi.vida > tiro.dano) {
 						const aviso = texto(this, c.x + c.l / 2, c.y - 4, 'CRÍTICO!', 8, '#ff9a3c').setOrigin(0.5).setDepth(8)
 						this.tweens.add({ targets: aviso, y: aviso.y - 16, alpha: 0, duration: 600, onComplete: () => aviso.destroy() })

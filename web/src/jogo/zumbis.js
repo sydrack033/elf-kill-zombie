@@ -448,15 +448,15 @@ export default class Zumbis {
 		desbloquear(this, 'primeiro')
 		this.encher_furia(R.FURIA.por_morte)
 		if (this.stats.mortos >= 100) desbloquear(this, 'cem')
-		if (this.combo >= 20) desbloquear(this, 'combo20')
-		if (this.combo >= 100) desbloquear(this, 'combo100')
+		if (this.combo >= 20 && !this.treino) desbloquear(this, 'combo20')
+		if (this.combo >= 100 && !this.treino) desbloquear(this, 'combo100')
 		// marcos do combo: aviso grande que pula na tela
 		const marcos = { 10: 'EMBALADO!  +1 BOMBA', 25: 'IMPARÁVEL!  ESCUDO', 50: 'LENDÁRIO!  FÚRIA CHEIA', 100: 'DEUS DOS ELFOS!  +1 VIDA' }
 		// cada marco dá um presente (mesmo se a escolha de melhoria abrir junto; só o aviso fica de fora)
 		if (marcos[this.combo] && this.estado != 'fim') {
 			if (this.combo == 10) this.bombas = Math.min(this.bombas_max(), this.bombas + 1)
-			if (this.combo == 25) this.poderes.escudo = Math.max(this.poderes.escudo, R.PODERES.escudo.duracao)
-			if (this.combo == 50) this.furia = 1
+			if (this.combo == 25) this.poderes.escudo = Math.max(this.poderes.escudo, R.PODERES.escudo.duracao * (this.m('segunda_pele') ? 2 : 1))
+			if (this.combo == 50) this.encher_furia(1) // (com o aviso de FÚRIA PRONTA)
 			if (this.combo == 100 && !this.mod.vidro) this.vidas = Math.min(this.vidas_max, this.vidas + 1)
 		}
 		if (marcos[this.combo] && this.estado == 'jogando') {
@@ -827,7 +827,7 @@ export default class Zumbis {
 
 	// saqueador: de vez em quando um zumbi com um saco de moedas cruza a tela de um lado para o outro
 	criar_saqueador() {
-		if (this.nivel < R.SAQUEADOR.a_partir_da_fase || this.chefe || this.chefe_em > 0 || this.treino || this.horda) {
+		if (this.nivel < R.SAQUEADOR.a_partir_da_fase || this.chefe || this.chefe_em > 0 || this.treino || this.horda || this.chuva_de_moedas > 0 || this.modo_chefes) {
 			return
 		}
 		this.proximo_saqueador--
