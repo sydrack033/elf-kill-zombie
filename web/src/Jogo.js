@@ -121,6 +121,8 @@ export default class Jogo extends Phaser.Scene {
 		this.faixas = 0
 		this.explicacao = null
 		this.capitulo_pendente = null
+		this.ja_trocou = false // troca de cartas de melhoria (uma por partida)
+		this.tecla_trocar = null
 		this.cartao_ate = 0 // até quando o cartão de cinema atual fica na tela
 		this.tweens.resumeAll() // se a partida anterior acabou pausada
 		this.time.paused = false
@@ -437,6 +439,9 @@ export default class Jogo extends Phaser.Scene {
 			}
 			else if (indice == 0) {
 				this.escolher(this.carta_destacada)
+			}
+			else if (indice == 3) {
+				this.trocar_cartas() // Y troca as cartas
 			}
 		}
 		else if (this.estado == 'final' && this.botoes_do_final && (indice == 0 || indice == 1)) {

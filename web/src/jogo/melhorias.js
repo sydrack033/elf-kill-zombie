@@ -53,6 +53,12 @@ export default class Melhorias {
 			const tecla = texto(this, x, topo + altura_carta - 7, this.modo_toque ? '' : String(i + 1), 8, '#9a8ab0').setOrigin(0.5).setDepth(12)
 			objetos.push(carta, icone, nome, desc, tecla)
 		})
+		// uma vez por partida dá para sortear as cartas de novo
+		if (!this.ja_trocou) {
+			const trocar = texto(this, meio, topo + altura_carta + 18, this.modo_toque ? '[ TROCAR AS CARTAS ]' : '[ R: TROCAR AS CARTAS (1 VEZ) ]', 8, '#9fd8ff').setOrigin(0.5).setDepth(12).setInteractive({ useHandCursor: true })
+			trocar.on('pointerdown', () => this.trocar_cartas())
+			objetos.push(trocar)
+		}
 		this.objetos_escolha = objetos
 		this.cartas = objetos.filter((o) => o.type == 'Rectangle')
 		this.carta_destacada = -1
@@ -64,6 +70,9 @@ export default class Melhorias {
 		this.input.keyboard.on('keydown-ONE', () => this.escolher(0))
 		this.input.keyboard.on('keydown-TWO', () => this.escolher(1))
 		this.input.keyboard.on('keydown-THREE', () => this.escolher(2))
+		// (função guardada para tirar só ela: o R da pausa continua)
+		this.tecla_trocar = this.tecla_trocar || (() => this.trocar_cartas())
+		this.input.keyboard.on('keydown-R', this.tecla_trocar)
 		efeito(this, 'poder', { volume: 0.5, rate: 0.7 })
 	}
 
@@ -71,6 +80,22 @@ export default class Melhorias {
 	destacar_carta(i) {
 		this.carta_destacada = i
 		this.cartas.forEach((carta, j) => carta.setStrokeStyle(2, j == i ? 0xffd34d : 0x7a3ab0))
+	}
+
+	// sorteia outras 3 cartas (só uma vez por partida)
+	trocar_cartas() {
+		if (this.estado != 'escolhendo' || this.ja_trocou || !this.pode_escolher) {
+			return
+		}
+		this.ja_trocou = true
+		for (const objeto of this.objetos_escolha) objeto.destroy()
+		this.input.keyboard.removeAllListeners('keydown-ONE')
+		this.input.keyboard.removeAllListeners('keydown-TWO')
+		this.input.keyboard.removeAllListeners('keydown-THREE')
+		this.input.keyboard.off('keydown-R', this.tecla_trocar)
+		this.estado = 'jogando' // oferecer_melhorias abre de novo
+		this.oferecer_melhorias()
+		efeito(this, 'item', { volume: 0.5, rate: 0.7 })
 	}
 
 	escolher(i) {
@@ -88,6 +113,7 @@ export default class Melhorias {
 		this.input.keyboard.removeAllListeners('keydown-ONE')
 		this.input.keyboard.removeAllListeners('keydown-TWO')
 		this.input.keyboard.removeAllListeners('keydown-THREE')
+		this.input.keyboard.off('keydown-R', this.tecla_trocar)
 		this.escurecer.setVisible(false)
 		this.estado = 'jogando'
 		this.tempo_acumulado = 0
