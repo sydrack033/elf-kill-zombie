@@ -41,6 +41,7 @@ funciona **sem internet** depois da primeira visita.
 | Loja (no título) | L | moeda no canto | Select |
 | Modo de jogo (no título) | X | setas na tela | X |
 | Começar adiantado (no título) | I | setas na tela | LB / RB |
+| Classe do elfo (no título) | K | setas na tela | LT / RT |
 | Bestiário / história (no título) | B / H | | |
 | Opções (no título) | O | "OPÇÕES" no canto | |
 | Estatísticas (nas conquistas) | E | tocar na linha de números | |
