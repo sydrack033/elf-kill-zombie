@@ -133,6 +133,7 @@ export default class Jogo extends Phaser.Scene {
 		this.cuspes = [] // { sprite, x, y, vx, vy }
 		this.sangues = [] // { sprite, ha }
 		this.coracoes = [] // corações caindo para pegar: { sprite, x, y }
+		this.moedas = [] // moedas caindo para pegar: { sprite, x, y }
 		this.itens = [] // caixas: { sprite, tipo, x, y }
 		this.lapides_quebradas = 0
 		this.moedas_extras = 0 // moedas dos zumbis de elite e das hordas, somadas no fim
@@ -369,7 +370,7 @@ export default class Jogo extends Phaser.Scene {
 		this.hud_progresso.setFillStyle(em_chefe ? 0xd02828 : 0x9ff07a)
 		const arma = R.ARMAS[this.arma]
 		this.hud_arma.setText(this.municao == Infinity ? arma.nome : arma.nome + ' ' + this.municao)
-		this.hud_bombas.setText('BOMBAS ' + this.bombas)
+		this.hud_bombas.setText('BOMBAS ' + this.bombas + (this.moedas_extras ? '   MOEDAS ' + this.moedas_extras : ''))
 	}
 
 	// ------------------------------------------------------------------ dicas da primeira partida
@@ -1064,6 +1065,7 @@ export default class Jogo extends Phaser.Scene {
 		this.mover_zumbis()
 		this.mover_chefe()
 		this.mover_coracoes()
+		this.mover_moedas()
 		this.mover_itens()
 		this.mover_torretas()
 		this.mover_manchas()
@@ -2246,6 +2248,10 @@ export default class Jogo extends Phaser.Scene {
 		else if (Math.random() < R.CHANCE_DE_ITEM * sorte) {
 			this.soltar_item(c.x + c.l / 2 - 8, c.y + c.a / 2)
 		}
+		else if (Math.random() < R.CHANCE_DE_MOEDA * sorte) {
+			const sprite = this.add.sprite(c.x + c.l / 2, c.y + c.a / 2, 'moeda').setScale(1.5).setDepth(1.8)
+			this.moedas.push({ sprite, x: c.x + c.l / 2 - 6, y: c.y + c.a / 2 - 6 })
+		}
 
 		// em nível de chefão as mortes não contam para subir de nível
 		// (e os da horda também não: a horda é um extra no meio da fase)
@@ -3039,6 +3045,27 @@ export default class Jogo extends Phaser.Scene {
 		t.cano.destroy()
 		t.barra.destroy()
 		this.flutuar(t.x, t.y - 10, 'PUF', '#cfcfcf')
+	}
+
+	mover_moedas() {
+		for (const moeda of this.moedas) {
+			moeda.y += 0.6
+			this.puxar(moeda, 6)
+			// gira (fica fina e larga de novo)
+			moeda.sprite.setPosition(Math.round(moeda.x + 6), Math.round(moeda.y + 6))
+			moeda.sprite.scaleX = 1.5 * Math.abs(Math.cos((this.quadro_atual + moeda.x) / 12))
+			if (this.herois().some((h) => encostou(moeda.x, moeda.y, 12, 12, h.x, h.y, 25, 25))) {
+				moeda.pegou = true
+				this.moedas_extras++
+				efeito(this, 'moeda', { volume: 0.45 })
+				this.flutuar(moeda.x + 6, moeda.y, '+1', '#ffd34d')
+				this.atualizar_hud()
+			}
+			if (moeda.pegou || moeda.y > ALTURA) {
+				moeda.sprite.destroy()
+			}
+		}
+		this.moedas = this.moedas.filter((moeda) => !moeda.pegou && moeda.y <= ALTURA)
 	}
 
 	mover_coracoes() {

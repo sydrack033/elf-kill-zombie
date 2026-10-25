@@ -146,6 +146,7 @@ export const TORRETA = { duracao: 1200, espera: 26, alcance: 270, velocidade: 6,
 export const ITEM_A_CADA = [700, 1100] // ticks entre uma caixa e outra (sorteado entre os dois)
 export const CHANCE_DE_CORACAO = 0.08 // chance de um zumbi morto soltar um coração
 export const CHANCE_DE_ITEM = 0.03 // chance de um zumbi morto soltar uma caixa
+export const CHANCE_DE_MOEDA = 0.04 // chance de um zumbi morto soltar uma moeda (para a loja)
 
 // ---------- zumbis ----------
 // escala = tamanho; cor = tom misturado à imagem; vida e velocidade (vy) crescem com o nível;
