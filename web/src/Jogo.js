@@ -234,6 +234,7 @@ export default class Jogo extends Phaser.Scene {
 
 		this.modo_chefes = opcoes.modo == 'chefes'
 		if (this.modo_chefes) {
+			this.ganhar_melhorias(2) // no modo chefões começa já com duas, além da escolha
 			this.texto_da_fase = 'CHEFÃO A CAMINHO!'
 			this.subir_nivel()
 			this.oferecer_melhorias()
@@ -256,7 +257,15 @@ export default class Jogo extends Phaser.Scene {
 
 	// começa na fase escolhida, já com as melhorias que teria pego no caminho (uma a cada 2 fases)
 	comecar_no_capitulo(inicio) {
-		for (let i = 0; i < Math.floor((inicio - 1) / 2); i++) {
+		this.ganhar_melhorias(Math.floor((inicio - 1) / 2))
+		this.nivel = inicio - 1
+		this.apanhou_na_fase = true // o salto não ganha bônus de fase perfeita
+		this.subir_nivel()
+	}
+
+	// melhorias sorteadas de presente (começo adiantado e modo chefões)
+	ganhar_melhorias(quantas) {
+		for (let i = 0; i < quantas; i++) {
 			const possiveis = R.MELHORIAS.filter((mel) => this.m(mel.id) < mel.maximo)
 			if (!possiveis.length) break
 			const mel = Phaser.Utils.Array.GetRandom(possiveis)
@@ -264,9 +273,6 @@ export default class Jogo extends Phaser.Scene {
 			this.aplicar_melhoria(mel.id)
 		}
 		this.atualizar_hud_melhorias()
-		this.nivel = inicio - 1
-		this.apanhou_na_fase = true // o salto não ganha bônus de fase perfeita
-		this.subir_nivel()
 	}
 
 	// vantagens compradas na loja valem para o começo de toda partida
