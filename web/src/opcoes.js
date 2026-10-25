@@ -1,7 +1,7 @@
 // Opções do jogador (volume da música e dos efeitos), guardadas no navegador.
 
 const CHAVE = 'elf-kill-zombie-opcoes'
-export const opcoes = { musica: 0.8, efeitos: 0.8 }
+export const opcoes = { musica: 0.8, efeitos: 0.8, dificuldade: 'normal', elfo: 'verde' }
 
 try {
 	Object.assign(opcoes, JSON.parse(localStorage.getItem(CHAVE) || '{}'))

@@ -1,6 +1,9 @@
 import Phaser from 'phaser'
 import { ALTURA, ajustar_tela, texto, tecla_tela_cheia, tecla_som, ler_recorde, ler_placar } from './tela.js'
 import { tocar_musica, tecla_musica } from './musica.js'
+import { opcoes, gravar_opcoes, efeito } from './opcoes.js'
+import { ler_conquistas } from './conquistas.js'
+import * as R from './regras.js'
 
 // Tela de título: enquanto espera, roda uma demonstração no fundo (o elfo atirando nos zumbis).
 export default class Titulo extends Phaser.Scene {
@@ -24,20 +27,34 @@ export default class Titulo extends Phaser.Scene {
 		// véu escuro para o texto aparecer bem por cima da demonstração
 		this.veu = this.add.rectangle(0, 0, 10, ALTURA, 0x000000, 0.45).setOrigin(0).setDepth(5)
 
-		this.nome = texto(this, 0, 70, 'ELF KILL\nZOMBIE', 24, '#e8f5c8').setOrigin(0.5).setDepth(6)
-		this.subtitulo = texto(this, 0, 120, 'O CEMITÉRIO NÃO DORME', 8, '#9fbf8a').setOrigin(0.5).setDepth(6)
-		this.comecar = texto(this, 0, 165, 'CLIQUE OU\nAPERTE ESPAÇO', 10, '#ffd34d').setOrigin(0.5).setDepth(6)
+		this.nome = texto(this, 0, 64, 'ELF KILL\nZOMBIE', 24, '#e8f5c8').setOrigin(0.5).setDepth(6)
+		this.subtitulo = texto(this, 0, 112, 'O CEMITÉRIO NÃO DORME', 8, '#9fbf8a').setOrigin(0.5).setDepth(6)
+
+		// escolhas: dificuldade e cor do elfo (setas na tela, teclado ou controle)
+		this.conquistas_feitas = ler_conquistas().size
+		this.seletores = [
+			this.criar_seletor(134, 'DIFICULDADE', () => this.mudar_dificuldade(-1), () => this.mudar_dificuldade(1)),
+			this.criar_seletor(149, 'ELFO', () => this.mudar_elfo(-1), () => this.mudar_elfo(1)),
+		]
+		this.atualizar_seletores()
+
+		this.comecar = texto(this, 0, 180, 'CLIQUE OU\nAPERTE ESPAÇO', 10, '#ffd34d').setOrigin(0.5).setDepth(6)
 
 		// placar dos 5 melhores
 		const placar = ler_placar()
+		const letra = { facil: '  F', normal: '', dificil: '  D' }
 		const linhas = placar.length
-			? ['MELHORES'].concat(placar.map((p, i) => i + 1 + '. ' + (p.nome || 'ELF').padEnd(3, ' ') + '  ' + String(p.pontos).padStart(6, ' ') + '  FASE ' + p.fase))
+			? ['MELHORES'].concat(placar.map((p, i) => i + 1 + '. ' + (p.nome || 'ELF').padEnd(3, ' ') + '  ' + String(p.pontos).padStart(6, ' ') + '  FASE ' + p.fase + (letra[p.dificuldade] || '')))
 			: ['RECORDE: ' + ler_recorde()]
-		this.placar = texto(this, 0, 240, placar.length || ler_recorde() ? linhas.join('\n') : '', 8, '#ffffff').setOrigin(0.5).setDepth(6)
+		this.placar = texto(this, 0, 244, placar.length || ler_recorde() ? linhas.join('\n') : '', 8, '#ffffff').setOrigin(0.5).setDepth(6)
 
+		// no celular/tablet as instruções são de toque
+		const celular = !this.sys.game.device.os.desktop
 		this.controles = texto(
-			this, 0, 318,
-			'WASD/SETAS: ANDAR   MOUSE: MIRAR\nCLIQUE: ATIRAR   CLIQUE DIREITO: BOMBA\nP: PAUSA  F: TELA CHEIA  M: SOM  N: MÚSICA\nC: CONQUISTAS',
+			this, 0, 330,
+			celular
+				? 'ARRASTE NA ESQUERDA: ANDAR\nO ELFO ATIRA SOZINHO\nTOQUE NA DIREITA: MIRAR\nBOTÕES NA TELA: BOMBA, ESQUIVA E PAUSA'
+				: 'WASD/SETAS: ANDAR   MOUSE: MIRAR   SHIFT: ESQUIVA\nCLIQUE: ATIRAR   CLIQUE DIREITO: BOMBA\nP: PAUSA  F: TELA CHEIA  M: SOM  N: MÚSICA\nC: CONQUISTAS   SETAS AQUI: DIFICULDADE E ELFO',
 			8, '#cfcfcf',
 		).setOrigin(0.5).setDepth(6)
 
@@ -48,21 +65,41 @@ export default class Titulo extends Phaser.Scene {
 		tecla_musica(this)
 		tocar_musica(this, 'musica_titulo')
 
-		const comecar = () => this.scene.start('Jogo')
-		this.input.keyboard.once('keydown-SPACE', comecar)
-		this.input.keyboard.once('keydown-ENTER', comecar)
-		this.input.keyboard.once('keydown-C', () => this.scene.start('Conquistas'))
-		// controle: A ou Start começa, Y abre as conquistas
+		// cuidado para não começar duas vezes (tecla e clique juntos, por exemplo)
+		let saiu = false
+		const ir = (cena) => {
+			if (!saiu) {
+				saiu = true
+				this.cameras.main.fadeOut(250, 0, 0, 0)
+				this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start(cena))
+			}
+		}
+		const comecar = () => ir('Jogo')
+		this.input.keyboard.on('keydown-SPACE', comecar)
+		this.input.keyboard.on('keydown-ENTER', comecar)
+		this.input.keyboard.on('keydown-C', () => ir('Conquistas'))
+		this.input.keyboard.on('keydown-LEFT', () => this.mudar_dificuldade(-1))
+		this.input.keyboard.on('keydown-RIGHT', () => this.mudar_dificuldade(1))
+		this.input.keyboard.on('keydown-UP', () => this.mudar_elfo(-1))
+		this.input.keyboard.on('keydown-DOWN', () => this.mudar_elfo(1))
+		// controle: direcional escolhe, Y abre as conquistas, os outros botões começam
 		if (this.input.gamepad) {
-			this.input.gamepad.once('down', (pad, botao) => {
-				if (botao.index == 3) this.scene.start('Conquistas')
-				else comecar()
+			this.input.gamepad.on('down', (pad, botao) => {
+				const acoes = {
+					12: () => this.mudar_elfo(-1), 13: () => this.mudar_elfo(1),
+					14: () => this.mudar_dificuldade(-1), 15: () => this.mudar_dificuldade(1),
+					3: () => ir('Conquistas'),
+				}
+				;(acoes[botao.index] || comecar)()
 			})
 		}
-		this.input.once('pointerdown', (p) => {
+		this.input.on('pointerdown', (p, alvos) => {
+			if (alvos.length) {
+				return // clicou numa seta de escolha
+			}
 			// no celular, tocar no troféu abre as conquistas
 			if (this.botao_trofeu && this.botao_trofeu.getBounds().contains(p.worldX, p.worldY)) {
-				this.scene.start('Conquistas')
+				ir('Conquistas')
 			}
 			else {
 				comecar()
@@ -70,7 +107,59 @@ export default class Titulo extends Phaser.Scene {
 		})
 		// troféu no canto (para quem joga no celular e não tem a tecla C)
 		this.botao_trofeu = this.add.sprite(0, 14, 'trofeu', 0).setScale(1.5).setDepth(6)
+		this.cameras.main.fadeIn(300, 0, 0, 0)
 		this.ao_redimensionar()
+	}
+
+	// uma linha "RÓTULO  < VALOR >" com setas clicáveis
+	criar_seletor(y, rotulo, menos, mais) {
+		const seletor = {
+			rotulo: texto(this, 0, y, rotulo, 8, '#9fbf8a').setOrigin(1, 0.5).setDepth(6),
+			menos: texto(this, 0, y, '<', 8, '#ffffff').setOrigin(0.5).setDepth(6).setInteractive({ useHandCursor: true }),
+			valor: texto(this, 0, y, '', 8, '#ffffff').setOrigin(0.5).setDepth(6),
+			mais: texto(this, 0, y, '>', 8, '#ffffff').setOrigin(0.5).setDepth(6).setInteractive({ useHandCursor: true }),
+		}
+		seletor.menos.on('pointerdown', menos)
+		seletor.mais.on('pointerdown', mais)
+		return seletor
+	}
+
+	mudar_dificuldade(passo) {
+		const ids = Object.keys(R.DIFICULDADES)
+		const i = Math.max(0, ids.indexOf(opcoes.dificuldade))
+		opcoes.dificuldade = ids[(i + passo + ids.length) % ids.length]
+		gravar_opcoes()
+		efeito(this, 'combo', { volume: 0.4 })
+		this.atualizar_seletores()
+	}
+
+	// pula as cores que ainda estão bloqueadas
+	mudar_elfo(passo) {
+		const liberados = R.ELFOS.filter((e) => this.conquistas_feitas >= e.conquistas)
+		const i = Math.max(0, liberados.findIndex((e) => e.id == opcoes.elfo))
+		opcoes.elfo = liberados[(i + passo + liberados.length) % liberados.length].id
+		gravar_opcoes()
+		efeito(this, 'combo', { volume: 0.4, rate: 1.2 })
+		this.atualizar_seletores()
+	}
+
+	atualizar_seletores() {
+		const dificuldade = R.DIFICULDADES[opcoes.dificuldade] || R.DIFICULDADES.normal
+		const cores = { facil: '#9ff07a', normal: '#ffffff', dificil: '#ff6a6a' }
+		this.seletores[0].valor.setText(dificuldade.nome).setColor(cores[opcoes.dificuldade] || '#ffffff')
+		const elfo = R.ELFOS.find((e) => e.id == opcoes.elfo) || R.ELFOS[0]
+		// mostra quantas cores já foram liberadas
+		const liberados = R.ELFOS.filter((e) => this.conquistas_feitas >= e.conquistas).length
+		this.seletores[1].valor.setText(elfo.nome + '  ' + liberados + '/' + R.ELFOS.length)
+		if (elfo.cor) {
+			this.demo_heroi.setTint(elfo.cor)
+		}
+		else {
+			this.demo_heroi.clearTint()
+		}
+		if (this.largura) {
+			this.ao_redimensionar()
+		}
 	}
 
 	ao_redimensionar() {
@@ -79,6 +168,13 @@ export default class Titulo extends Phaser.Scene {
 		this.veu.setSize(this.largura, ALTURA)
 		for (const objeto of [this.nome, this.subtitulo, this.comecar, this.placar, this.controles]) {
 			objeto.x = meio
+		}
+		// seletores: as duas linhas com as setas alinhadas, "RÓTULO  <    VALOR    >"
+		for (const s of this.seletores) {
+			s.rotulo.x = meio - 40
+			s.menos.x = meio - 30
+			s.valor.x = meio + 30
+			s.mais.x = meio + 90
 		}
 		if (this.botao_trofeu) {
 			this.botao_trofeu.x = this.largura - 14
@@ -96,7 +192,7 @@ export default class Titulo extends Phaser.Scene {
 		this.quadro += passo
 		this.chao.tilePositionY -= 0.4 * passo
 		this.comecar.setVisible(Math.floor(time / 500) % 2 == 0)
-		this.nome.y = 70 + Math.sin(time / 600) * 3
+		this.nome.y = 64 + Math.sin(time / 600) * 2
 		this.rodar_demo(passo)
 	}
 

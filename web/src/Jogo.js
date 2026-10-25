@@ -79,7 +79,10 @@ export default class Jogo extends Phaser.Scene {
 		this.clarao_ha = 0
 		this.bolha = this.add.circle(0, 0, 21).setStrokeStyle(2, 0x70c8ff, 0.9).setFillStyle(0x70c8ff, 0.15).setDepth(6.5).setVisible(false)
 
-		this.vidas = R.VIDAS_NO_COMECO
+		this.dificuldade = R.DIFICULDADES[opcoes.dificuldade] || R.DIFICULDADES.normal
+		this.vidas = this.dificuldade.vidas
+		const elfo = R.ELFOS.find((e) => e.id == opcoes.elfo)
+		this.cor_do_elfo = elfo ? elfo.cor : null
 		this.vidas_max = R.VIDAS_NO_MAXIMO
 		this.melhorias = {} // id da melhoria -> quantas vezes foi pega
 		this.armas_usadas = new Set(['pistola']) // para a conquista Arsenal
@@ -205,6 +208,7 @@ export default class Jogo extends Phaser.Scene {
 		this.events.once('shutdown', () => this.game.events.off(Phaser.Core.Events.BLUR, ao_perder_foco))
 
 		this.tempo_acumulado = 0
+		this.cameras.main.fadeIn(300, 0, 0, 0)
 	}
 
 	// ------------------------------------------------------------------ HUD
@@ -273,7 +277,7 @@ export default class Jogo extends Phaser.Scene {
 	atualizar_hud() {
 		// mostra pelo menos 3 espaços de coração; o 4º e o 5º só aparecem quando você ganha vida extra
 		this.hud_coracoes.forEach((coracao, i) => {
-			coracao.setVisible(i < Math.max(R.VIDAS_NO_COMECO, this.vidas))
+			coracao.setVisible(i < Math.max(this.dificuldade.vidas, this.vidas))
 			coracao.setFrame(i < this.vidas ? 0 : 1)
 		})
 		this.hud_pontos.setText('PONTOS ' + String(this.pontos).padStart(6, '0'))
@@ -1343,7 +1347,7 @@ export default class Jogo extends Phaser.Scene {
 
 		// quanto maior o nível, mais zumbis e mais rápidos
 		const n = this.nivel - 1
-		this.proximo_zumbi = Math.max(35, 140 - n * 8) + Phaser.Math.Between(0, 60)
+		this.proximo_zumbi = (Math.max(35, 140 - n * 8) + Phaser.Math.Between(0, 60)) / this.dificuldade.frequencia
 
 		// às vezes vem uma fileira de zumbis juntos
 		if (this.nivel >= 3 && Math.random() < 0.12) {
@@ -1374,7 +1378,7 @@ export default class Jogo extends Phaser.Scene {
 			x,
 			y,
 			vx: persegue ? 0.12 + n * 0.02 : 0, // os que perseguem vão se ajeitando na direção do elfo
-			vy: regra.vy * (1 + n * R.ACELERACAO_POR_NIVEL) * (0.9 + Math.random() * 0.25),
+			vy: regra.vy * (1 + n * R.ACELERACAO_POR_NIVEL) * (0.9 + Math.random() * 0.25) * this.dificuldade.velocidade,
 			vida: regra.vida + Math.floor(n / 3),
 			morrendo: false,
 			morto_ha: 0,
@@ -1444,7 +1448,7 @@ export default class Jogo extends Phaser.Scene {
 			this.flutuar(c0.x + c0.l / 2, c0.y - 10, nomes[juntas] || 'MASSACRE!', '#ff5a5a')
 			this.pontos += 25 * juntas * this.nivel
 		}
-		const ganho = zumbi.regra.pontos * this.nivel * this.multiplicador
+		const ganho = Math.round(zumbi.regra.pontos * this.nivel * this.multiplicador * this.dificuldade.pontos)
 		this.pontos += ganho
 		if (this.pontos >= 50000) desbloquear(this, 'rico')
 		const c = corpo(zumbi)
@@ -1999,7 +2003,7 @@ export default class Jogo extends Phaser.Scene {
 			this.recorde = this.pontos
 			gravar_recorde(this.pontos)
 		}
-		const { posicao, id } = gravar_placar(this.pontos, this.nivel)
+		const { posicao, id } = gravar_placar(this.pontos, this.nivel, opcoes.dificuldade)
 		const segundos = Math.floor(this.stats.ticks / 100)
 		const tempo = Math.floor(segundos / 60) + ':' + String(segundos % 60).padStart(2, '0')
 		const pontaria = this.stats.disparos ? Math.round((100 * this.stats.acertos) / this.stats.disparos) : 0
@@ -2131,6 +2135,9 @@ export default class Jogo extends Phaser.Scene {
 		this.heroi.setVisible(visivel)
 		if (this.vermelho_heroi > 0) {
 			this.heroi.setTint(0xff3030).setTintMode(Phaser.TintModes.FILL)
+		}
+		else if (this.cor_do_elfo) {
+			this.heroi.setTint(this.cor_do_elfo).setTintMode(Phaser.TintModes.MULTIPLY)
 		}
 		else {
 			this.heroi.clearTint().setTintMode(Phaser.TintModes.MULTIPLY)

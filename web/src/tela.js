@@ -89,7 +89,7 @@ export function gravar_recorde(pontos) {
 	}
 }
 
-// placar com as 5 melhores partidas: [{ id, nome, pontos, fase }]
+// placar com as 5 melhores partidas: [{ id, nome, pontos, fase, dificuldade }]
 export function ler_placar() {
 	try {
 		const placar = JSON.parse(localStorage.getItem('elf-kill-zombie-placar') || '[]')
@@ -109,13 +109,13 @@ function salvar_placar(placar) {
 
 // coloca a partida no placar (com o nome provisório "ELF") e devolve { posicao, id };
 // posicao é de 1 a 5, ou 0 se não entrou
-export function gravar_placar(pontos, fase) {
+export function gravar_placar(pontos, fase, dificuldade = 'normal') {
 	if (pontos <= 0) {
 		return { posicao: 0, id: null }
 	}
 	const id = Date.now()
 	const placar = ler_placar()
-	placar.push({ id, nome: 'ELF', pontos, fase })
+	placar.push({ id, nome: 'ELF', pontos, fase, dificuldade })
 	placar.sort((a, b) => b.pontos - a.pontos)
 	const posicao = placar.findIndex((p) => p.id == id) + 1
 	salvar_placar(placar)

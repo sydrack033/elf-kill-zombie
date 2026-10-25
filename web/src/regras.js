@@ -3,6 +3,24 @@
 
 export const TICK_MS = 10
 
+// ---------- dificuldade (escolhida na tela de título) ----------
+// vidas = vidas no começo; velocidade = multiplica a velocidade dos zumbis;
+// frequencia = multiplica quantos zumbis aparecem; pontos = multiplica os pontos
+export const DIFICULDADES = {
+	facil: { nome: 'FÁCIL', vidas: 5, velocidade: 0.8, frequencia: 0.75, pontos: 0.5 },
+	normal: { nome: 'NORMAL', vidas: 3, velocidade: 1, frequencia: 1, pontos: 1 },
+	dificil: { nome: 'DIFÍCIL', vidas: 2, velocidade: 1.2, frequencia: 1.3, pontos: 2 },
+}
+
+// ---------- cores do elfo (liberadas com conquistas) ----------
+export const ELFOS = [
+	{ id: 'verde', nome: 'ELFO VERDE', cor: null, conquistas: 0 },
+	{ id: 'noturno', nome: 'ELFO NOTURNO', cor: 0x8aa0ff, conquistas: 3 },
+	{ id: 'fogo', nome: 'ELFO DE FOGO', cor: 0xff9a6a, conquistas: 6 },
+	{ id: 'ouro', nome: 'ELFO DOURADO', cor: 0xffe070, conquistas: 10 },
+	{ id: 'sombrio', nome: 'ELFO SOMBRIO', cor: 0x7a6a8a, conquistas: 14 },
+]
+
 // ---------- elfo ----------
 export const VELOCIDADE_HEROI = 1.6
 export const VELOCIDADE_HEROI_RAPIDO = 2.6 // com as botas
