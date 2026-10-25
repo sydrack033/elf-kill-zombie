@@ -64,7 +64,7 @@ export default class Titulo extends Phaser.Scene {
 			this, 0, 346,
 			celular
 				? 'ARRASTE NA ESQUERDA: ANDAR\nO ELFO ATIRA SOZINHO\nTOQUE NA DIREITA: MIRAR\nBOTÕES NA TELA: BOMBA, ESQUIVA E PAUSA'
-				: 'WASD/SETAS: ANDAR   MOUSE: MIRAR   SHIFT: ESQUIVA\nCLIQUE: ATIRAR   CLIQUE DIREITO: BOMBA\nP: PAUSA  F: TELA CHEIA  M: SOM  N: MÚSICA\nX: MODO  L: LOJA  D: DESAFIOS  C: CONQUISTAS  B: BESTIÁRIO  H: HISTÓRIA',
+				: 'WASD/SETAS: ANDAR   MOUSE: MIRAR   SHIFT: ESQUIVA\nCLIQUE: ATIRAR   CLIQUE DIREITO: BOMBA\nP: PAUSA  F: TELA CHEIA  M: SOM  N: MÚSICA\nX: MODO  L: LOJA  D: DESAFIOS  O: OPÇÕES  C: CONQUISTAS  B: BESTIÁRIO  H: HISTÓRIA',
 			8, '#cfcfcf',
 		).setOrigin(0.5).setDepth(6)
 
@@ -99,6 +99,7 @@ export default class Titulo extends Phaser.Scene {
 		this.input.keyboard.on('keydown-B', () => ir('Bestiario'))
 		this.input.keyboard.on('keydown-L', () => ir('Loja'))
 		this.input.keyboard.on('keydown-D', () => ir('Desafios'))
+		this.input.keyboard.on('keydown-O', () => ir('Opcoes'))
 		this.input.keyboard.on('keydown-LEFT', () => this.mudar_dificuldade(-1))
 		this.input.keyboard.on('keydown-RIGHT', () => this.mudar_dificuldade(1))
 		this.input.keyboard.on('keydown-UP', () => this.mudar_elfo(-1))
@@ -131,12 +132,16 @@ export default class Titulo extends Phaser.Scene {
 			else if (this.botao_desafios && this.botao_desafios.getBounds().contains(p.worldX, p.worldY)) {
 				ir('Desafios')
 			}
+			else if (this.botao_opcoes && this.botao_opcoes.getBounds().contains(p.worldX, p.worldY)) {
+				ir('Opcoes')
+			}
 			else {
 				comecar()
 			}
 		})
 		// troféu no canto (para quem joga no celular e não tem a tecla C)
 		this.botao_trofeu = this.add.sprite(0, 14, 'trofeu', 0).setScale(1.5).setDepth(6)
+		this.botao_opcoes = texto(this, 0, 30, 'OPÇÕES', 8, '#cfcfcf').setOrigin(1, 0.5).setDepth(6)
 		// moedas no canto esquerdo: tocar (ou L) abre a loja
 		this.moeda = this.add.sprite(12, 14, 'moeda').setScale(1.5).setDepth(6)
 		this.botao_loja = texto(this, 21, 14, ler_loja().moedas + '  LOJA', 8, '#ffd34d').setOrigin(0, 0.5).setDepth(6)
@@ -237,6 +242,7 @@ export default class Titulo extends Phaser.Scene {
 		}
 		if (this.botao_trofeu) {
 			this.botao_trofeu.x = this.largura - 14
+			this.botao_opcoes.x = this.largura - 6
 		}
 		// em tela estreita os controles ficam grandes demais: diminui para caber
 		const escala = Math.min(1, (this.largura - 10) / this.controles.width)
