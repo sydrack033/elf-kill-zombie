@@ -42,6 +42,7 @@ export default class Carregar extends Phaser.Scene {
 		this.load.spritesheet('coracao', PASTA + 'coracao.png', { frameWidth: 9, frameHeight: 8 })
 
 		this.load.image('chao', PASTA + 'chao.png')
+		this.load.spritesheet('melhorias', PASTA + 'melhorias.png', { frameWidth: 16, frameHeight: 16 })
 
 		// efeitos e músicas são gerados por ferramentas/gerar_sons.mjs
 		const sons = [

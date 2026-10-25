@@ -11,7 +11,8 @@ export const VIDAS_NO_COMECO = 3
 export const VIDAS_NO_MAXIMO = 5
 
 // ---------- níveis ----------
-export const MORTES_POR_NIVEL = 12
+export const MORTES_POR_NIVEL = (nivel) => 10 + nivel * 2 // fase 1: 12, fase 5: 20, fase 10: 30
+export const ACELERACAO_POR_NIVEL = 0.08 // quanto os zumbis ficam mais rápidos a cada fase (8%)
 export const NIVEIS_ENTRE_CHEFOES = 5 // nível 5, 10, 15... tem chefão
 export const COMBO_TEMPO = 150 // ticks para emendar a próxima morte no combo
 export const COMBO_MAXIMO = 5 // multiplicador máximo de pontos
@@ -99,6 +100,24 @@ export const VELOCIDADE_CUSPE = 1.7
 
 // a imagem do zumbi tem 44x44, mas o corpo dele ocupa só este pedaço (sem contar a escala)
 export const CORPO_ZUMBI = { x: 10, y: 4, l: 24, a: 36 }
+
+// ---------- melhorias (a cada 2 fases e depois de cada chefão, escolha 1 de 3) ----------
+// quadro = ícone em melhorias.png; maximo = quantas vezes dá para pegar a mesma
+export const MELHORIAS = [
+	{ id: 'cadencia', quadro: 0, nome: 'GATILHO LEVE', texto: 'ATIRA 15% MAIS RÁPIDO', maximo: 4 },
+	{ id: 'dano', quadro: 1, nome: 'FOGO FORTE', texto: '+1 DE DANO EM TODO TIRO', maximo: 3 },
+	{ id: 'perfura', quadro: 2, nome: 'PERFURANTE', texto: 'O TIRO ATRAVESSA MAIS 1 ZUMBI', maximo: 2 },
+	{ id: 'vida_max', quadro: 3, nome: 'CORAÇÃO EXTRA', texto: '+1 CORAÇÃO MÁXIMO E CURA 1', maximo: 2 },
+	{ id: 'velocidade', quadro: 4, nome: 'PÉS LIGEIROS', texto: 'ANDA 12% MAIS RÁPIDO', maximo: 3 },
+	{ id: 'mochila', quadro: 5, nome: 'MOCHILA', texto: '+3 BOMBAS E CABEM MAIS 3', maximo: 3 },
+	{ id: 'ima', quadro: 6, nome: 'ÍMÃ', texto: 'PUXA CAIXAS E CORAÇÕES', maximo: 3 },
+	{ id: 'anjo', quadro: 7, nome: 'ANJO DA GUARDA', texto: 'ESCUDO NO COMEÇO DE CADA FASE', maximo: 1 },
+	{ id: 'cinto', quadro: 8, nome: 'CINTO DE BALAS', texto: 'ARMAS ESPECIAIS COM +50% DE MUNIÇÃO', maximo: 2 },
+	{ id: 'mao_dupla', quadro: 9, nome: 'MÃO DUPLA', texto: 'A PISTOLA DÁ DOIS TIROS', maximo: 1 },
+	{ id: 'sorte', quadro: 10, nome: 'TREVO', texto: 'CAEM MAIS CORAÇÕES E CAIXAS', maximo: 2 },
+	{ id: 'polvora', quadro: 11, nome: 'PÓLVORA', texto: 'EXPLOSÕES 25% MAIORES', maximo: 2 },
+]
+export const VIDAS_EXTRAS_MAXIMO = 2 // com o Coração Extra, o máximo de vidas sobe até 5 + 2
 
 // ---------- chefão ----------
 // a imagem tem quadros de 64x64; o corpo ocupa este pedaço (sem contar a escala)

@@ -30,6 +30,7 @@ export function instalar_teste(jogo) {
 				for (let i = 0; i < 100 && !ativa(jogo, 'Jogo'); i++) await espera(50)
 			}
 			const s = this.jogo
+			for (let i = 0; i < 50 && !s.sys.isActive(); i++) await espera(100)
 			s.scene.pause()
 			for (const k in s.teclas) s.teclas[k].isDown = false
 			return s
@@ -37,7 +38,14 @@ export function instalar_teste(jogo) {
 
 		ticks(n) {
 			const s = this.jogo
-			for (let i = 0; i < n && s.estado == 'jogando'; i++) {
+			for (let i = 0; i < n && (s.estado == 'jogando' || s.estado == 'escolhendo'); i++) {
+				// tela de melhoria: escolhe uma ao acaso
+				if (s.estado == 'escolhendo') {
+					s.pode_escolher = true
+					const escolha = Math.floor(Math.random() * s.opcoes.length)
+					this.escolhidas = (this.escolhidas || []).concat(s.opcoes[escolha].id)
+					s.escolher(escolha)
+				}
 				s.entrada()
 				this.controle?.(s)
 				s.processamento()
@@ -59,7 +67,16 @@ export function instalar_teste(jogo) {
 				const vivos = j.zumbis.filter((z) => !z.morrendo && z.y > -30).sort((a, b) => b.y - a.y)
 				const alvo = j.chefe && j.chefe.fase != 'morrendo' ? j.chefe : vivos[0]
 				const item = j.itens.find((i) => i.y > 150) || j.coracoes.find((c) => c.y > 150)
-				const destino = item ? item.x : alvo ? alvo.x + 10 : j.largura / 2
+				let destino = item ? item.x : alvo ? alvo.x + 10 : j.largura / 2
+				// desvia de cuspe chegando perto e de zumbi encostando
+				const hx = j.heroi_x + 12
+				const hy = j.heroi_y + 12
+				const perigo = j.cuspes.find((c) => Math.hypot(c.x - hx, c.y - hy) < 70 && c.vy > 0)
+					|| vivos.find((z) => Math.abs(z.x + 22 * z.escala - hx) < 30 && z.y + 40 * z.escala > hy - 60 && z.y < hy)
+				if (perigo) {
+					const px = perigo.escala ? perigo.x + 22 * perigo.escala : perigo.x
+					destino = px < hx ? Math.min(j.largura - 25, j.heroi_x + 60) : Math.max(0, j.heroi_x - 60)
+				}
 				j.esq_on = j.heroi_x > destino + 3
 				j.dir_on = j.heroi_x < destino - 3
 				j.baixo_on = item ? j.heroi_y < item.y : j.heroi_y < 360
@@ -76,8 +93,9 @@ export function instalar_teste(jogo) {
 					j.bomba_on = false
 				}
 			}
+			this.escolhidas = []
 			try {
-				for (let i = 0; i < n && s.estado == 'jogando'; i++) {
+				for (let i = 0; i < n && (s.estado == 'jogando' || s.estado == 'escolhendo'); i++) {
 					this.ticks(1)
 					if (s.vidas < vidas) resumo.vidas_perdidas += vidas - s.vidas
 					vidas = s.vidas
@@ -96,6 +114,7 @@ export function instalar_teste(jogo) {
 				resumo.erro = String(e.stack).slice(0, 600)
 			}
 			this.controle = null
+			resumo.melhorias = this.escolhidas
 			resumo.final = {
 				estado: s.estado, pontos: s.pontos, nivel: s.nivel, vidas: s.vidas, stats: s.stats,
 				objetos: s.children.list.length, zumbis: s.zumbis.length, tiros: s.tiros.length,

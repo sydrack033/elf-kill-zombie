@@ -47,6 +47,11 @@ export default class Jogo extends Phaser.Scene {
 	}
 
 	create() {
+		// a cena é reaproveitada quando o jogo recomeça: esquece os objetos da partida anterior
+		this.hud_pontos = null
+		this.botao_bomba = null
+		this.objetos_escolha = []
+
 		this.chao = this.add.tileSprite(0, 0, 10, ALTURA, 'chao').setOrigin(0)
 		ajustar_tela(this)
 
@@ -65,6 +70,8 @@ export default class Jogo extends Phaser.Scene {
 		this.bolha = this.add.circle(0, 0, 21).setStrokeStyle(2, 0x70c8ff, 0.9).setFillStyle(0x70c8ff, 0.15).setDepth(6.5).setVisible(false)
 
 		this.vidas = R.VIDAS_NO_COMECO
+		this.vidas_max = R.VIDAS_NO_MAXIMO
+		this.melhorias = {} // id da melhoria -> quantas vezes foi pega
 		this.invencivel = 0
 		this.pontos = 0
 		this.nivel = 1
@@ -101,7 +108,7 @@ export default class Jogo extends Phaser.Scene {
 		this.dano_ha = 0 // tela vermelha quando o elfo apanha
 
 		this.quadro_atual = 0
-		this.estado = 'jogando' // 'jogando', 'pausado' ou 'fim'
+		this.estado = 'jogando' // 'jogando', 'pausado', 'escolhendo' (melhoria) ou 'fim'
 
 		this.criar_hud()
 		this.ao_redimensionar()
@@ -162,12 +169,16 @@ export default class Jogo extends Phaser.Scene {
 
 	criar_hud() {
 		this.hud_coracoes = []
-		for (let i = 0; i < R.VIDAS_NO_MAXIMO; i++) {
+		for (let i = 0; i < R.VIDAS_NO_MAXIMO + R.VIDAS_EXTRAS_MAXIMO; i++) {
 			this.hud_coracoes.push(this.add.sprite(8 + i * 11, 8, 'coracao', 0).setOrigin(0).setDepth(10))
 		}
+		this.hud_melhorias = [] // ícones das melhorias pegas, embaixo da fase
 		this.hud_pontos = texto(this, 0, 8, '', 8).setOrigin(1, 0).setDepth(10)
 		this.hud_combo = texto(this, 0, 22, '', 8, '#ff9a3c').setOrigin(1, 0).setDepth(10)
 		this.hud_nivel = texto(this, 8, 22, '', 8).setDepth(10)
+		// barrinha de quanto falta para a próxima fase
+		this.hud_progresso_fundo = this.add.rectangle(8, 32, 50, 2, 0x000000, 0.6).setOrigin(0).setDepth(10)
+		this.hud_progresso = this.add.rectangle(8, 32, 0, 2, 0x9ff07a).setOrigin(0).setDepth(10)
 		this.hud_arma = texto(this, 8, ALTURA - 24, '', 8, '#ffd34d').setDepth(10)
 		this.hud_bombas = texto(this, 8, ALTURA - 12, '', 8).setDepth(10)
 		this.hud_poderes = texto(this, 0, ALTURA - 12, '', 8, '#9fd8ff').setOrigin(1, 0).setDepth(10)
@@ -220,9 +231,125 @@ export default class Jogo extends Phaser.Scene {
 		})
 		this.hud_pontos.setText('PONTOS ' + String(this.pontos).padStart(6, '0'))
 		this.hud_nivel.setText('FASE ' + this.nivel)
+		const em_chefe = this.chefe != null || this.chefe_em > 0
+		this.hud_progresso.setSize(em_chefe ? 50 : (50 * this.mortes_no_nivel) / R.MORTES_POR_NIVEL(this.nivel), 2)
+		this.hud_progresso.setFillStyle(em_chefe ? 0xd02828 : 0x9ff07a)
 		const arma = R.ARMAS[this.arma]
 		this.hud_arma.setText(this.municao == Infinity ? arma.nome : arma.nome + ' ' + this.municao)
 		this.hud_bombas.setText('BOMBAS ' + this.bombas)
+	}
+
+	// ------------------------------------------------------------------ melhorias
+
+	// quantas vezes a melhoria foi pega (0 = não tem)
+	m(id) {
+		return this.melhorias[id] || 0
+	}
+
+	// pausa o jogo e mostra 3 melhorias para escolher
+	oferecer_melhorias() {
+		const possiveis = R.MELHORIAS.filter((mel) => this.m(mel.id) < mel.maximo)
+		if (possiveis.length == 0) {
+			return
+		}
+		const opcoes = Phaser.Utils.Array.Shuffle(possiveis.slice()).slice(0, 3)
+		this.estado = 'escolhendo'
+		this.opcoes = opcoes
+		this.escurecer.setVisible(true)
+		this.aviso.setVisible(false) // o "FASE N" aparece depois da escolha
+
+		const objetos = []
+		const largura_carta = Math.min(96, (this.largura - 24) / 3)
+		const altura_carta = 120
+		const meio = this.largura / 2
+		const topo = ALTURA / 2 - altura_carta / 2 + 10
+		objetos.push(texto(this, meio, topo - 26, 'ESCOLHA UMA MELHORIA', 16, '#c08aff').setOrigin(0.5).setDepth(12))
+		opcoes.forEach((mel, i) => {
+			const x = meio + (i - 1) * (largura_carta + 6)
+			const carta = this.add.rectangle(x, topo, largura_carta, altura_carta, 0x1c1630, 0.95)
+				.setOrigin(0.5, 0).setStrokeStyle(2, 0x7a3ab0).setDepth(11).setInteractive({ useHandCursor: true })
+			carta.on('pointerover', () => carta.setStrokeStyle(2, 0xffd34d))
+			carta.on('pointerout', () => carta.setStrokeStyle(2, 0x7a3ab0))
+			carta.on('pointerdown', () => this.escolher(i))
+			const icone = this.add.sprite(x, topo + 22, 'melhorias', mel.quadro).setScale(2).setDepth(12)
+			const tem = this.m(mel.id)
+			const nome = texto(this, x, topo + 46, mel.nome + (tem ? ' ' + (tem + 1) : ''), 8, '#ffd34d').setOrigin(0.5, 0).setDepth(12)
+			nome.setWordWrapWidth(largura_carta - 6)
+			const desc = texto(this, x, topo + 66, mel.texto, 8, '#ffffff').setOrigin(0.5, 0).setDepth(12)
+			desc.setWordWrapWidth(largura_carta - 8).setLineSpacing(2)
+			const tecla = texto(this, x, topo + altura_carta - 7, this.modo_toque ? '' : String(i + 1), 8, '#9a8ab0').setOrigin(0.5).setDepth(12)
+			objetos.push(carta, icone, nome, desc, tecla)
+		})
+		this.objetos_escolha = objetos
+
+		// espera um pouco antes de aceitar: quem está segurando o botão de atirar não escolhe sem querer
+		this.pode_escolher = false
+		this.time.delayedCall(700, () => (this.pode_escolher = true))
+		this.input.keyboard.once('keydown-ONE', () => this.escolher(0))
+		this.input.keyboard.once('keydown-TWO', () => this.escolher(1))
+		this.input.keyboard.once('keydown-THREE', () => this.escolher(2))
+		this.sound.play('poder', { volume: 0.5, rate: 0.7 })
+	}
+
+	escolher(i) {
+		if (this.estado != 'escolhendo' || !this.pode_escolher || !this.opcoes[i]) {
+			return
+		}
+		const mel = this.opcoes[i]
+		this.melhorias[mel.id] = this.m(mel.id) + 1
+		this.aplicar_melhoria(mel.id)
+		for (const objeto of this.objetos_escolha) {
+			objeto.destroy()
+		}
+		this.objetos_escolha = []
+		this.input.keyboard.removeAllListeners('keydown-ONE')
+		this.input.keyboard.removeAllListeners('keydown-TWO')
+		this.input.keyboard.removeAllListeners('keydown-THREE')
+		this.escurecer.setVisible(false)
+		this.estado = 'jogando'
+		this.tempo_acumulado = 0
+		this.sound.play('item', { volume: 0.6, rate: 0.8 })
+		this.flutuar(this.heroi_x + 12, this.heroi_y - 8, mel.nome + '!', '#c08aff')
+		this.anunciar('FASE ' + this.nivel)
+		this.atualizar_hud_melhorias()
+		this.atualizar_hud()
+	}
+
+	// o que muda na hora em que a melhoria é escolhida (o resto é conferido durante o jogo com this.m())
+	aplicar_melhoria(id) {
+		if (id == 'vida_max') {
+			this.vidas_max++
+			this.vidas = Math.min(this.vidas_max, this.vidas + 1)
+		}
+		else if (id == 'mochila') {
+			this.bombas = Math.min(this.bombas_max(), this.bombas + 3)
+		}
+		else if (id == 'anjo') {
+			this.poderes.escudo = Math.max(this.poderes.escudo, 500)
+		}
+	}
+
+	bombas_max() {
+		return R.BOMBAS_NO_MAXIMO + 3 * this.m('mochila')
+	}
+
+	atualizar_hud_melhorias() {
+		for (const objeto of this.hud_melhorias) {
+			objeto.destroy()
+		}
+		this.hud_melhorias = []
+		let x = 8
+		for (const mel of R.MELHORIAS) {
+			const n = this.m(mel.id)
+			if (n == 0) {
+				continue
+			}
+			this.hud_melhorias.push(this.add.sprite(x, 37, 'melhorias', mel.quadro).setOrigin(0).setScale(0.75).setDepth(10))
+			if (n > 1) {
+				this.hud_melhorias.push(texto(this, x + 11, 45, String(n), 8, '#ffffff').setDepth(10))
+			}
+			x += 14
+		}
 	}
 
 	// mensagem grande que some sozinha
@@ -501,7 +628,7 @@ export default class Jogo extends Phaser.Scene {
 
 	mover_heroi() {
 		// o elfo anda pela parte de baixo da tela
-		const v = this.poderes.velocidade > 0 ? R.VELOCIDADE_HEROI_RAPIDO : R.VELOCIDADE_HEROI
+		const v = (this.poderes.velocidade > 0 ? R.VELOCIDADE_HEROI_RAPIDO : R.VELOCIDADE_HEROI) * (1 + 0.12 * this.m('velocidade'))
 		if (this.modo_toque && (this.toque_vx || this.toque_vy)) {
 			// joystick: a velocidade acompanha o quanto o dedo foi arrastado
 			this.heroi_x += this.toque_vx * v
@@ -544,20 +671,30 @@ export default class Jogo extends Phaser.Scene {
 		}
 
 		const arma = R.ARMAS[this.arma]
+		// com a Mão Dupla a pistola dá dois tiros lado a lado
+		const lado_a_lado = this.arma == 'pistola' && this.m('mao_dupla') ? [-4, 4] : [0]
 		for (let i = 0; i < arma.tiros; i++) {
 			// o triplo sai em leque: um no meio e um para cada lado
 			const desvio = (i - (arma.tiros - 1) / 2) * arma.abertura
 			const angulo = this.angulo + desvio + (Math.random() * 2 - 1) * arma.tremida
 			const vx = Math.cos(angulo) * arma.velocidade
 			const vy = Math.sin(angulo) * arma.velocidade
-			// sai da ponta da arma
-			const x = this.mao_x + Math.cos(angulo) * 14
-			const y = this.mao_y + Math.sin(angulo) * 14
-			const sprite = this.add.sprite(x, y, arma.projetil, 0).setRotation(angulo).setDepth(4)
-			this.tiros.push({ sprite, x, y, vx, vy, arma, acertou: new Set() })
+			for (const afasta of lado_a_lado) {
+				// sai da ponta da arma
+				const x = this.mao_x + Math.cos(angulo) * 14 - Math.sin(angulo) * afasta
+				const y = this.mao_y + Math.sin(angulo) * 14 + Math.cos(angulo) * afasta
+				const sprite = this.add.sprite(x, y, arma.projetil, 0).setRotation(angulo).setDepth(4)
+				this.tiros.push({
+					sprite, x, y, vx, vy, arma,
+					dano: arma.dano + this.m('dano'),
+					// quantos zumbis ainda pode atravessar
+					perfura: arma.atravessa ? Infinity : this.m('perfura'),
+					acertou: new Set(),
+				})
+				this.stats.disparos++
+			}
 		}
-		this.stats.disparos += arma.tiros
-		this.espera_tiro = arma.espera
+		this.espera_tiro = Math.round(arma.espera * Math.pow(0.85, this.m('cadencia')))
 		this.sound.play(arma.som.chave, arma.som)
 
 		this.clarao_ha = 4
@@ -574,7 +711,8 @@ export default class Jogo extends Phaser.Scene {
 
 	trocar_arma(arma) {
 		this.arma = arma
-		this.municao = R.ARMAS[arma].municao
+		// o Cinto de Balas aumenta a munição das armas especiais
+		this.municao = Math.round(R.ARMAS[arma].municao * (1 + 0.5 * this.m('cinto')))
 		this.arma_na_mao.setFrame(R.ARMAS[arma].quadro)
 		this.atualizar_hud()
 	}
@@ -649,7 +787,7 @@ export default class Jogo extends Phaser.Scene {
 			if (bomba.ha >= bomba.duracao) {
 				bomba.explodiu = true
 				bomba.sprite.destroy()
-				this.explodir(bomba.x1, bomba.y1, R.RAIO_DA_EXPLOSAO, R.DANO_DA_EXPLOSAO)
+				this.explodir(bomba.x1, bomba.y1, R.RAIO_DA_EXPLOSAO * this.tamanho_explosao(), R.DANO_DA_EXPLOSAO)
 			}
 		}
 		this.bombas_voando = this.bombas_voando.filter((bomba) => !bomba.explodiu)
@@ -717,9 +855,9 @@ export default class Jogo extends Phaser.Scene {
 				// o tiro conta como um quadradinho de 8x8 em volta do centro dele
 				if (encostou(tiro.x - 4, tiro.y - 4, 8, 8, c.x, c.y, c.l, c.a)) {
 					this.acertar(tiro, Phaser.Math.Clamp(tiro.x, c.x, c.x + c.l), Phaser.Math.Clamp(tiro.y, c.y, c.y + c.a))
-					this.ferir_zumbi(zumbi, tiro.arma.dano, tiro.arma.empurra)
+					this.ferir_zumbi(zumbi, tiro.dano, tiro.arma.empurra)
 					tiro.acertou.add(zumbi)
-					if (!tiro.arma.atravessa) {
+					if (tiro.sumiu) {
 						break
 					}
 				}
@@ -729,7 +867,7 @@ export default class Jogo extends Phaser.Scene {
 				const c = corpo_chefe(this.chefe)
 				if (encostou(tiro.x - 4, tiro.y - 4, 8, 8, c.x, c.y, c.l, c.a)) {
 					this.acertar(tiro, tiro.x, tiro.y)
-					this.ferir_chefe(tiro.arma.dano, tiro.x, tiro.y)
+					this.ferir_chefe(tiro.dano, tiro.x, tiro.y)
 					tiro.acertou.add(this.chefe)
 				}
 			}
@@ -754,11 +892,19 @@ export default class Jogo extends Phaser.Scene {
 		this.sound.play('acerto', { volume: 0.5 })
 		if (tiro.arma.explode) {
 			tiro.sumiu = true
-			this.explodir(x, y, tiro.arma.explode, tiro.arma.dano)
+			this.explodir(x, y, tiro.arma.explode * this.tamanho_explosao(), tiro.dano)
 		}
-		else if (!tiro.arma.atravessa) {
+		else if (tiro.perfura > 0) {
+			tiro.perfura-- // atravessa e segue em frente
+		}
+		else {
 			tiro.sumiu = true
 		}
+	}
+
+	// a Pólvora deixa as explosões maiores
+	tamanho_explosao() {
+		return 1 + 0.25 * this.m('polvora')
 	}
 
 	// ------------------------------------------------------------------ zumbis
@@ -775,7 +921,7 @@ export default class Jogo extends Phaser.Scene {
 
 		// quanto maior o nível, mais zumbis e mais rápidos
 		const n = this.nivel - 1
-		this.proximo_zumbi = Math.max(30, 130 - n * 12) + Phaser.Math.Between(0, 60)
+		this.proximo_zumbi = Math.max(35, 140 - n * 8) + Phaser.Math.Between(0, 60)
 
 		// às vezes vem uma fileira de zumbis juntos
 		if (this.nivel >= 3 && Math.random() < 0.12) {
@@ -806,7 +952,7 @@ export default class Jogo extends Phaser.Scene {
 			x,
 			y,
 			vx: persegue ? 0.12 + n * 0.02 : 0, // os que perseguem vão se ajeitando na direção do elfo
-			vy: regra.vy * (1 + n * 0.12) * (0.9 + Math.random() * 0.25),
+			vy: regra.vy * (1 + n * R.ACELERACAO_POR_NIVEL) * (0.9 + Math.random() * 0.25),
 			vida: regra.vida + Math.floor(n / 3),
 			morrendo: false,
 			morto_ha: 0,
@@ -858,27 +1004,31 @@ export default class Jogo extends Phaser.Scene {
 		const c = corpo(zumbi)
 		this.flutuar(c.x + c.l / 2, c.y, '+' + ganho, this.multiplicador > 1 ? '#ff9a3c' : '#ffffff')
 
-		if (Math.random() < R.CHANCE_DE_CORACAO) {
+		const sorte = 1 + this.m('sorte')
+		if (Math.random() < R.CHANCE_DE_CORACAO * sorte) {
 			this.soltar_coracao(c.x + c.l / 2 - 7, c.y + c.a / 2)
 		}
-		else if (Math.random() < R.CHANCE_DE_ITEM) {
+		else if (Math.random() < R.CHANCE_DE_ITEM * sorte) {
 			this.soltar_item(c.x + c.l / 2 - 8, c.y + c.a / 2)
 		}
 
 		// em nível de chefão as mortes não contam para subir de nível
 		if (this.chefe == null && this.chefe_em == 0) {
 			this.mortes_no_nivel++
-			if (this.mortes_no_nivel >= R.MORTES_POR_NIVEL) {
+			if (this.mortes_no_nivel >= R.MORTES_POR_NIVEL(this.nivel)) {
 				this.subir_nivel()
 			}
 		}
 		this.atualizar_hud()
 	}
 
-	subir_nivel() {
+	subir_nivel(venceu_chefe = false) {
 		this.nivel++
 		this.mortes_no_nivel = 0
 		this.pintar_noite()
+		if (this.m('anjo')) {
+			this.poderes.escudo = Math.max(this.poderes.escudo, 500)
+		}
 		if (this.nivel % R.NIVEIS_ENTRE_CHEFOES == 0) {
 			this.chefe_em = 300
 			this.anunciar('ZUMBI REI!', 300, '#ff5a5a')
@@ -886,6 +1036,10 @@ export default class Jogo extends Phaser.Scene {
 		else {
 			this.anunciar('FASE ' + this.nivel)
 			this.sound.play('fase', { volume: 0.6 })
+			// a cada 2 fases, e sempre depois de vencer um chefão, escolhe uma melhoria
+			if (venceu_chefe || this.nivel % 2 == 0) {
+				this.oferecer_melhorias()
+			}
 		}
 		this.atualizar_hud()
 	}
@@ -1058,7 +1212,7 @@ export default class Jogo extends Phaser.Scene {
 				chefe.sprite.destroy()
 				this.chefe = null
 				tocar_musica(this, 'musica_jogo')
-				this.subir_nivel()
+				this.subir_nivel(true)
 			}
 			return
 		}
@@ -1136,6 +1290,7 @@ export default class Jogo extends Phaser.Scene {
 	mover_itens() {
 		for (const item of this.itens) {
 			item.y += 0.5
+			this.puxar(item, 8)
 			if (encostou(item.x, item.y, 16, 16, this.heroi_x, this.heroi_y, 25, 25)) {
 				item.pegou = true
 				this.pegar(item.tipo)
@@ -1147,10 +1302,25 @@ export default class Jogo extends Phaser.Scene {
 		this.itens = this.itens.filter((item) => !item.pegou && item.y <= ALTURA)
 	}
 
+	// com o Ímã, caixas e corações perto do elfo vão até ele (meio = metade do tamanho do objeto)
+	puxar(objeto, meio) {
+		const nivel = this.m('ima')
+		if (nivel == 0) {
+			return
+		}
+		const dx = this.heroi_x + 12 - (objeto.x + meio)
+		const dy = this.heroi_y + 12 - (objeto.y + meio)
+		const distancia = Math.hypot(dx, dy)
+		if (distancia < 50 + 40 * nivel && distancia > 1) {
+			objeto.x += (dx / distancia) * 1.8
+			objeto.y += (dy / distancia) * 1.8
+		}
+	}
+
 	pegar(tipo) {
 		this.sound.play(R.PODERES[tipo] ? 'poder' : 'item', { volume: 0.6 })
 		if (tipo == 'bomba') {
-			this.bombas = Math.min(R.BOMBAS_NO_MAXIMO, this.bombas + R.BOMBAS_POR_CAIXA)
+			this.bombas = Math.min(this.bombas_max(), this.bombas + R.BOMBAS_POR_CAIXA)
 			this.anunciar('+' + R.BOMBAS_POR_CAIXA + ' BOMBAS', 100)
 		}
 		else if (R.PODERES[tipo]) {
@@ -1167,10 +1337,11 @@ export default class Jogo extends Phaser.Scene {
 	mover_coracoes() {
 		for (const coracao of this.coracoes) {
 			coracao.y += 0.6
+			this.puxar(coracao, 7)
 			if (encostou(coracao.x, coracao.y, 14, 12, this.heroi_x, this.heroi_y, 25, 25)) {
 				coracao.pegou = true
 				this.sound.play('item', { volume: 0.6, rate: 1.25 })
-				if (this.vidas < R.VIDAS_NO_MAXIMO) {
+				if (this.vidas < this.vidas_max) {
 					this.vidas++
 				}
 				else {
