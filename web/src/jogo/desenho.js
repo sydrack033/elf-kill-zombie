@@ -126,6 +126,10 @@ export default class Desenho {
 		this.arma_na_mao.setFlipY(Math.abs(this.angulo) > Math.PI / 2)
 		this.arma_na_mao.setVisible(visivel)
 		this.clarao.setVisible(this.clarao_ha > 0)
+		// barrinha da carga do arco em cima do elfo (pisca quando está cheia)
+		this.barra_carga.setVisible(this.carga > 0).setPosition(Math.round(this.heroi_x + 2), Math.round(this.heroi_y - 4))
+		this.barra_carga.width = 20 * this.carga
+		this.barra_carga.setFillStyle(this.carga >= 1 && Math.floor(this.quadro_atual / 6) % 2 ? 0xffffff : 0x9ff07a)
 		if (this.chapeu) {
 			// em cima da cabeça; de lado a cabeça fica um pouco mais para a frente
 			const dx = { esquerda: -1, direita: 1 }[this.heroi_direcao] || 0

@@ -2,7 +2,7 @@
 // Responde com o que já está guardado (rápido) e, ao mesmo tempo, busca a versão nova para a próxima vez.
 // troque o número quando imagens ou sons mudarem (eles não têm nome com hash como o código):
 // assim quem já tinha o jogo guardado não fica com uma imagem velha junto com o código novo
-const CACHE = 'elf-kill-zombie-v6'
+const CACHE = 'elf-kill-zombie-v7'
 
 self.addEventListener('install', () => self.skipWaiting())
 

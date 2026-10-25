@@ -92,6 +92,7 @@ export default class Melhorias {
 		efeito(this, 'item', { volume: 0.6, rate: 0.8 })
 		this.flutuar(this.heroi_x + 12, this.heroi_y - 8, mel.nome + '!', '#c08aff')
 		this.anunciar(this.texto_da_fase || 'FASE ' + this.nivel, 250, this.lua_de_sangue ? '#ff5a5a' : '#ffd34d')
+		this.mostrar_capitulo()
 		this.atualizar_hud_melhorias()
 		this.atualizar_hud()
 	}
@@ -106,7 +107,7 @@ export default class Melhorias {
 			this.bombas = Math.min(this.bombas_max(), this.bombas + 3)
 		}
 		else if (id == 'anjo') {
-			this.poderes.escudo = Math.max(this.poderes.escudo, 500)
+			this.poderes.escudo = Math.max(this.poderes.escudo, 500 * (this.m('segunda_pele') ? 2 : 1))
 		}
 	}
 
@@ -228,6 +229,7 @@ export default class Melhorias {
 			this.escurecer.setVisible(true)
 			this.sound.pauseAll()
 			this.tweens.pauseAll() // faixas, avisos e efeitos esperam a pausa acabar
+			this.time.paused = true // e os eventos marcados (como o fim da abertura do chefão) também
 			// o aviso de fase e a dica ficam escondidos atrás do menu
 			this.aviso.setAlpha(0)
 			this.dica_texto.setAlpha(0)
@@ -238,6 +240,7 @@ export default class Melhorias {
 			this.escurecer.setVisible(false)
 			this.sound.resumeAll()
 			this.tweens.resumeAll()
+			this.time.paused = false
 			this.aviso.setAlpha(1)
 			this.dica_texto.setAlpha(1)
 			for (const objeto of this.menu_pausa) {
@@ -252,6 +255,7 @@ export default class Melhorias {
 		if (this.estado == 'pausado') {
 			this.sound.resumeAll()
 			this.tweens.resumeAll()
+			this.time.paused = false
 			this.scene.start('Titulo')
 		}
 	}
@@ -261,6 +265,7 @@ export default class Melhorias {
 		if (this.estado == 'pausado') {
 			this.sound.resumeAll()
 			this.tweens.resumeAll()
+			this.time.paused = false
 			this.scene.restart()
 		}
 	}

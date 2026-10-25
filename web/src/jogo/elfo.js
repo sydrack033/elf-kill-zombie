@@ -4,7 +4,7 @@ import Phaser from 'phaser'
 import { ALTURA, texto } from '../tela.js'
 import * as R from '../regras.js'
 import { desbloquear } from '../conquistas.js'
-import { efeito } from '../opcoes.js'
+import { efeito, opcoes } from '../opcoes.js'
 import { encostou, COR_P2, corpo, corpo_chefe } from './comum.js'
 
 export default class Elfo {
@@ -234,6 +234,10 @@ export default class Elfo {
 			this.espera_tiro--
 			return
 		}
+		if (R.ARMAS[this.arma].carrega) {
+			this.puxar_arco(R.ARMAS[this.arma])
+			return
+		}
 		if (!this.atirar_on) {
 			return
 		}
@@ -264,7 +268,7 @@ export default class Elfo {
 				}
 				this.tiros.push({
 					sprite, x, y, vx, vy, arma, ha: 0,
-					dano: arma.dano + this.m('dano') + (this.nivel_arma || 1) - 1,
+					dano: this.dano_da_arma(arma),
 					// quantos zumbis ainda pode atravessar
 					perfura: arma.atravessa ? Infinity : this.m('perfura'),
 					acertou: new Set(),
@@ -285,6 +289,47 @@ export default class Elfo {
 			}
 			this.atualizar_hud()
 		}
+	}
+
+	// arco élfico: segurando o botão a carga sobe; soltando, a flecha sai (no toque, no controle e com o
+	// tiro automático não dá para soltar, então ela sai sozinha quando a carga enche)
+	puxar_arco(arma) {
+		if (this.atirar_on) {
+			this.carga = Math.min(1, this.carga + 1 / arma.carrega)
+			const sozinho = this.modo_toque || opcoes.tiro_auto || this.mira_controle
+			if (!(this.carga >= 1 && sozinho)) {
+				return
+			}
+		}
+		if (this.carga < 0.15) {
+			this.carga = 0 // um toque rápido não dispara nada
+			return
+		}
+		const angulo = this.angulo
+		const x = this.mao_x + Math.cos(angulo) * 14
+		const y = this.mao_y + Math.sin(angulo) * 14
+		const v = arma.velocidade * (0.6 + 0.4 * this.carga)
+		const sprite = this.add.sprite(x, y, 'flecha').setRotation(angulo).setDepth(4).setScale(1 + 0.4 * this.carga)
+		if (this.carga >= 1) sprite.setTint(0xc8ffb0) // carga cheia: flecha brilhando
+		this.tiros.push({
+			sprite, x, y, arma, ha: 0, vx: Math.cos(angulo) * v, vy: Math.sin(angulo) * v,
+			dano: Math.round((arma.dano + 6 * this.carga + this.m('dano')) * (1 + 0.25 * (this.nivel_arma - 1))),
+			perfura: Infinity, acertou: new Set(),
+		})
+		this.stats.disparos++
+		efeito(this, arma.som.chave, { ...arma.som, rate: arma.som.rate - 0.6 * this.carga })
+		this.carga = 0
+		this.espera_tiro = Math.round(arma.espera * Math.pow(0.85, this.m('cadencia')))
+		this.municao--
+		if (this.municao <= 0) {
+			this.trocar_arma('pistola')
+		}
+		this.atualizar_hud()
+	}
+
+	// dano de um tiro da arma: base + Fogo Forte, e +25% por nível da arma (nível II e III)
+	dano_da_arma(arma) {
+		return Math.max(1, Math.round((arma.dano + this.m('dano')) * (1 + 0.25 * ((this.nivel_arma || 1) - 1))))
 	}
 
 	encher_furia(quanto) {
@@ -325,7 +370,7 @@ export default class Elfo {
 	// raio: acerta o inimigo mais perto da mira e vai pulando para os vizinhos
 	disparar_raio(arma) {
 		this.stats.disparos++
-		const dano = arma.dano + this.m('dano') + (this.nivel_arma || 1) - 1
+		const dano = this.dano_da_arma(arma)
 		const alvos = []
 		const vivos = () => {
 			const lista = this.zumbis.filter((z) => !z.morrendo && !z.intangivel && !alvos.includes(z)).map((z) => {
@@ -377,6 +422,7 @@ export default class Elfo {
 	trocar_arma(arma) {
 		// pegar a mesma arma especial de novo sobe o nível dela (até 3): +1 de dano por nível
 		this.nivel_arma = arma == this.arma && arma != 'pistola' ? Math.min(3, (this.nivel_arma || 1) + 1) : 1
+		this.carga = 0
 		this.arma = arma
 		this.usou_arma(arma)
 		// o Cinto de Balas aumenta a munição das armas especiais

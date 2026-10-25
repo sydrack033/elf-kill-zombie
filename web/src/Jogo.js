@@ -79,6 +79,8 @@ export default class Jogo extends Phaser.Scene {
 
 		this.arma = 'pistola'
 		this.nivel_arma = 1 // sobe pegando a mesma arma de novo
+		this.carga = 0 // carga do arco élfico, de 0 a 1
+		this.barra_carga = this.add.rectangle(0, 0, 20, 2, 0x9ff07a).setOrigin(0, 0.5).setDepth(6).setVisible(false)
 		this.municao = Infinity
 		this.bombas = R.BOMBAS_NO_COMECO
 		this.poderes = { escudo: 0, velocidade: 0, congelar: 0 } // ticks que faltam de cada poder
@@ -107,7 +109,9 @@ export default class Jogo extends Phaser.Scene {
 		this.lapides_quebradas = 0
 		this.dia = dia_de_hoje() // os desafios valem pelo dia em que a partida começou
 		this.faixas = 0
+		this.capitulo_pendente = null
 		this.tweens.resumeAll() // se a partida anterior acabou pausada
+		this.time.paused = false
 		this.objetos_final = null
 		this.fila_faixas = [] // inimigos novos esperando a vez de ser apresentados
 		this.moedas_extras = 0 // moedas dos zumbis de elite e das hordas, somadas no fim

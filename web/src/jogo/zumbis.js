@@ -217,7 +217,7 @@ export default class Zumbis {
 	// perto de um tamborzeiro vivo, o zumbi anda mais rápido
 	batida_do_tambor(zumbi) {
 		for (const t of this.zumbis) {
-			if (t != zumbi && t.regra.aura && !t.morrendo && Math.abs(t.x - zumbi.x) < t.regra.aura && Math.abs(t.y - zumbi.y) < t.regra.aura) {
+			if (t != zumbi && t.regra.aura && !t.morrendo && Phaser.Math.Distance.Between(t.x, t.y, zumbi.x, zumbi.y) < t.regra.aura) {
 				return t.regra.acelera
 			}
 		}
@@ -382,7 +382,7 @@ export default class Zumbis {
 		if (this.combo >= 20) desbloquear(this, 'combo20')
 		// marcos do combo: aviso grande que pula na tela
 		const marcos = { 10: 'EMBALADO!', 25: 'IMPARÁVEL!', 50: 'LENDÁRIO!', 100: 'DEUS DOS ELFOS!' }
-		if (marcos[this.combo]) {
+		if (marcos[this.combo] && this.estado == 'jogando') {
 			const aviso = texto(this, this.largura / 2, 96, 'COMBO ' + this.combo + '\n' + marcos[this.combo], 16, '#ff9a3c').setOrigin(0.5).setDepth(12).setScale(0.4)
 			this.tweens.add({ targets: aviso, scale: 1, duration: 260, ease: 'Back.Out' })
 			this.tweens.add({ targets: aviso, alpha: 0, y: 80, delay: 1100, duration: 400, onComplete: () => aviso.destroy() })
@@ -510,11 +510,11 @@ export default class Zumbis {
 		if (this.chao.texture.key != cenario.textura) {
 			this.trocar_cenario(cenario)
 			// abertura de capítulo, como no cinema
-			if (cenario.lema) this.apresentar_chefe(cenario.nome, cenario.lema, '#9ff07a')
+			if (cenario.lema) this.capitulo_pendente = cenario // mostrado no fim do subir_nivel, se não abrir a escolha de melhoria
 		}
 		this.pintar_noite()
 		if (this.m('anjo')) {
-			this.poderes.escudo = Math.max(this.poderes.escudo, 500)
+			this.poderes.escudo = Math.max(this.poderes.escudo, 500 * (this.m('segunda_pele') ? 2 : 1))
 		}
 		if (this.lua_de_sangue) desbloquear(this, 'lua') // passou a fase da lua de sangue
 		// sorteia a lua de sangue para a fase nova (nunca duas seguidas, nem em fase de chefão)
@@ -550,7 +550,18 @@ export default class Zumbis {
 				this.oferecer_melhorias()
 			}
 		}
+		this.mostrar_capitulo()
 		this.atualizar_hud()
+	}
+
+	// abertura de capítulo do cenário novo; se a escolha de melhoria estiver aberta, espera ela fechar
+	mostrar_capitulo() {
+		const cenario = this.capitulo_pendente
+		if (!cenario || this.estado != 'jogando') {
+			return
+		}
+		this.capitulo_pendente = null
+		this.apresentar_chefe(cenario.nome, cenario.lema, '#9ff07a')
 	}
 
 	mover_zumbis() {

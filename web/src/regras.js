@@ -125,6 +125,13 @@ export const ARMAS = {
 		projetil: 'tiro', velocidade: 7, dano: 1, empurra: 7, alcance: 26, chumbo: true,
 		som: { chave: 'explosao', volume: 0.35, rate: 1.9 },
 	},
+	// arco: segure para carregar (carrega = ticks até a carga cheia) e solte para disparar;
+	// a flecha atravessa tudo e o dano cresce com a carga (dano + 6 com a carga cheia)
+	arco: {
+		nome: 'ARCO ÉLFICO', quadro: 9, espera: 12, tiros: 1, abertura: 0, tremida: 0, municao: 30,
+		projetil: 'flecha', velocidade: 9, dano: 2, empurra: 3, atravessa: true, carrega: 70,
+		som: { chave: 'arremesso', volume: 0.5, rate: 1.8 },
+	},
 	// volta = depois de tantos ticks o bumerangue faz a curva e volta para a mão (acerta na ida e na volta)
 	bumerangue: {
 		nome: 'BUMERANGUE', quadro: 7, espera: 40, tiros: 1, abertura: 0, tremida: 0, municao: 25,
@@ -165,6 +172,7 @@ export const ITENS = [
 	{ tipo: 'raio', quadro: 9, peso: 1.5, nivel: 5, texto: 'PULA DE ZUMBI EM ZUMBI' },
 	{ tipo: 'torreta', quadro: 10, peso: 1.2, nivel: 3, texto: 'ATIRA SOZINHA POR 12 SEGUNDOS' },
 	{ tipo: 'bumerangue', quadro: 11, peso: 1.5, nivel: 2, texto: 'VAI E VOLTA, ACERTANDO DUAS VEZES' },
+	{ tipo: 'arco', quadro: 13, peso: 1.3, nivel: 4, texto: 'SEGURE PARA CARREGAR, SOLTE PARA ATIRAR' },
 	{ tipo: 'espingarda', quadro: 12, peso: 1.5, nivel: 3, texto: 'MUITOS CHUMBOS DE PERTO, EMPURRA FORTE' },
 ]
 
