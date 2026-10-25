@@ -1643,6 +1643,9 @@ export default class Jogo extends Phaser.Scene {
 
 	mover_tiros() {
 		for (const tiro of this.tiros) {
+			if (tiro.arma.volta) {
+				this.voar_bumerangue(tiro)
+			}
 			tiro.x += tiro.vx
 			tiro.y += tiro.vy
 			// o foguete pisca a chama
@@ -1695,7 +1698,9 @@ export default class Jogo extends Phaser.Scene {
 			}
 
 			tiro.ha++
-			const saiu = tiro.x < -20 || tiro.x > this.largura + 20 || tiro.y < -20 || tiro.y > ALTURA + 20
+			// o bumerangue pode sair um pouco da tela, porque volta
+		const margem = tiro.arma.volta ? 80 : 20
+		const saiu = tiro.x < -margem || tiro.x > this.largura + margem || tiro.y < -margem || tiro.y > ALTURA + margem
 			if (saiu || (tiro.arma.alcance && tiro.ha >= tiro.arma.alcance)) {
 				tiro.sumiu = true
 			}
@@ -1704,6 +1709,33 @@ export default class Jogo extends Phaser.Scene {
 			}
 		}
 		this.tiros = this.tiros.filter((tiro) => !tiro.sumiu)
+	}
+
+	// bumerangue: gira, e depois de um tempo faz a curva e volta para o elfo; sumiu quando ele pega de volta
+	voar_bumerangue(tiro) {
+		tiro.sprite.rotation += 0.45
+		if (!tiro.voltando && tiro.ha >= tiro.arma.volta) {
+			tiro.voltando = true
+			tiro.acertou.clear() // na volta acerta de novo quem já levou na ida
+		}
+		if (tiro.voltando) {
+			const dx = this.heroi_x + 12 - tiro.x
+			const dy = this.heroi_y + 12 - tiro.y
+			const d = Math.hypot(dx, dy)
+			// vai virando aos poucos na direção do elfo (curva) e acelera
+			const v = Math.min(7, Math.hypot(tiro.vx, tiro.vy) + 0.08)
+			tiro.vx += ((dx / d) * v - tiro.vx) * 0.12
+			tiro.vy += ((dy / d) * v - tiro.vy) * 0.12
+			if (d < 14 || tiro.ha > 400) {
+				tiro.sumiu = true
+				efeito(this, 'item', { volume: 0.25, rate: 1.6 })
+			}
+		}
+		else {
+			// freia no fim da ida
+			tiro.vx *= 0.985
+			tiro.vy *= 0.985
+		}
 	}
 
 	// o tiro bateu em alguém em (x, y): sangue, som e, conforme a arma, some ou explode

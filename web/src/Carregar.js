@@ -58,6 +58,7 @@ export default class Carregar extends Phaser.Scene {
 		this.load.spritesheet('lapide', PASTA + 'lapide.png', { frameWidth: 20, frameHeight: 22 })
 		// torreta montada no chão (o cano é desenhado por cima e gira)
 		this.load.image('torreta', PASTA + 'torreta.png')
+		this.load.image('bumerangue', PASTA + 'bumerangue.png')
 		this.load.spritesheet('mancha', PASTA + 'mancha.png', { frameWidth: 24, frameHeight: 14 })
 
 		// efeitos e músicas são gerados por ferramentas/gerar_sons.mjs

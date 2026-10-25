@@ -88,6 +88,12 @@ export const ARMAS = {
 		projetil: null, velocidade: 0, dano: 3, empurra: 3, especial: 'raio', saltos: 3, alcance: 260,
 		som: { chave: 'raio', volume: 0.55, rate: 1 },
 	},
+	// volta = depois de tantos ticks o bumerangue faz a curva e volta para a mão (acerta na ida e na volta)
+	bumerangue: {
+		nome: 'BUMERANGUE', quadro: 7, espera: 40, tiros: 1, abertura: 0, tremida: 0, municao: 25,
+		projetil: 'bumerangue', velocidade: 5, dano: 2, empurra: 2, atravessa: true, volta: 40,
+		som: { chave: 'arremesso', volume: 0.5, rate: 1.4 },
+	},
 }
 
 // ---------- fúria élfica (tecla E): a barra enche matando e solta um anel de fogo ----------
@@ -121,6 +127,7 @@ export const ITENS = [
 	{ tipo: 'lancachamas', quadro: 8, peso: 1.5, nivel: 4 },
 	{ tipo: 'raio', quadro: 9, peso: 1.5, nivel: 5 },
 	{ tipo: 'torreta', quadro: 10, peso: 1.2, nivel: 3 },
+	{ tipo: 'bumerangue', quadro: 11, peso: 1.5, nivel: 2 },
 ]
 
 // torreta: fica onde o elfo pegou a caixa e atira sozinha no zumbi mais perto
