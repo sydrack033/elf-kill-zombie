@@ -444,6 +444,7 @@ export default class Chefes {
 			'OS SINOS SE CALARAM E OS MORTOS VOLTARAM PARA AS COVAS.',
 			'PELA PRIMEIRA VEZ EM MUITO TEMPO,',
 			'O CEMITÉRIO DORME.',
+			'(O ELFO LENDÁRIO ESTÁ LIBERADO NO TÍTULO)',
 			'OBRIGADO POR JOGAR!',
 		]
 		const meio = this.largura / 2
