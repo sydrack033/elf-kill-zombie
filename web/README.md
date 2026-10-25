@@ -52,7 +52,7 @@ funciona **sem internet** depois da primeira visita.
 - Você começa com 3 vidas (5 no fácil, 2 no difícil). Perde uma quando é mordido, atingido por
   cuspe ou quando um zumbi passa por você.
 - **Caixas** descem rolando: armas (triplo, metralhadora, laser, bazuca, lança-chamas, raio,
-  bumerangue, espingarda), bombas, torreta (atira sozinha por 12 segundos) e poderes (escudo, botas, gelo).
+  bumerangue, espingarda, arco élfico), bombas, torreta (atira sozinha por 12 segundos) e poderes (escudo, botas, gelo).
   Quando a munição acaba, o elfo volta para a pistola.
 - A cada 2 fases (e depois de cada chefão) você escolhe **1 de 3 melhorias**.
 - A cada 5 fases vem um **chefão**: Rei Zumbi, Carniceiro, Podre, Bruxa, Necromante e Demônio
