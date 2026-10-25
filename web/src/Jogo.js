@@ -128,6 +128,7 @@ export default class Jogo extends Phaser.Scene {
 		this.textos = [] // pontos e avisos que sobem e somem: { obj, ha }
 		this.dano_ha = 0 // tela vermelha quando o elfo apanha
 		this.vermelho_heroi = 0 // elfo pintado de vermelho logo depois de apanhar
+		this.parada = 0 // ticks de parada de impacto
 		this.mortes_recentes = [] // ticks das últimas mortes, para o DUPLO! TRIPLO!
 		this.manchas = [] // sangue que fica no chão: { sprite, y, ha }
 
@@ -231,6 +232,7 @@ export default class Jogo extends Phaser.Scene {
 
 		// barra de vida do chefão
 		this.barra_fundo = this.add.rectangle(0, 40, 10, 6, 0x000000, 0.7).setOrigin(0.5, 0).setDepth(10).setVisible(false)
+		this.barra_rastro = this.add.rectangle(0, 41, 10, 4, 0xffe080).setOrigin(0, 0).setDepth(10).setVisible(false)
 		this.barra_vida = this.add.rectangle(0, 41, 10, 4, 0xd02828).setOrigin(0, 0).setDepth(10).setVisible(false)
 		this.barra_nome = texto(this, 0, 29, 'ZUMBI REI', 8, '#ff6a6a').setOrigin(0.5, 0).setDepth(10).setVisible(false)
 
@@ -267,6 +269,7 @@ export default class Jogo extends Phaser.Scene {
 		const largura_barra = Math.min(200, this.largura - 40)
 		this.barra_fundo.setSize(largura_barra + 2, 6)
 		this.barra_vida.x = meio - largura_barra / 2
+		this.barra_rastro.x = meio - largura_barra / 2
 		this.largura_barra = largura_barra
 		this.heroi_x = Phaser.Math.Clamp(this.heroi_x, 0, this.largura - 25)
 		if (this.botao_bomba) {
@@ -620,6 +623,11 @@ export default class Jogo extends Phaser.Scene {
 
 		while (this.tempo_acumulado >= R.TICK_MS && this.estado == 'jogando') {
 			this.tempo_acumulado -= R.TICK_MS
+			// parada de impacto: o jogo congela por alguns ticks num golpe forte
+			if (this.parada > 0) {
+				this.parada--
+				continue
+			}
 			this.entrada()
 			this.processamento()
 			this.saida()
@@ -1149,6 +1157,7 @@ export default class Jogo extends Phaser.Scene {
 			return
 		}
 		this.vidas--
+		this.parada = 6
 		this.apanhou_na_fase = true
 		this.vermelho_heroi = 20 // o elfo fica vermelho por um instante
 		if (navigator.vibrate) {
@@ -1242,6 +1251,9 @@ export default class Jogo extends Phaser.Scene {
 				this.espirrar_sangue(c.x + c.l / 2, c.y + c.a / 2)
 				this.ferir_zumbi(zumbi, dano, 6)
 			}
+		}
+		if (this.stats.mortos - mortos_antes >= 3) {
+			this.parada = Math.max(this.parada, 5)
 		}
 		if (this.stats.mortos - mortos_antes >= 5) {
 			desbloquear(this, 'bomba5')
@@ -1704,6 +1716,8 @@ export default class Jogo extends Phaser.Scene {
 		}
 		this.chefe.sprite = this.add.sprite(this.chefe.x, this.chefe.y, 'chefe', 0).setOrigin(0).setScale(R.CHEFE.escala).setDepth(3)
 		this.barra_nome.setText(this.chefe.nome)
+		this.barra_rastro.setSize(this.largura_barra, 4)
+		this.apresentar_chefe(this.chefe.nome, numero)
 		efeito(this, 'rugido', { volume: 0.9 })
 		tocar_musica(this, 'musica_chefe')
 		this.cameras.main.shake(400, 0.008)
@@ -1717,6 +1731,7 @@ export default class Jogo extends Phaser.Scene {
 		if (chefe.vida <= 0) {
 			chefe.fase = 'morrendo'
 			chefe.morto_ha = 0
+			this.parada = 18
 			this.stats.chefes++
 			desbloquear(this, 'chefe' + (((chefe.numero - 1) % R.CHEFES.length) + 1))
 			const ganho = R.CHEFE.pontos * chefe.numero
@@ -1785,6 +1800,30 @@ export default class Jogo extends Phaser.Scene {
 		if (encostou(c.x, c.y, c.l, c.a, this.heroi_x + 4, this.heroi_y + 2, 17, 22)) {
 			this.levar_dano()
 		}
+	}
+
+	// entrada de cinema: faixas pretas em cima e embaixo e o nome do chefão atravessando a tela
+	apresentar_chefe(nome, numero) {
+		const L = this.largura
+		const faixa_cima = this.add.rectangle(0, 0, L, 0, 0x000000).setOrigin(0).setDepth(9.6)
+		const faixa_baixo = this.add.rectangle(0, ALTURA, L, 0, 0x000000).setOrigin(0, 1).setDepth(9.6)
+		const titulo = texto(this, -150, ALTURA / 2 - 10, nome, 16, '#ff5a5a').setOrigin(0.5).setDepth(9.7)
+		const sub = texto(this, L + 150, ALTURA / 2 + 12, 'CHEFÃO ' + numero, 8, '#ffd34d').setOrigin(0.5).setDepth(9.7)
+		this.tweens.add({ targets: [faixa_cima, faixa_baixo], height: 26, duration: 300 })
+		this.tweens.add({
+			targets: titulo, x: L / 2, duration: 450, ease: 'Back.Out',
+			onComplete: () => this.tweens.add({ targets: titulo, x: L + 200, delay: 1300, duration: 350, ease: 'Back.In' }),
+		})
+		this.tweens.add({
+			targets: sub, x: L / 2, duration: 450, delay: 100, ease: 'Back.Out',
+			onComplete: () => this.tweens.add({ targets: sub, x: -200, delay: 1200, duration: 350, ease: 'Back.In' }),
+		})
+		this.time.delayedCall(2100, () => {
+			this.tweens.add({
+				targets: [faixa_cima, faixa_baixo], height: 0, duration: 300,
+				onComplete: () => [faixa_cima, faixa_baixo, titulo, sub].forEach((o) => o.destroy()),
+			})
+		})
 	}
 
 	// cada ataque tem seu relógio; o chefão só usa os ataques da lista dele
@@ -2219,6 +2258,7 @@ export default class Jogo extends Phaser.Scene {
 		const mostrar_barra = chefe != null && chefe.fase != 'morrendo'
 		this.barra_fundo.setVisible(mostrar_barra)
 		this.barra_vida.setVisible(mostrar_barra)
+		this.barra_rastro.setVisible(mostrar_barra)
 		this.barra_nome.setVisible(mostrar_barra)
 		if (!chefe) {
 			return
@@ -2241,7 +2281,10 @@ export default class Jogo extends Phaser.Scene {
 		const avisando = chefe.investida && chefe.investida.etapa == 'aviso' && Math.floor(this.quadro_atual / 6) % 2 == 0
 		this.pintar(chefe.sprite, chefe.flash, avisando ? 0xff3030 : chefe.cor)
 
-		this.barra_vida.setSize(Math.max(0, (this.largura_barra * chefe.vida) / chefe.vida_max), 4)
+		const largura_vida = Math.max(0, (this.largura_barra * chefe.vida) / chefe.vida_max)
+		this.barra_vida.setSize(largura_vida, 4)
+		// o rastro amarelo vai alcançando a vida aos poucos e mostra o dano recente
+		this.barra_rastro.setSize(Math.max(largura_vida, this.barra_rastro.width - 0.6), 4)
 	}
 
 	desenhar_resto() {
