@@ -19,6 +19,7 @@ const MISSOES = [
 	{ id: 'explosoes', texto: 'MATE 15 ZUMBIS COM EXPLOSÕES', meta: 15, valor: (r) => r.por_explosao },
 	{ id: 'mira', texto: 'TERMINE COM 60% DE PONTARIA (100+ TIROS)', meta: 100, valor: (r) => (r.acertos / Math.max(1, r.disparos) >= 0.6 ? r.disparos : 0), so_no_fim: true },
 	{ id: 'zumbis150', texto: 'MATE 150 ZUMBIS', meta: 150, valor: (r) => r.mortos },
+	{ id: 'saqueadores', texto: 'PEGUE 2 SAQUEADORES', meta: 2, valor: (r) => r.por_tipo.saqueador || 0 },
 ]
 
 export function dia_de_hoje() {
