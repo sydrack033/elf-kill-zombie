@@ -222,6 +222,7 @@ export default class Melhorias {
 			this.estado = 'pausado'
 			this.escurecer.setVisible(true)
 			this.sound.pauseAll()
+			this.tweens.pauseAll() // faixas, avisos e efeitos esperam a pausa acabar
 			// o aviso de fase e a dica ficam escondidos atrás do menu
 			this.aviso.setAlpha(0)
 			this.dica_texto.setAlpha(0)
@@ -231,6 +232,7 @@ export default class Melhorias {
 			this.estado = 'jogando'
 			this.escurecer.setVisible(false)
 			this.sound.resumeAll()
+			this.tweens.resumeAll()
 			this.aviso.setAlpha(1)
 			this.dica_texto.setAlpha(1)
 			for (const objeto of this.menu_pausa) {
@@ -244,6 +246,7 @@ export default class Melhorias {
 	sair_para_menu() {
 		if (this.estado == 'pausado') {
 			this.sound.resumeAll()
+			this.tweens.resumeAll()
 			this.scene.start('Titulo')
 		}
 	}
@@ -252,6 +255,7 @@ export default class Melhorias {
 	reiniciar_da_pausa() {
 		if (this.estado == 'pausado') {
 			this.sound.resumeAll()
+			this.tweens.resumeAll()
 			this.scene.restart()
 		}
 	}
