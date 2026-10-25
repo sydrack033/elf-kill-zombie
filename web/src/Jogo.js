@@ -134,7 +134,9 @@ export default class Jogo extends Phaser.Scene {
 		this.coracoes = [] // corações caindo para pegar: { sprite, x, y }
 		this.itens = [] // caixas: { sprite, tipo, x, y }
 		this.lapides_quebradas = 0
-		this.moedas_extras = 0 // moedas dos zumbis de elite, somadas no fim
+		this.moedas_extras = 0 // moedas dos zumbis de elite e das hordas, somadas no fim
+		this.horda = null // { ha, zumbis } enquanto a horda está vindo
+		this.horda_na_fase = 0
 		this.torretas = [] // torretas montadas: { x, y, base, cano, barra, ha, espera }
 		this.proximo_item = 500
 		this.textos = [] // pontos e avisos que sobem e somem: { obj, ha }
@@ -1009,6 +1011,7 @@ export default class Jogo extends Phaser.Scene {
 		this.soltar_furia()
 		this.jogar_bomba()
 		this.criar_zumbis()
+		this.mover_horda()
 		this.chamar_chefe()
 		this.criar_revoada()
 		this.criar_itens()
@@ -1769,8 +1772,8 @@ export default class Jogo extends Phaser.Scene {
 	// ------------------------------------------------------------------ zumbis
 
 	criar_zumbis() {
-		// enquanto o chefão está na tela (ou chegando), só ele manda zumbis
-		if (this.chefe || this.chefe_em > 0) {
+		// enquanto o chefão está na tela (ou chegando), só ele manda zumbis; na horda, só ela
+		if (this.chefe || this.chefe_em > 0 || (this.horda && this.horda.ha < R.HORDA.duracao)) {
 			return
 		}
 		this.proximo_zumbi--
@@ -1804,6 +1807,42 @@ export default class Jogo extends Phaser.Scene {
 		const zumbi = this.criar_zumbi(tipo, Phaser.Math.Between(0, Math.max(0, Math.floor(this.largura - tamanho))), -tamanho)
 		if (this.nivel >= R.ELITE.a_partir_da_fase && Math.random() < R.ELITE.chance) {
 			this.tornar_elite(zumbi)
+		}
+	}
+
+	comecar_horda() {
+		this.horda = { ha: 0, zumbis: [] }
+		this.horda_na_fase = this.nivel
+		this.anunciar('HORDA!', 220, '#ff5a5a')
+		efeito(this, 'rugido', { volume: 0.9, rate: 0.85 })
+		this.tremer(500, 0.006)
+	}
+
+	// durante a horda os zumbis vêm em sequência; acabou quando o último da horda cair (ou fugir)
+	mover_horda() {
+		const h = this.horda
+		if (!h || this.estado != 'jogando') {
+			return
+		}
+		h.ha++
+		if (h.ha < R.HORDA.duracao && h.ha % R.HORDA.a_cada == 0) {
+			const tipo = Math.random() < 0.3 && this.nivel >= 2 ? 'corredor' : 'comum'
+			const tamanho = 44 * R.ZUMBIS[tipo].escala
+			const zumbi = this.criar_zumbi(tipo, Phaser.Math.Between(0, Math.max(0, Math.floor(this.largura - tamanho))), -tamanho)
+			zumbi.horda = true
+			h.zumbis.push(zumbi)
+		}
+		if (h.ha >= R.HORDA.duracao && h.zumbis.every((z) => z.morrendo || z.fugiu || !this.zumbis.includes(z))) {
+			this.horda = null
+			this.anunciar('HORDA DERROTADA!', 220, '#9ff07a')
+			efeito(this, 'combo', { volume: 0.7, rate: 0.8 })
+			// prêmio: duas caixas, um coração e moedas
+			const meio = this.largura / 2
+			this.soltar_item(meio - 30, -16)
+			this.soltar_item(meio + 14, -30)
+			this.soltar_coracao(meio - 7, -50)
+			this.moedas_extras += R.HORDA.moedas
+			this.flutuar(meio, ALTURA / 2 - 30, '+' + R.HORDA.moedas + ' MOEDAS', '#ffd34d')
 		}
 	}
 
@@ -1979,7 +2018,12 @@ export default class Jogo extends Phaser.Scene {
 		// em nível de chefão as mortes não contam para subir de nível
 		if (this.chefe == null && this.chefe_em == 0) {
 			this.mortes_no_nivel++
-			if (this.mortes_no_nivel >= R.MORTES_POR_NIVEL(this.nivel)) {
+			// na metade de algumas fases começa a horda
+			const meta = R.MORTES_POR_NIVEL(this.nivel)
+			if (this.nivel % 5 == R.HORDA.fase && this.nivel >= R.HORDA.a_partir_da_fase && !this.horda && this.horda_na_fase != this.nivel && this.mortes_no_nivel == Math.floor(meta / 2) && !this.modo_chefes) {
+				this.comecar_horda()
+			}
+			if (this.mortes_no_nivel >= meta) {
 				this.subir_nivel()
 			}
 		}

@@ -185,6 +185,9 @@ export const ZUMBIS = {
 	},
 }
 
+// horda: na metade das fases 8, 13, 18... vem uma enxurrada de zumbis; quem sobrevive ganha um prêmio
+export const HORDA = { fase: 3, a_partir_da_fase: 8, duracao: 400, a_cada: 15, moedas: 10 }
+
 // elite: às vezes um zumbi vem dourado, maior e bem mais forte; vale mais pontos, sempre solta uma caixa e dá moedas
 export const ELITE = { a_partir_da_fase: 4, chance: 0.04, vida: 4, escala: 1.2, pontos: 5, moedas: 5 }
 
