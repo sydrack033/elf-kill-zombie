@@ -445,6 +445,7 @@ export default class Zumbis {
 		this.encher_furia(R.FURIA.por_morte)
 		if (this.stats.mortos >= 100) desbloquear(this, 'cem')
 		if (this.combo >= 20) desbloquear(this, 'combo20')
+		if (this.combo >= 100) desbloquear(this, 'combo100')
 		// marcos do combo: aviso grande que pula na tela
 		const marcos = { 10: 'EMBALADO!  +1 BOMBA', 25: 'IMPARÁVEL!  ESCUDO', 50: 'LENDÁRIO!  FÚRIA CHEIA', 100: 'DEUS DOS ELFOS!  +1 VIDA' }
 		// cada marco dá um presente (mesmo se a escolha de melhoria abrir junto; só o aviso fica de fora)
@@ -592,6 +593,7 @@ export default class Zumbis {
 		if (this.nivel >= 10 && de_verdade) desbloquear(this, 'fase10')
 		if (this.nivel >= 20 && de_verdade) desbloquear(this, 'fase20')
 		if (this.nivel >= 10 && this.mod.vidro && de_verdade) desbloquear(this, 'vidro10')
+		if (this.nivel >= 10 && this.diario && de_verdade) desbloquear(this, 'diario10')
 		this.mortes_no_nivel = 0
 		const fase_de_chefao = this.nivel % R.NIVEIS_ENTRE_CHEFOES == 0
 		if (fase_de_chefao) {

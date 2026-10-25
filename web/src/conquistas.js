@@ -31,6 +31,8 @@ export const CONQUISTAS = [
 	{ id: 'covas5', nome: 'FECHA-COVAS', texto: 'QUEBRE 5 COVAS ABERTAS NUMA PARTIDA' },
 	{ id: 'treino', nome: 'TREINADO', texto: 'VENÇA UM TREINO DE CHEFÃO NO BESTIÁRIO' },
 	{ id: 'vidro10', nome: 'VIDRO BLINDADO', texto: 'CHEGUE À FASE 10 COMO ELFO DE VIDRO' },
+	{ id: 'combo100', nome: 'DEUS DOS ELFOS', texto: 'FAÇA UM COMBO DE 100' },
+	{ id: 'diario10', nome: 'CARTEIRO DA MORTE', texto: 'CHEGUE À FASE 10 NA PARTIDA DO DIA' },
 ]
 
 const CHAVE = 'elf-kill-zombie-conquistas'
