@@ -3,6 +3,7 @@
 import Phaser from 'phaser'
 import { ALTURA, texto } from '../tela.js'
 import * as R from '../regras.js'
+import { efeito } from '../opcoes.js'
 
 export default class Hud {
 	// ------------------------------------------------------------------ HUD
@@ -88,7 +89,14 @@ export default class Hud {
 			coracao.setVisible(i < Math.max(this.dificuldade.vidas, this.vidas))
 			coracao.setFrame(i < this.vidas ? 0 : 1)
 		})
-		this.hud_pontos.setText('PONTOS ' + String(this.pontos).padStart(6, '0'))
+		// passou do recorde: os pontos ficam dourados (e o recorde acompanha)
+		const acima = this.recorde > 0 && this.pontos > this.recorde && !this.treino
+		this.hud_pontos.setText((acima ? 'RECORDE! ' : '') + 'PONTOS ' + String(this.pontos).padStart(6, '0')).setColor(acima ? '#ffd34d' : '#ffffff')
+		if (acima && !this.avisou_recorde) {
+			this.avisou_recorde = true
+			this.flutuar(this.largura - 50, 24, 'NOVO RECORDE!', '#ffd34d')
+			efeito(this, 'combo', { volume: 0.6, rate: 1.4 })
+		}
 		this.hud_nivel.setText('FASE ' + this.nivel)
 		const em_chefe = this.chefe != null || this.chefe_em > 0
 		this.hud_progresso.setSize(em_chefe ? 50 : (50 * this.mortes_no_nivel) / R.MORTES_POR_NIVEL(this.nivel), 2)
