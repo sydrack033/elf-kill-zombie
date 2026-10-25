@@ -558,6 +558,13 @@ export default class Jogo extends Phaser.Scene {
 		}
 	}
 
+	// a tela só treme se o jogador não desligou isso nas opções
+	tremer(duracao, intensidade) {
+		if (opcoes.tremor) {
+			this.cameras.main.shake(duracao, intensidade)
+		}
+	}
+
 	// menu da pausa: volume da música e dos efeitos (setas, mouse, toque ou controle)
 	mostrar_menu_pausa() {
 		const meio = this.largura / 2
@@ -567,6 +574,7 @@ export default class Jogo extends Phaser.Scene {
 		const linhas = [
 			{ rotulo: 'MÚSICA', chave: 'musica' },
 			{ rotulo: 'EFEITOS', chave: 'efeitos' },
+			{ rotulo: 'TREMOR', chave: 'tremor', liga: true }, // liga e desliga a tela tremendo
 		]
 		linhas.forEach((linha, i) => {
 			const y = ALTURA / 2 - 30 + i * 22
@@ -574,19 +582,21 @@ export default class Jogo extends Phaser.Scene {
 			const menos = texto(this, meio - 38, y, '<', 8).setOrigin(0.5).setDepth(11).setInteractive({ useHandCursor: true })
 			const mais = texto(this, meio + 62, y, '>', 8).setOrigin(0.5).setDepth(11).setInteractive({ useHandCursor: true })
 			const barras = []
-			for (let b = 0; b < 10; b++) {
+			for (let b = 0; b < (linha.liga ? 0 : 10); b++) {
 				barras.push(this.add.rectangle(meio - 28 + b * 9, y, 7, 6, 0xffffff).setDepth(11))
 			}
+			const valor = linha.liga ? texto(this, meio + 12, y, '', 8).setOrigin(0.5).setDepth(11) : null
+			if (valor) objetos.push(valor)
 			// stopPropagation: o toque na seta não conta como "toque para continuar"
 			menos.on('pointerdown', (p, x, y2, ev) => { ev.stopPropagation(); this.mudar_volume(i, -0.1) })
 			mais.on('pointerdown', (p, x, y2, ev) => { ev.stopPropagation(); this.mudar_volume(i, 0.1) })
 			objetos.push(rotulo, menos, mais, ...barras)
-			this.linhas_menu.push({ ...linha, rotulo, barras })
+			this.linhas_menu.push({ ...linha, rotulo, barras, valor })
 		})
 		const ajuda = this.modo_toque
 			? 'TOQUE FORA PARA CONTINUAR'
 			: 'SETAS: AJUSTAR\nP OU ESC: CONTINUAR   T: SAIR PARA O MENU'
-		objetos.push(texto(this, meio, ALTURA / 2 + 40, ajuda, 8, '#cfcfcf').setOrigin(0.5, 0).setDepth(11))
+		objetos.push(texto(this, meio, ALTURA / 2 + 50, ajuda, 8, '#cfcfcf').setOrigin(0.5, 0).setDepth(11))
 		this.menu_pausa = objetos
 		this.linha_escolhida = 0
 		this.desenhar_menu_pausa()
@@ -596,6 +606,9 @@ export default class Jogo extends Phaser.Scene {
 		this.linhas_menu.forEach((linha, i) => {
 			const valor = Math.round(opcoes[linha.chave] * 10)
 			linha.rotulo.setColor(i == this.linha_escolhida ? '#ffd34d' : '#ffffff')
+			if (linha.liga) {
+				linha.valor.setText(opcoes[linha.chave] ? 'LIGADO' : 'DESLIGADO').setColor(opcoes[linha.chave] ? '#9ff07a' : '#ff6a6a')
+			}
 			linha.barras.forEach((barra, b) => barra.setFillStyle(b < valor ? 0x9ff07a : 0x3a3a44))
 		})
 	}
@@ -603,6 +616,13 @@ export default class Jogo extends Phaser.Scene {
 	mudar_volume(i, quanto) {
 		const linha = this.linhas_menu[i]
 		this.linha_escolhida = i
+		if (linha.liga) {
+			opcoes[linha.chave] = !opcoes[linha.chave]
+			gravar_opcoes()
+			efeito(this, 'combo', { volume: 0.6 })
+			this.desenhar_menu_pausa()
+			return
+		}
 		opcoes[linha.chave] = Math.round(Phaser.Math.Clamp(opcoes[linha.chave] + quanto, 0, 1) * 10) / 10
 		gravar_opcoes()
 		if (linha.chave == 'musica') {
@@ -1329,7 +1349,7 @@ export default class Jogo extends Phaser.Scene {
 		}
 		this.invencivel = Math.max(this.invencivel, 80)
 		this.cameras.main.flash(250, 255, 160, 255)
-		this.cameras.main.shake(250, 0.008)
+		this.tremer(250, 0.008)
 		efeito(this, 'explosao', { volume: 0.7, rate: 1.4 })
 		efeito(this, 'poder', { volume: 0.6, rate: 0.7 })
 	}
@@ -1344,7 +1364,7 @@ export default class Jogo extends Phaser.Scene {
 				const c = corpo(z)
 				return { alvo: z, x: c.x + c.l / 2, y: c.y + c.a / 2 }
 			})
-			if (this.chefe && this.chefe.fase != 'morrendo' && !alvos.includes(this.chefe)) {
+			if (this.chefe && this.chefe.fase != 'morrendo' && !this.chefe.intangivel && !alvos.includes(this.chefe)) {
 				const c = corpo_chefe(this.chefe)
 				lista.push({ alvo: this.chefe, x: c.x + c.l / 2, y: c.y + c.a / 2 })
 			}
@@ -1427,7 +1447,7 @@ export default class Jogo extends Phaser.Scene {
 		this.combo = 0
 		this.combo_ha = 0
 		this.multiplicador = 1
-		this.cameras.main.shake(200, 0.01)
+		this.tremer(200, 0.01)
 		efeito(this, 'perder_vida', { volume: 0.7 })
 		this.atualizar_hud()
 		if (this.vidas == 0) {
@@ -1492,7 +1512,7 @@ export default class Jogo extends Phaser.Scene {
 	explodir(x, y, raio, dano, com_som = true, fere_heroi = false) {
 		const sprite = this.add.sprite(x, y, 'explosao', 0).setDepth(7).setScale(raio / R.RAIO_DA_EXPLOSAO)
 		this.explosoes.push({ sprite, ha: 0 })
-		this.cameras.main.shake(150, 0.004 + raio / 10000)
+		this.tremer(150, 0.004 + raio / 10000)
 		if (com_som) {
 			efeito(this, 'explosao', { volume: 0.8, rate: raio < R.RAIO_DA_EXPLOSAO ? 1.25 : 1 })
 		}
@@ -1517,7 +1537,7 @@ export default class Jogo extends Phaser.Scene {
 		if (this.stats.mortos - mortos_antes >= 5) {
 			desbloquear(this, 'bomba5')
 		}
-		if (this.chefe && this.chefe.fase != 'morrendo') {
+		if (this.chefe && this.chefe.fase != 'morrendo' && !this.chefe.intangivel) {
 			const c = corpo_chefe(this.chefe)
 			if (Phaser.Math.Distance.Between(x, y, c.x + c.l / 2, c.y + c.a / 2) <= raio + c.l / 2) {
 				this.ferir_chefe(dano, x, y)
@@ -1560,7 +1580,7 @@ export default class Jogo extends Phaser.Scene {
 				}
 			}
 
-			if (!tiro.sumiu && this.chefe && this.chefe.fase != 'morrendo' && !tiro.acertou.has(this.chefe)) {
+			if (!tiro.sumiu && this.chefe && this.chefe.fase != 'morrendo' && !this.chefe.intangivel && !tiro.acertou.has(this.chefe)) {
 				const c = corpo_chefe(this.chefe)
 				if (encostou(tiro.x - 4, tiro.y - 4, 8, 8, c.x, c.y, c.l, c.a)) {
 					this.acertar(tiro, tiro.x, tiro.y)
@@ -1821,7 +1841,7 @@ export default class Jogo extends Phaser.Scene {
 					zumbi.sprite.setVisible(true).setAlpha(0)
 					this.tweens.add({ targets: zumbi.sprite, alpha: 1, duration: 300 })
 					efeito(this, 'cuspe', { volume: 0.5, rate: 0.45 })
-					this.cameras.main.shake(120, 0.004)
+					this.tremer(120, 0.004)
 				}
 				continue
 			}
@@ -1990,7 +2010,7 @@ export default class Jogo extends Phaser.Scene {
 			nome: tipo.nome + (romanos[volta] ?? ' ' + volta),
 			cor: tipo.cor,
 			// do 4º chefão em diante ele usa todos os ataques
-			ataques: numero > R.CHEFES.length ? ['cuspe', 'chamar', 'investida', 'chuva'] : tipo.ataques,
+			ataques: numero > R.CHEFES.length ? ['cuspe', 'chamar', 'investida', 'chuva', 'teleporte', 'fantasmas'] : tipo.ataques,
 			x: this.largura / 2 - tamanho / 2,
 			y: -tamanho,
 			vida,
@@ -2003,6 +2023,9 @@ export default class Jogo extends Phaser.Scene {
 			espera_chamar: 400,
 			espera_investida: 300,
 			espera_chuva: 250,
+			espera_teleporte: 250,
+			espera_fantasmas: 400,
+			teleporte: null, // { ha } enquanto some e aparece em outro lugar
 			investida: null, // { etapa: 'aviso' | 'descendo' | 'voltando', ha, alvo_x, alvo_y }
 			morto_ha: 0,
 		}
@@ -2012,7 +2035,7 @@ export default class Jogo extends Phaser.Scene {
 		this.apresentar_chefe(this.chefe.nome, numero)
 		efeito(this, 'rugido', { volume: 0.9 })
 		tocar_musica(this, 'musica_chefe')
-		this.cameras.main.shake(400, 0.008)
+		this.tremer(400, 0.008)
 	}
 
 	ferir_chefe(dano, x, y) {
@@ -2081,6 +2104,17 @@ export default class Jogo extends Phaser.Scene {
 		else {
 			// anda de um lado para o outro na parte de cima, balançando
 			chefe.ha++
+			if (chefe.teleporte) {
+				chefe.teleporte.ha++
+				if (chefe.teleporte.ha == 30) {
+					chefe.ha += Phaser.Math.Between(150, 500) // reaparece em outro ponto do balanço
+				}
+				chefe.intangivel = chefe.teleporte.ha > 12 && chefe.teleporte.ha < 48
+				if (chefe.teleporte.ha >= 60) {
+					chefe.teleporte = null
+					chefe.intangivel = false
+				}
+			}
 			const amplitude = Math.max(0, this.largura / 2 - tamanho / 2 - 10)
 			chefe.x = this.largura / 2 - tamanho / 2 + Math.sin(chefe.ha / (140 - chefe.numero * 10)) * amplitude
 			chefe.y = 48 + Math.sin(chefe.ha / 37) * 8
@@ -2090,7 +2124,7 @@ export default class Jogo extends Phaser.Scene {
 			chefe.atacando--
 
 		const c = corpo_chefe(chefe)
-		if (this.encosta_em_heroi(c.x, c.y, c.l, c.a)) {
+		if (!chefe.intangivel && this.encosta_em_heroi(c.x, c.y, c.l, c.a)) {
 			this.levar_dano()
 		}
 	}
@@ -2161,6 +2195,22 @@ export default class Jogo extends Phaser.Scene {
 			chefe.espera_investida = Math.max(300, 520 - chefe.numero * 30)
 			efeito(this, 'rugido', { volume: 0.7, rate: 1.3 })
 		}
+
+		chefe.espera_teleporte--
+		if (tem('teleporte') && chefe.espera_teleporte <= 0 && !chefe.teleporte) {
+			chefe.teleporte = { ha: 0 }
+			chefe.espera_teleporte = Math.max(220, 360 - chefe.numero * 15)
+			efeito(this, 'fantasma', { volume: 0.6, rate: 0.6 })
+		}
+
+		chefe.espera_fantasmas--
+		if (tem('fantasmas') && chefe.espera_fantasmas <= 0) {
+			for (let i = 0; i < 2; i++) {
+				this.criar_zumbi('fantasma', Phaser.Math.Clamp(c.x + Math.random() * c.l - 22, 0, this.largura - 44), c.y + c.a - 30)
+			}
+			chefe.atacando = 40
+			chefe.espera_fantasmas = 520
+		}
 	}
 
 	// investida: treme vermelho por um tempo (dá para fugir), desce correndo e volta para o lugar
@@ -2175,7 +2225,7 @@ export default class Jogo extends Phaser.Scene {
 				const alvo = Phaser.Utils.Array.GetRandom(this.herois())
 				inv.alvo_x = Phaser.Math.Clamp(alvo.x + 12 - tamanho / 2, 0, this.largura - tamanho)
 				inv.alvo_y = ALTURA - tamanho - 10
-				this.cameras.main.shake(300, 0.006)
+				this.tremer(300, 0.006)
 			}
 		}
 		else if (inv.etapa == 'descendo') {
@@ -2185,7 +2235,7 @@ export default class Jogo extends Phaser.Scene {
 			const v = 3.5 + chefe.numero * 0.2
 			if (d <= v) {
 				inv.etapa = 'voltando'
-				this.cameras.main.shake(200, 0.01)
+				this.tremer(200, 0.01)
 			}
 			else {
 				chefe.x += (dx / d) * v
@@ -2324,7 +2374,7 @@ export default class Jogo extends Phaser.Scene {
 			this.espirrar_sangue(this.heroi_x + 6 + i * 6, this.heroi_y + 8 + (i % 2) * 6)
 		}
 		this.deixar_mancha(this.heroi_x + 12, this.heroi_y + 24)
-		this.cameras.main.shake(400, 0.012)
+		this.tremer(400, 0.012)
 		this.tweens.add({ targets: this.heroi, angle: 90, duration: 500, ease: 'Bounce.Out' })
 		this.tweens.add({ targets: this.heroi, alpha: 0.35, delay: 400, duration: 600 })
 		if (this.p2) {
@@ -2614,6 +2664,8 @@ export default class Jogo extends Phaser.Scene {
 		// avisando a investida: pisca vermelho
 		const avisando = chefe.investida && chefe.investida.etapa == 'aviso' && Math.floor(this.quadro_atual / 6) % 2 == 0
 		this.pintar(chefe.sprite, chefe.flash, avisando ? 0xff3030 : chefe.cor)
+		const tp = chefe.teleporte
+		chefe.sprite.setAlpha(tp ? (tp.ha < 30 ? 1 - tp.ha / 30 : (tp.ha - 30) / 30) : 1)
 
 		const largura_vida = Math.max(0, (this.largura_barra * chefe.vida) / chefe.vida_max)
 		this.barra_vida.setSize(largura_vida, 4)

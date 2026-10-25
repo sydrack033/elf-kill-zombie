@@ -19,7 +19,7 @@ export default class ConquistasCena extends Phaser.Scene {
 
 		CONQUISTAS.forEach((c, i) => {
 			const tem = feitas.has(c.id)
-			const y = 46 + i * 22
+			const y = 42 + i * 21
 			const trofeu = this.add.sprite(0, y + 6, 'trofeu', tem ? 0 : 1)
 			const nome = texto(this, 0, y, c.nome, 8, tem ? '#ffd34d' : '#8a8a90')
 			const desc = texto(this, 0, y + 10, c.texto, 8, tem ? '#ffffff' : '#6a6a70')

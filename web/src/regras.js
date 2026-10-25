@@ -18,7 +18,7 @@ export const ELFOS = [
 	{ id: 'noturno', nome: 'ELFO NOTURNO', cor: 0x8aa0ff, conquistas: 3 },
 	{ id: 'fogo', nome: 'ELFO DE FOGO', cor: 0xff9a6a, conquistas: 6 },
 	{ id: 'ouro', nome: 'ELFO DOURADO', cor: 0xffe070, conquistas: 10 },
-	{ id: 'sombrio', nome: 'ELFO SOMBRIO', cor: 0x7a6a8a, conquistas: 14 },
+	{ id: 'sombrio', nome: 'ELFO SOMBRIO', cor: 0x7a6a8a, conquistas: 15 },
 ]
 
 // ---------- elfo ----------
@@ -201,4 +201,6 @@ export const CHEFES = [
 	{ nome: 'O REI ZUMBI', cor: null, ataques: ['cuspe', 'chamar'] },
 	{ nome: 'O CARNICEIRO', cor: 0xff9a9a, ataques: ['cuspe', 'investida'] },
 	{ nome: 'O PODRE', cor: 0xa8ff8a, ataques: ['cuspe', 'chuva', 'chamar'] },
+	// teleporte = some e aparece em outro lugar; fantasmas = chama zumbis fantasmas
+	{ nome: 'A BRUXA', cor: 0xd08aff, ataques: ['cuspe', 'teleporte', 'fantasmas'] },
 ]

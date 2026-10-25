@@ -10,6 +10,7 @@ export const CONQUISTAS = [
 	{ id: 'chefe1', nome: 'O REI CAIU', texto: 'DERROTE O REI ZUMBI' },
 	{ id: 'chefe2', nome: 'AÇOUGUE FECHADO', texto: 'DERROTE O CARNICEIRO' },
 	{ id: 'chefe3', nome: 'LIMPEZA', texto: 'DERROTE O PODRE' },
+	{ id: 'chefe4', nome: 'CAÇA ÀS BRUXAS', texto: 'DERROTE A BRUXA' },
 	{ id: 'fase10', nome: 'SOBREVIVENTE', texto: 'CHEGUE À FASE 10' },
 	{ id: 'fase20', nome: 'LENDA DO CEMITÉRIO', texto: 'CHEGUE À FASE 20' },
 	{ id: 'bomba5', nome: 'BOMBARDEIO', texto: 'MATE 5 ZUMBIS COM UMA EXPLOSÃO' },
