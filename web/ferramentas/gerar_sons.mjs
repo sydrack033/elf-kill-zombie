@@ -463,3 +463,30 @@ salvar('moeda', gerar(0.22, (t, p, osc) => quadrada(osc(p < 0.35 ? 988 : 1319)) 
 		canal_bateria(rep('k - - - h - - - s - - - h - h -', 24), { volume: 0.22, bpm }),
 	))
 }
+
+// ---------------------------------------------------------------- música do chefão final (dó menor, 150 bpm, órgão e bateria pesada)
+// (também no fim do arquivo, pelo mesmo motivo da música do gelo)
+
+{
+	const bpm = 150
+	const melodia = [
+		'C5 . . . D#5 . . . G5 . . . F#5 . G5 .',
+		'G#5 . . . G5 . . . F5 . . . D#5 . D5 .',
+		'C5 . . . D#5 . . . G5 . . . C6 . . .',
+		'B5 . . . . . . . G5 . . . . . . .',
+		'G#5 . . . . . G5 . F5 . . . . . D#5 .',
+		'F5 . . . . . D#5 . D5 . . . . . C5 .',
+		'D5 . . . D#5 . F5 . G5 . . . G#5 . B5 .',
+		'C6 . . . . . . . - - - - - - - -',
+	]
+	const acordes = [['C3', 'D#3', 'G3'], ['G#2', 'C3', 'D#3'], ['C3', 'D#3', 'G3'], ['G2', 'B2', 'D3'],
+		['F2', 'G#2', 'C3'], ['G#2', 'C3', 'D#3'], ['G2', 'B2', 'D3'], ['C3', 'D#3', 'G3']]
+	const raizes = ['C2', 'G#1', 'C2', 'G1', 'F1', 'G#1', 'G1', 'C2']
+	const baixo_martelo = (n) => [n, n, n, '-', n, n, n, '-', n, n, n, '-', n, '-', n, n].join(' ')
+	salvar('musica_final', misturar(
+		canal_melodico([...melodia, ...melodia], { onda: 'serra', volume: 0.12, bpm, queda: 0.3, sustento: 0.7, vibrato: 0.012 }),
+		canal_melodico([...acordes, ...acordes].map((a) => arpejo(a, [0, 1, 2, 1, 0, 2])), { onda: 'quadrada', volume: 0.07, bpm, queda: 0.1, sustento: 0.3 }),
+		canal_melodico([...raizes, ...raizes].map(baixo_martelo), { onda: 'triangulo', volume: 0.32, bpm, queda: 0.05, sustento: 0.6 }),
+		canal_bateria(rep('k k s - k h s h k k s - k s s s', 16), { volume: 0.42, bpm }),
+	))
+}

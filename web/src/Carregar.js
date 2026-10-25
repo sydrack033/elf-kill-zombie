@@ -73,7 +73,7 @@ export default class Carregar extends Phaser.Scene {
 		}
 		// músicas comprimidas (ferramentas/comprimir_musicas.mjs): o navegador fica com o OGG ou, se não
 		// souber tocar (Safari antigo), com o MP3
-		const musicas = ['titulo', 'jogo', 'chefe', 'pantano', 'ruinas', 'inferno', 'gelo']
+		const musicas = ['titulo', 'jogo', 'chefe', 'pantano', 'ruinas', 'inferno', 'gelo', 'final']
 		for (const musica of musicas) {
 			this.load.audio('musica_' + musica, ['assets/sons/musica_' + musica + '.ogg', 'assets/sons/musica_' + musica + '.mp3'])
 		}

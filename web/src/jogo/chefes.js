@@ -69,7 +69,7 @@ export default class Chefes {
 		this.barra_rastro.setSize(this.largura_barra, 4)
 		this.apresentar_chefe(this.chefe.nome, numero)
 		efeito(this, 'rugido', { volume: 0.9 })
-		tocar_musica(this, 'musica_chefe')
+		tocar_musica(this, final ? 'musica_final' : 'musica_chefe')
 		this.tremer(400, 0.008)
 	}
 
