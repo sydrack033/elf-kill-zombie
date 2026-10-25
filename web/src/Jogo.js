@@ -236,6 +236,9 @@ export default class Jogo extends Phaser.Scene {
 		}
 		const meio = this.largura / 2
 		this.chao.setSize(this.largura, ALTURA)
+		if (this.chao_velho && this.chao_velho.active) {
+			this.chao_velho.setSize(this.largura, ALTURA)
+		}
 		this.hud_pontos.x = this.largura - 8
 		this.hud_combo.x = this.largura - 8
 		this.hud_poderes.x = this.largura - 8
@@ -400,7 +403,7 @@ export default class Jogo extends Phaser.Scene {
 		this.tempo_acumulado = 0
 		this.sound.play('item', { volume: 0.6, rate: 0.8 })
 		this.flutuar(this.heroi_x + 12, this.heroi_y - 8, mel.nome + '!', '#c08aff')
-		this.anunciar('FASE ' + this.nivel)
+		this.anunciar(this.texto_da_fase || 'FASE ' + this.nivel, 250)
 		this.atualizar_hud_melhorias()
 		this.atualizar_hud()
 	}
@@ -454,13 +457,43 @@ export default class Jogo extends Phaser.Scene {
 		this.textos.push({ obj, ha: 0 })
 	}
 
-	// o chão vai escurecendo conforme o nível sobe, como se a noite chegasse
+	// em cada cenário o chão vai escurecendo conforme as fases passam, como se a noite chegasse
 	pintar_noite() {
-		const t = Math.min(1, (this.nivel - 1) / 9)
+		const cenario = this.cenario()
+		const t = Math.min(1, (this.nivel - cenario.a_partir_da_fase) / 9)
 		const dia = Phaser.Display.Color.ValueToColor(0xffffff)
 		const noite = Phaser.Display.Color.ValueToColor(0x6a72a8)
 		const c = Phaser.Display.Color.Interpolate.ColorWithColor(dia, noite, 100, t * 100)
 		this.chao.setTint(Phaser.Display.Color.GetColor(c.r, c.g, c.b))
+	}
+
+	// o cenário da fase atual (cemitério, pântano...)
+	cenario() {
+		let atual = R.CENARIOS[0]
+		for (const c of R.CENARIOS) {
+			if (this.nivel >= c.a_partir_da_fase) atual = c
+		}
+		return atual
+	}
+
+	// troca o chão aos poucos: o novo aparece por cima do velho e o velho some
+	trocar_cenario(cenario) {
+		const velho = this.chao
+		const novo = this.add.tileSprite(0, 0, this.largura, ALTURA, cenario.textura).setOrigin(0).setDepth(0.1).setAlpha(0)
+		novo.tilePositionY = velho.tilePositionY
+		this.chao = novo
+		this.pintar_noite()
+		this.tweens.add({
+			targets: novo,
+			alpha: 1,
+			duration: 2500,
+			onComplete: () => {
+				velho.destroy()
+				novo.setDepth(0)
+			},
+		})
+		// o velho continua rolando junto até sumir
+		this.chao_velho = velho
 	}
 
 	pausar() {
@@ -748,6 +781,9 @@ export default class Jogo extends Phaser.Scene {
 		this.contar_tempos()
 
 		this.chao.tilePositionY -= R.ROLAGEM_DO_CHAO // o chão rola para dar a impressão de que o elfo avança
+		if (this.chao_velho && this.chao_velho.active) {
+			this.chao_velho.tilePositionY -= R.ROLAGEM_DO_CHAO
+		}
 	}
 
 	// ------------------------------------------------------------------ manchas, chuva e relâmpagos
@@ -773,14 +809,35 @@ export default class Jogo extends Phaser.Scene {
 		this.manchas = this.manchas.filter((mancha) => !mancha.sumiu)
 	}
 
-	// da fase 6 em diante chove, e cada vez mais forte; de vez em quando cai um raio
+	// da 6ª fase de cada cenário em diante chove (cada vez mais forte) e de vez em quando cai um raio;
+	// no inferno, em vez de chuva, sobem brasas o tempo todo
 	mover_chuva() {
-		const quantas = this.nivel >= R.FASE_DA_CHUVA ? Math.min(140, 40 + (this.nivel - R.FASE_DA_CHUVA) * 15) : 0
+		const cenario = this.cenario()
+		const fase_no_cenario = this.nivel - cenario.a_partir_da_fase + 1
+		const brasas = cenario.clima == 'brasas'
+		let quantas = 0
+		if (brasas) {
+			quantas = 50
+		}
+		else if (fase_no_cenario >= R.FASE_DA_CHUVA) {
+			quantas = Math.min(140, 40 + (fase_no_cenario - R.FASE_DA_CHUVA) * 15)
+		}
 		while (this.gotas.length < quantas) {
 			this.gotas.push({ x: Math.random() * (this.largura + 60), y: Math.random() * ALTURA, v: 5 + Math.random() * 3 })
 		}
 		this.gotas.length = Math.min(this.gotas.length, quantas)
+		this.clima = brasas ? 'brasas' : 'chuva'
 		for (const gota of this.gotas) {
+			if (brasas) {
+				// brasa: sobe devagar balançando
+				gota.y -= gota.v * 0.12
+				gota.x += Math.sin((gota.y + gota.v * 50) / 20) * 0.3
+				if (gota.y < -5) {
+					gota.y = ALTURA + 5
+					gota.x = Math.random() * this.largura
+				}
+				continue
+			}
 			gota.y += gota.v
 			gota.x -= gota.v * 0.25 // vento leve
 			if (gota.y > ALTURA) {
@@ -792,7 +849,7 @@ export default class Jogo extends Phaser.Scene {
 		if (this.relampago_ha > 0) {
 			this.relampago_ha--
 		}
-		if (quantas > 0) {
+		if (quantas > 0 && !brasas) {
 			this.proximo_trovao--
 			if (this.proximo_trovao <= 0) {
 				this.proximo_trovao = Phaser.Math.Between(1200, 2600)
@@ -1306,12 +1363,17 @@ export default class Jogo extends Phaser.Scene {
 	}
 
 	subir_nivel(venceu_chefe = false) {
+		const cenario_antes = this.cenario()
 		if (!this.apanhou_na_fase && this.nivel >= 3) desbloquear(this, 'intocavel')
 		this.apanhou_na_fase = false
 		this.nivel++
 		if (this.nivel >= 10) desbloquear(this, 'fase10')
 		if (this.nivel >= 20) desbloquear(this, 'fase20')
 		this.mortes_no_nivel = 0
+		const cenario = this.cenario()
+		if (this.chao.texture.key != cenario.textura) {
+			this.trocar_cenario(cenario)
+		}
 		this.pintar_noite()
 		if (this.m('anjo')) {
 			this.poderes.escudo = Math.max(this.poderes.escudo, 500)
@@ -1321,7 +1383,8 @@ export default class Jogo extends Phaser.Scene {
 			this.anunciar('ZUMBI REI!', 300, '#ff5a5a')
 		}
 		else {
-			this.anunciar('FASE ' + this.nivel)
+			this.texto_da_fase = cenario != cenario_antes ? cenario.nome + '\nFASE ' + this.nivel : 'FASE ' + this.nivel
+			this.anunciar(this.texto_da_fase, cenario != cenario_antes ? 300 : 200)
 			this.sound.play('fase', { volume: 0.6 })
 			// a cada 2 fases, e sempre depois de vencer um chefão, escolhe uma melhoria
 			if (venceu_chefe || this.nivel % 2 == 0) {
@@ -1896,7 +1959,14 @@ export default class Jogo extends Phaser.Scene {
 	desenhar_clima() {
 		const g = this.chuva
 		g.clear()
-		if (this.gotas.length) {
+		if (this.gotas.length && this.clima == 'brasas') {
+			for (const gota of this.gotas) {
+				// pisca entre laranja e amarelo
+				g.fillStyle(gota.v > 6.5 ? 0xffe080 : 0xff8a30, 0.5 + 0.4 * Math.sin((this.quadro_atual + gota.v * 40) / 10))
+				g.fillRect(Math.round(gota.x), Math.round(gota.y), 1, 1)
+			}
+		}
+		else if (this.gotas.length) {
 			g.lineStyle(1, 0xa8c0ff, 0.45)
 			for (const gota of this.gotas) {
 				g.lineBetween(gota.x, gota.y, gota.x + 2, gota.y - 7)

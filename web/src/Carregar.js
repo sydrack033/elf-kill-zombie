@@ -41,7 +41,11 @@ export default class Carregar extends Phaser.Scene {
 		// coração: quadro 0 cheio, quadro 1 vazio
 		this.load.spritesheet('coracao', PASTA + 'coracao.png', { frameWidth: 9, frameHeight: 8 })
 
+		// chão de cada cenário (256x256, emenda sem costura)
 		this.load.image('chao', PASTA + 'chao.png')
+		this.load.image('chao_pantano', PASTA + 'chao_pantano.png')
+		this.load.image('chao_ruinas', PASTA + 'chao_ruinas.png')
+		this.load.image('chao_inferno', PASTA + 'chao_inferno.png')
 		this.load.spritesheet('melhorias', PASTA + 'melhorias.png', { frameWidth: 16, frameHeight: 16 })
 		// corvo visto de cima: 3 quadros de 16x12 (asas abertas, no meio, fechadas)
 		this.load.spritesheet('corvo', PASTA + 'corvo.png', { frameWidth: 16, frameHeight: 12 })

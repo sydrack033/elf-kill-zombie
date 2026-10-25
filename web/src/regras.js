@@ -18,7 +18,15 @@ export const ACELERACAO_POR_NIVEL = 0.08 // quanto os zumbis ficam mais rápidos
 export const NIVEIS_ENTRE_CHEFOES = 5 // nível 5, 10, 15... tem chefão
 export const COMBO_TEMPO = 150 // ticks para emendar a próxima morte no combo
 export const ROLAGEM_DO_CHAO = 0.3 // o chão desce esta quantidade por tick
-export const FASE_DA_CHUVA = 6 // a partir desta fase chove e caem raios
+export const FASE_DA_CHUVA = 6 // dentro de cada cenário, a partir desta fase chove e caem raios
+
+// o cenário muda a cada 10 fases; clima = o que cai do céu (chuva) ou sobe do chão (brasas)
+export const CENARIOS = [
+	{ a_partir_da_fase: 1, textura: 'chao', nome: 'CEMITÉRIO', clima: 'chuva' },
+	{ a_partir_da_fase: 10, textura: 'chao_pantano', nome: 'PÂNTANO', clima: 'chuva' },
+	{ a_partir_da_fase: 20, textura: 'chao_ruinas', nome: 'CIDADE EM RUÍNAS', clima: 'chuva' },
+	{ a_partir_da_fase: 30, textura: 'chao_inferno', nome: 'INFERNO', clima: 'brasas' },
+]
 export const COMBO_MAXIMO = 5 // multiplicador máximo de pontos
 
 // ---------- armas ----------
