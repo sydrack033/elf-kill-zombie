@@ -55,7 +55,7 @@ export default class Zumbis {
 		this.mover_lodo()
 		this.mover_chuva_de_moedas()
 		const regra = R.PERIGOS[this.cenario().perigo]
-		if (regra && !this.chefe && this.chefe_em == 0) {
+		if (regra && !this.chefe && this.chefe_em == 0 && this.chuva_de_moedas <= 0) {
 			this.proxima_queda--
 			if (this.proxima_queda <= 0) {
 				this.proxima_queda = Phaser.Math.Between(regra.a_cada[0], regra.a_cada[1])
@@ -521,9 +521,10 @@ export default class Zumbis {
 			this.nivel = Math.ceil((this.nivel + 1) / R.NIVEIS_ENTRE_CHEFOES) * R.NIVEIS_ENTRE_CHEFOES - 1
 		}
 		this.nivel++
-		if (this.nivel >= 10 && !this.comecou_adiantado) desbloquear(this, 'fase10')
-		if (this.nivel >= 20 && !this.comecou_adiantado) desbloquear(this, 'fase20')
-		if (this.nivel >= 10 && this.mod.vidro && !this.comecou_adiantado) desbloquear(this, 'vidro10')
+		const de_verdade = !this.comecou_adiantado && !this.modo_chefes // fases pulando não contam
+		if (this.nivel >= 10 && de_verdade) desbloquear(this, 'fase10')
+		if (this.nivel >= 20 && de_verdade) desbloquear(this, 'fase20')
+		if (this.nivel >= 10 && this.mod.vidro && de_verdade) desbloquear(this, 'vidro10')
 		this.mortes_no_nivel = 0
 		const fase_de_chefao = this.nivel % R.NIVEIS_ENTRE_CHEFOES == 0
 		if (fase_de_chefao) {

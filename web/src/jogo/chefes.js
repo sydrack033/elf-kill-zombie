@@ -144,10 +144,14 @@ export default class Chefes {
 					// uma frase da história depois de cada chefão (só na primeira volta)
 					const tipo = R.CHEFES[chefe.numero - 1]
 					if (tipo && tipo.fala) {
-						this.capitulo_pendente = { nome: tipo.nome + ' CAIU', lema: tipo.fala }
+						this.apresentar_chefe(tipo.nome + ' CAIU', tipo.fala, '#9ff07a') // a fila de cartões cuida da ordem
 					}
 					if (chefe.numero % 2 == 0 && !this.modo_chefes) {
 						this.chuva_de_moedas = R.CHUVA_DE_MOEDAS.duracao
+						// bônus de verdade: some quem sobrou da luta e os cuspes no ar
+						this.zumbis.forEach((z) => !z.morrendo && (z.morrendo = true))
+						this.cuspes.forEach((c) => c.sprite.destroy())
+						this.cuspes = []
 					}
 					this.subir_nivel(true)
 					if (this.chuva_de_moedas > 0) {
@@ -214,12 +218,13 @@ export default class Chefes {
 	// também usada na chegada de cada cenário (com outra cor)
 	apresentar_chefe(nome, subtitulo, cor = '#ff5a5a') {
 		// um cartão por vez: se já tem um na tela, este espera ele acabar
-		const agora = this.time.now
+		// (conta em ticks do jogo, que param na pausa junto com as animações do cartão)
+		const agora = this.quadro_atual
 		if (this.cartao_ate && this.cartao_ate > agora) {
-			this.time.delayedCall(this.cartao_ate - agora + 50, () => this.apresentar_chefe(nome, subtitulo, cor))
+			this.time.delayedCall((this.cartao_ate - agora) * 10 + 50, () => this.apresentar_chefe(nome, subtitulo, cor))
 			return
 		}
-		this.cartao_ate = agora + 2450
+		this.cartao_ate = agora + 245
 		const L = this.largura
 		const faixa_cima = this.add.rectangle(0, 0, L, 0, 0x000000).setOrigin(0).setDepth(9.6)
 		const faixa_baixo = this.add.rectangle(0, ALTURA, L, 0, 0x000000).setOrigin(0, 1).setDepth(9.6)

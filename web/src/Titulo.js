@@ -344,6 +344,7 @@ export default class Titulo extends Phaser.Scene {
 		for (const objeto of [this.nome, this.subtitulo, this.comecar, this.placar, this.controles]) {
 			objeto.x = meio
 		}
+		this.subtitulo.setScale(Math.min(1, (this.largura - 10) / this.subtitulo.width))
 		// seletores: as duas linhas com as setas alinhadas, "RÓTULO  <    VALOR    >"
 		for (const s of this.seletores) {
 			s.rotulo.x = meio - 40

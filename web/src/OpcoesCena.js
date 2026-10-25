@@ -10,9 +10,9 @@ const LINHAS = [
 	{ rotulo: 'TREMOR', chave: 'tremor', liga: true },
 	{ rotulo: 'TIRO AUTOMÁTICO', chave: 'tiro_auto', liga: true }, // no computador: atira sem segurar o botão
 	{ rotulo: 'NÚMEROS DE DANO', chave: 'numeros_dano', liga: true },
-	{ rotulo: 'ELFO DE VIDRO (PONTOS X2)', modificador: 'vidro', liga: true },
-	{ rotulo: 'TURBO (PONTOS X1,5)', modificador: 'turbo', liga: true },
-	{ rotulo: 'SÓ PISTOLA (PONTOS X1,5)', modificador: 'pistola', liga: true },
+	{ rotulo: 'VIDRO (PTS X2)', modificador: 'vidro', liga: true },
+	{ rotulo: 'TURBO (PTS X1,5)', modificador: 'turbo', liga: true },
+	{ rotulo: 'SÓ PISTOLA (PTS X1,5)', modificador: 'pistola', liga: true },
 	{ rotulo: 'TELA CHEIA', acao: 'tela_cheia' },
 	{ rotulo: 'VER AS DICAS DE NOVO', acao: 'dicas' },
 	{ rotulo: 'CRÉDITOS', acao: 'creditos' },

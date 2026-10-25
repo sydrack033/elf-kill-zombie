@@ -60,9 +60,11 @@ export default class Jogo extends Phaser.Scene {
 		this.dificuldade = { ...(R.DIFICULDADES[opcoes.dificuldade] || R.DIFICULDADES.normal) }
 		// modificadores das Opções: mudam a dificuldade desta partida e multiplicam os pontos
 		this.mod = { ...opcoes.modificadores }
+		this.multiplicador_mod = 1 // as moedas da loja não ganham com os modificadores
 		for (const [id, m] of Object.entries(R.MODIFICADORES)) {
 			if (!this.mod[id]) continue
 			this.dificuldade.pontos *= m.pontos
+			this.multiplicador_mod = (this.multiplicador_mod || 1) * m.pontos
 			if (m.velocidade) {
 				this.dificuldade.velocidade *= m.velocidade
 				this.dificuldade.frequencia *= m.velocidade
@@ -288,7 +290,8 @@ export default class Jogo extends Phaser.Scene {
 	// melhorias sorteadas de presente (começo adiantado e modo chefões)
 	ganhar_melhorias(quantas) {
 		for (let i = 0; i < quantas; i++) {
-			const possiveis = R.MELHORIAS.filter((mel) => this.m(mel.id) < mel.maximo)
+			const inuteis = this.mod.vidro ? ['vida_max', 'vampiro'] : []
+			const possiveis = R.MELHORIAS.filter((mel) => this.m(mel.id) < mel.maximo && !inuteis.includes(mel.id))
 			if (!possiveis.length) break
 			const mel = Phaser.Utils.Array.GetRandom(possiveis)
 			this.melhorias[mel.id] = this.m(mel.id) + 1
@@ -311,10 +314,7 @@ export default class Jogo extends Phaser.Scene {
 			this.melhorias.ima = 1
 		}
 		if (compras.melhoria) {
-			const possiveis = R.MELHORIAS.filter((mel) => this.m(mel.id) < mel.maximo)
-			const mel = Phaser.Utils.Array.GetRandom(possiveis)
-			this.melhorias[mel.id] = this.m(mel.id) + 1
-			this.aplicar_melhoria(mel.id)
+			this.ganhar_melhorias(1)
 		}
 		if (compras.arma && !this.mod.pistola) {
 			this.trocar_arma('triplo')
