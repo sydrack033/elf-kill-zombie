@@ -20,6 +20,7 @@ export const PRODUTOS = [
 	{ id: 'ima', nome: 'BOLSO MAGNÉTICO', texto: 'COMEÇA COM O ÍMÃ', custo: [90] },
 	{ id: 'melhoria', nome: 'TALENTO', texto: 'COMEÇA COM 1 MELHORIA SORTEADA', custo: [200] },
 	{ id: 'reviver', nome: 'SEGUNDA CHANCE', texto: 'VOLTA UMA VEZ QUANDO MORRER', custo: [350] },
+	{ id: 'forja', nome: 'FORJA ÉLFICA', texto: 'TODA ARMA JÁ VEM NO NÍVEL II', custo: [400] },
 	{ id: 'fada', nome: 'FADA COMPANHEIRA', texto: 'VOA COM VOCÊ E ATIRA FAÍSCAS', custo: [300, 500] },
 ]
 

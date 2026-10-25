@@ -82,21 +82,21 @@ export default class Loja extends Phaser.Scene {
 		}
 		const lista = ABAS[this.aba].lista
 		this.linhas = lista.map((produto, i) => {
-			const y = 68 + i * 38
-			const fundo = this.add.rectangle(0, y, 10, 34, 0x101018, 0.75).setOrigin(0.5, 0).setStrokeStyle(1, 0x3a3a44)
+			const y = 66 + i * 35
+			const fundo = this.add.rectangle(0, y, 10, 32, 0x101018, 0.75).setOrigin(0.5, 0).setStrokeStyle(1, 0x3a3a44)
 				.setInteractive({ useHandCursor: true })
 			fundo.on('pointerover', () => this.escolher(i))
 			fundo.on('pointerdown', () => {
 				this.escolher(i)
 				this.comprar_escolhido()
 			})
-			const nome = texto(this, 0, y + 6, produto.nome, 8, '#ffffff')
-			const desc = texto(this, 0, y + 18, produto.texto, 8, '#9fbf8a')
+			const nome = texto(this, 0, y + 5, produto.nome, 8, '#ffffff')
+			const desc = texto(this, 0, y + 16, produto.texto, 8, '#9fbf8a')
 			// um quadradinho por nível: aceso = comprado (os chapéus mostram o desenho no lugar)
 			const chapeu = this.aba == 1
 			const nivel = chapeu ? [] : produto.custo.map(() => this.add.rectangle(0, y + 10, 6, 6, 0x3a3a44).setStrokeStyle(1, 0x000000))
 			const figura = chapeu ? this.add.sprite(0, y + 19, produto.id).setScale(2) : null
-			const valor = texto(this, 0, y + 18, '', 8, '#ffd34d').setOrigin(1, 0)
+			const valor = texto(this, 0, y + 16, '', 8, '#ffd34d').setOrigin(1, 0)
 			return { produto, fundo, nome, desc, nivel, valor, figura }
 		})
 		this.escolhido = 0
@@ -184,8 +184,8 @@ export default class Loja extends Phaser.Scene {
 		this.carteira.x = this.icone.x + 7
 		this.abas.forEach((rotulo, i) => (rotulo.x = meio + (i - 0.5) * 110))
 		for (const l of this.linhas) {
-			l.fundo.setSize(largura, 34).setPosition(meio, l.fundo.y)
-			l.fundo.input.hitArea.setSize(largura, 34)
+			l.fundo.setSize(largura, 32).setPosition(meio, l.fundo.y)
+			l.fundo.input.hitArea.setSize(largura, 32)
 			const recuo = l.figura ? 40 : 8
 			if (l.figura) l.figura.x = esquerda + 20
 			l.nome.x = esquerda + recuo

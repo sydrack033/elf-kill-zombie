@@ -428,7 +428,9 @@ export default class Elfo {
 
 	trocar_arma(arma) {
 		// pegar a mesma arma especial de novo sobe o nível dela (até 3): mais dano (ver dano_da_arma)
-		this.nivel_arma = arma == this.arma && arma != 'pistola' ? Math.min(3, (this.nivel_arma || 1) + 1) : 1
+		// (com a Forja Élfica da loja, arma nova já começa no nível II)
+		const nivel_inicial = arma != 'pistola' && this.forja ? 2 : 1
+		this.nivel_arma = arma == this.arma && arma != 'pistola' ? Math.min(3, (this.nivel_arma || 1) + 1) : nivel_inicial
 		this.carga = 0
 		this.arma = arma
 		this.usou_arma(arma)

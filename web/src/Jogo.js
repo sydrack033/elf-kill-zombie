@@ -136,6 +136,7 @@ export default class Jogo extends Phaser.Scene {
 		this.desafios_pagos = []
 		this.polvora_da_classe = 0
 		this.causa_do_golpe = null
+		this.forja = false // (a loja liga, se comprada)
 		this.proxima_cova = undefined // a primeira cova vem depois de um tempo
 		this.ja_trocou = false // troca de cartas de melhoria (uma por partida)
 		this.tecla_trocar = null
@@ -347,6 +348,7 @@ export default class Jogo extends Phaser.Scene {
 			this.trocar_arma('triplo')
 		}
 		this.pode_reviver = !!compras.reviver
+		this.forja = !!compras.forja
 		// fada da loja: nível 1 atira devagar, nível 2 mais rápido e mais forte
 		this.fada = compras.fada ? { nivel: compras.fada, angulo: 0, espera: 60, x: 0, y: 0 } : null
 		if (this.fada) {
