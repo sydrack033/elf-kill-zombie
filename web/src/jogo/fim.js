@@ -63,7 +63,7 @@ export default class Fim {
 		const pontaria = this.stats.disparos ? Math.round((100 * this.stats.acertos) / this.stats.disparos) : 0
 		if (pontaria >= 70 && this.stats.disparos >= 200) desbloquear(this, 'mira')
 		// desafios do dia cumpridos nesta partida
-		const cumpridos = conferir_desafios(this.dia, { ...this.stats, fase: this.nivel, pontos: this.pontos, lapides: this.lapides_quebradas })
+		const cumpridos = conferir_desafios(this.dia, this.resumo_da_partida())
 		const moedas = moedas_da_partida(Math.round(this.pontos / this.multiplicador_mod), this.stats.chefes) + this.moedas_extras + cumpridos.length * PREMIO
 		const carteira = ganhar_moedas(moedas)
 

@@ -3,22 +3,22 @@
 const CHAVE = 'elf-kill-zombie-desafios'
 export const PREMIO = 25
 
-// confere(r) recebe o resumo da partida e diz se a missão foi cumprida
+// valor(r) tira do resumo da partida o número que conta; cumpriu quando chega na meta
 const MISSOES = [
-	{ id: 'corredores', texto: 'MATE 25 CORREDORES', confere: (r) => (r.por_tipo.corredor || 0) >= 25 },
-	{ id: 'brutamontes', texto: 'MATE 8 BRUTAMONTES', confere: (r) => (r.por_tipo.brutamontes || 0) >= 8 },
-	{ id: 'corvos', texto: 'MATE 10 CORVOS', confere: (r) => (r.por_tipo.corvo || 0) >= 10 },
-	{ id: 'fase10', texto: 'CHEGUE À FASE 10', confere: (r) => r.fase >= 10 },
-	{ id: 'fase15', texto: 'CHEGUE À FASE 15', confere: (r) => r.fase >= 15 },
-	{ id: 'chefes2', texto: 'VENÇA 2 CHEFÕES', confere: (r) => r.chefes >= 2 },
-	{ id: 'combo25', texto: 'FAÇA UM COMBO DE 25', confere: (r) => r.melhor_combo >= 25 },
-	{ id: 'pontos', texto: 'FAÇA 30.000 PONTOS', confere: (r) => r.pontos >= 30000 },
-	{ id: 'lapides', texto: 'QUEBRE 5 LÁPIDES', confere: (r) => r.lapides >= 5 },
-	{ id: 'elites', texto: 'MATE 3 ZUMBIS DE ELITE', confere: (r) => r.elites >= 3 },
-	{ id: 'horda', texto: 'SOBREVIVA A UMA HORDA', confere: (r) => r.hordas >= 1 },
-	{ id: 'explosoes', texto: 'MATE 15 ZUMBIS COM EXPLOSÕES', confere: (r) => r.por_explosao >= 15 },
-	{ id: 'mira', texto: 'TERMINE COM 60% DE PONTARIA (100+ TIROS)', confere: (r) => r.disparos >= 100 && r.acertos / r.disparos >= 0.6 },
-	{ id: 'zumbis150', texto: 'MATE 150 ZUMBIS', confere: (r) => r.mortos >= 150 },
+	{ id: 'corredores', texto: 'MATE 25 CORREDORES', meta: 25, valor: (r) => r.por_tipo.corredor || 0 },
+	{ id: 'brutamontes', texto: 'MATE 8 BRUTAMONTES', meta: 8, valor: (r) => r.por_tipo.brutamontes || 0 },
+	{ id: 'corvos', texto: 'MATE 10 CORVOS', meta: 10, valor: (r) => r.por_tipo.corvo || 0 },
+	{ id: 'fase10', texto: 'CHEGUE À FASE 10', meta: 10, valor: (r) => r.fase },
+	{ id: 'fase15', texto: 'CHEGUE À FASE 15', meta: 15, valor: (r) => r.fase },
+	{ id: 'chefes2', texto: 'VENÇA 2 CHEFÕES', meta: 2, valor: (r) => r.chefes },
+	{ id: 'combo25', texto: 'FAÇA UM COMBO DE 25', meta: 25, valor: (r) => r.melhor_combo },
+	{ id: 'pontos', texto: 'FAÇA 30.000 PONTOS', meta: 30000, valor: (r) => r.pontos },
+	{ id: 'lapides', texto: 'QUEBRE 5 LÁPIDES', meta: 5, valor: (r) => r.lapides },
+	{ id: 'elites', texto: 'MATE 3 ZUMBIS DE ELITE', meta: 3, valor: (r) => r.elites },
+	{ id: 'horda', texto: 'SOBREVIVA A UMA HORDA', meta: 1, valor: (r) => r.hordas },
+	{ id: 'explosoes', texto: 'MATE 15 ZUMBIS COM EXPLOSÕES', meta: 15, valor: (r) => r.por_explosao },
+	{ id: 'mira', texto: 'TERMINE COM 60% DE PONTARIA (100+ TIROS)', meta: 100, valor: (r) => (r.acertos / Math.max(1, r.disparos) >= 0.6 ? r.disparos : 0) },
+	{ id: 'zumbis150', texto: 'MATE 150 ZUMBIS', meta: 150, valor: (r) => r.mortos },
 ]
 
 export function dia_de_hoje() {
@@ -48,6 +48,12 @@ function ler_feitas(dia) {
 }
 
 // as missões de hoje: [{ id, texto, feita }]
+// progresso da partida em andamento em cada desafio de hoje: [{ texto, feita, atual, meta }]
+export function progresso_de_hoje(dia, resumo) {
+	const feitas = ler_feitas(dia)
+	return sortear_do_dia(dia).map((m) => ({ texto: m.texto, feita: feitas.includes(m.id), atual: Math.min(m.meta, m.valor(resumo)), meta: m.meta }))
+}
+
 export function desafios_de_hoje() {
 	const dia = dia_de_hoje()
 	const feitas = ler_feitas(dia)
@@ -57,7 +63,7 @@ export function desafios_de_hoje() {
 // confere a partida que acabou (pelo dia em que ela começou); devolve as missões cumpridas agora
 export function conferir_desafios(dia, resumo) {
 	const feitas = ler_feitas(dia)
-	const novas = sortear_do_dia(dia).filter((m) => !feitas.includes(m.id) && m.confere(resumo))
+	const novas = sortear_do_dia(dia).filter((m) => !feitas.includes(m.id) && m.valor(resumo) >= m.meta)
 	if (novas.length) {
 		try {
 			localStorage.setItem(CHAVE, JSON.stringify({ dia, feitas: feitas.concat(novas.map((m) => m.id)) }))

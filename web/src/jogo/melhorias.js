@@ -6,6 +6,7 @@ import * as R from '../regras.js'
 import { tocar_musica, atualizar_volume_musica } from '../musica.js'
 import { desbloquear } from '../conquistas.js'
 import { efeito, opcoes, gravar_opcoes } from '../opcoes.js'
+import { progresso_de_hoje } from '../desafios.js'
 
 export default class Melhorias {
 	// ------------------------------------------------------------------ melhorias
@@ -302,6 +303,11 @@ export default class Melhorias {
 		}
 	}
 
+	// o resumo da partida que os desafios do dia olham
+	resumo_da_partida() {
+		return { ...this.stats, fase: this.nivel, pontos: this.pontos, lapides: this.lapides_quebradas }
+	}
+
 	// a tela só treme se o jogador não desligou isso nas opções
 	tremer(duracao, intensidade) {
 		if (opcoes.tremor) {
@@ -388,6 +394,15 @@ export default class Melhorias {
 			recomecar.on('pointerdown', (p, x, y, ev) => { ev.stopPropagation(); this.reiniciar_da_pausa() })
 			objetos.push(sair, recomecar)
 		}
+		// desafios do dia com o progresso desta partida
+		const desafios = progresso_de_hoje(this.dia, this.resumo_da_partida())
+		objetos.push(texto(this, meio, ALTURA - 86, 'DESAFIOS DE HOJE', 8, '#ffd34d').setOrigin(0.5).setDepth(11))
+		desafios.forEach((d, i) => {
+			const feito = d.feita || d.atual >= d.meta
+			const linha = texto(this, meio, ALTURA - 72 + i * 13, (feito ? 'FEITO: ' : '') + d.texto + (feito ? '' : '   ' + d.atual.toLocaleString('pt-BR') + '/' + d.meta.toLocaleString('pt-BR')), 8, feito ? '#9ff07a' : '#9fd8ff').setOrigin(0.5).setDepth(11)
+			linha.setScale(Math.min(1, (this.largura - 10) / linha.width))
+			objetos.push(linha)
+		})
 		this.menu_pausa = objetos
 		this.linha_escolhida = 0
 		this.desenhar_menu_pausa()
